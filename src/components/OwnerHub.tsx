@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Tenant, Room, Expense, Invoice, Notice } from '../types';
+import { Tenant, Room, Expense, Invoice, Notice, WhitelabelConfig } from '../types';
 import {
   Users,
   Building,
@@ -27,6 +27,7 @@ export const OwnerHub: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
+  const [whitelabel, setWhitelabel] = useState<WhitelabelConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -76,9 +77,32 @@ export const OwnerHub: React.FC = () => {
       const { data: iData } = await supabase.from('invoices').select('*');
       if (iData) setInvoices(iData);
 
-      // Fetch Notices
+      // Fetch Notices & Whitelabel Configuration
       const { data: nData } = await supabase.from('notices').select('*');
-      if (nData) setNotices(nData);
+      if (nData) {
+        setNotices(nData);
+        try {
+          const sessionUser = JSON.parse(sessionStorage.getItem('srinoos_session_user') || '{}');
+          const activeOwnerId = sessionUser.id || 'acc-1782895136356';
+          const ownerNotice = nData.find(n => n.id === `whitelabel-customizations-data-${activeOwnerId}`);
+          if (ownerNotice && ownerNotice.content) {
+            const p = JSON.parse(ownerNotice.content);
+            const conf = Array.isArray(p) ? p[0] : p;
+            if (conf) setWhitelabel(conf);
+          } else {
+            const globalNotice = nData.find(n => n.id === 'whitelabel-customizations-data');
+            if (globalNotice && globalNotice.content) {
+              const p = JSON.parse(globalNotice.content);
+              if (Array.isArray(p)) {
+                const conf = p.find((x: any) => x.ownerId === activeOwnerId) || p.find((x: any) => x.ownerId === 'system_default');
+                if (conf) setWhitelabel(conf);
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Error loading whitelabel customization:', e);
+        }
+      }
     } catch (err) {
       console.error('Error fetching data from Supabase:', err);
     } finally {
@@ -247,43 +271,49 @@ export const OwnerHub: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap items-center justify-between border-b border-slate-700/80 pb-3 gap-4">
-        <div className="flex flex-wrap gap-2">
-          {[
-            { id: 'tenants', label: 'Residents Roster', icon: Users },
-            { id: 'rooms', label: 'Rooms & Beds', icon: Building },
-            { id: 'invoices', label: 'Rent Invoices', icon: CreditCard },
-            { id: 'expenses', label: 'Expenses Outlay', icon: TrendingDown },
-            { id: 'notices', label: 'Notices Board', icon: Bell },
-            { id: 'reports', label: 'CSV Statements', icon: FileSpreadsheet },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                    : 'bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-800'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      {(() => {
+        const availableTabs = [
+          ...(whitelabel?.enableTenantsSection !== false ? [{ id: 'tenants', label: 'Residents Roster', icon: Users }] : []),
+          ...(whitelabel?.enableRoomsSection !== false ? [{ id: 'rooms', label: 'Rooms & Beds', icon: Building }] : []),
+          ...(whitelabel?.enablePaymentsSection !== false ? [{ id: 'invoices', label: 'Rent Invoices', icon: CreditCard }] : []),
+          ...(whitelabel?.enableExpensesSection !== false ? [{ id: 'expenses', label: 'Expenses Outlay', icon: TrendingDown }] : []),
+          { id: 'notices', label: 'Notices Board', icon: Bell },
+          ...(whitelabel?.enableReportsSection !== false ? [{ id: 'reports', label: 'CSV Statements', icon: FileSpreadsheet }] : []),
+        ];
 
-        <button
-          onClick={fetchData}
-          className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer"
-          title="Refresh Data"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-purple-400' : ''}`} />
-        </button>
-      </div>
+        return (
+          <div className="flex flex-wrap items-center justify-between border-b border-slate-700/80 pb-3 gap-4">
+            <div className="flex flex-wrap gap-2">
+              {availableTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                        : 'bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={fetchData}
+              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer"
+              title="Refresh Data"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-purple-400' : ''}`} />
+            </button>
+          </div>
+        );
+      })()}
 
       {/* Tab Content: Tenants */}
       {activeTab === 'tenants' && (

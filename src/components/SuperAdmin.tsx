@@ -80,6 +80,9 @@ export const SuperAdmin: React.FC = () => {
     instructions: 'Please transfer subscription fee and upload UTR receipt below for instant activation.'
   });
 
+  const [selectedOwnerId, setSelectedOwnerId] = useState<string>('system_default');
+  const [allWhitelabelConfigs, setAllWhitelabelConfigs] = useState<WhitelabelConfig[]>([]);
+
   const [whitelabel, setWhitelabel] = useState<WhitelabelConfig>({
     ownerId: 'system_default',
     appName: 'Srinoos PG Management',
@@ -162,17 +165,30 @@ export const SuperAdmin: React.FC = () => {
           }
         }
 
+        const allConfigs: WhitelabelConfig[] = [];
+        noticeData.forEach(n => {
+          if (n.id.startsWith('whitelabel-customizations-data-') && n.content) {
+            try {
+              const p = JSON.parse(n.content);
+              if (Array.isArray(p)) allConfigs.push(...p);
+              else if (p && typeof p === 'object') allConfigs.push(p);
+            } catch (e) {}
+          }
+        });
         const wlSetting = noticeData.find(n => n.id === 'whitelabel-customizations-data');
         if (wlSetting && wlSetting.content) {
           try {
             const parsed = JSON.parse(wlSetting.content);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              setWhitelabel(parsed[0]);
+              allConfigs.push(...parsed);
+              const sys = parsed.find((p: any) => p.ownerId === 'system_default') || parsed[0];
+              if (sys) setWhitelabel(sys);
             }
           } catch (e) {
             console.error('Error parsing whitelabel settings', e);
           }
         }
+        setAllWhitelabelConfigs(allConfigs);
       }
 
       // Seed Initial Buildings if empty
@@ -414,22 +430,127 @@ export const SuperAdmin: React.FC = () => {
     }
   };
 
+  // Handle Owner Selection in Whitelabel
+  const handleSelectWhitelabelOwner = (ownerId: string) => {
+    setSelectedOwnerId(ownerId);
+    if (ownerId === 'system_default') {
+      const sys = allWhitelabelConfigs.find(c => c.ownerId === 'system_default') || {
+        ownerId: 'system_default',
+        appName: 'Srinoos PG Management',
+        logoUrl: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=128&h=128&q=80',
+        primaryColor: '#a855f7',
+        accentColor: '#f43f5e',
+        theme: 'glass',
+        loginTitle: 'Sign In Console',
+        loginSubtitle: 'Operations SaaS',
+        enableTenantsSection: true,
+        enableRoomsSection: true,
+        enablePaymentsSection: true,
+        enableExpensesSection: true,
+        enableReportsSection: true,
+        enableFoodSection: true,
+        showRevenueWidget: true,
+        showOccupancyWidget: true,
+        showComplaintsWidget: true,
+        showStaffWidget: true,
+        customCss: ''
+      };
+      setWhitelabel(sys);
+    } else {
+      const existing = allWhitelabelConfigs.find(c => c.ownerId === ownerId);
+      const ownerAcc = accounts.find(a => a.id === ownerId);
+      if (existing) {
+        setWhitelabel({
+          ...existing,
+          enableTenantsSection: existing.enableTenantsSection ?? true,
+          enableRoomsSection: existing.enableRoomsSection ?? true,
+          enablePaymentsSection: existing.enablePaymentsSection ?? true,
+          enableExpensesSection: existing.enableExpensesSection ?? true,
+          enableReportsSection: existing.enableReportsSection ?? true,
+          enableFoodSection: existing.enableFoodSection ?? true
+        });
+      } else {
+        setWhitelabel({
+          ownerId,
+          appName: ownerAcc ? `${ownerAcc.name} Coliving` : 'Srinoos Luxury Living',
+          logoUrl: '',
+          primaryColor: '#a855f7',
+          accentColor: '#f43f5e',
+          theme: 'glass',
+          loginTitle: 'Operations Hub',
+          loginSubtitle: 'Coliving operational cockpit',
+          enableTenantsSection: true,
+          enableRoomsSection: true,
+          enablePaymentsSection: true,
+          enableExpensesSection: true,
+          enableReportsSection: true,
+          enableFoodSection: true,
+          showRevenueWidget: true,
+          showOccupancyWidget: true,
+          showComplaintsWidget: true,
+          showStaffWidget: true,
+          customCss: ''
+        });
+      }
+    }
+  };
+
   // 7. Save Whitelabel & Toggles
   const handleSaveWhitelabel = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const noticePayload = {
-        id: 'whitelabel-customizations-data',
-        title: 'Platform Whitelabel Customizations',
-        content: JSON.stringify([whitelabel]),
-        date: new Date().toLocaleDateString('en-IN'),
-        owner_id: 'acc1'
+      const configToSave: WhitelabelConfig = {
+        ...whitelabel,
+        ownerId: selectedOwnerId
       };
-      const { error } = await supabase.from('notices').upsert([noticePayload], { onConflict: 'id' });
-      if (error) throw error;
+
+      if (selectedOwnerId === 'system_default') {
+        const noticePayload = {
+          id: 'whitelabel-customizations-data',
+          title: 'Platform Whitelabel Customizations',
+          content: JSON.stringify([configToSave]),
+          date: new Date().toLocaleDateString('en-IN'),
+          owner_id: 'acc1'
+        };
+        const { error } = await supabase.from('notices').upsert([noticePayload], { onConflict: 'id' });
+        if (error) throw error;
+      } else {
+        // Save to owner notice
+        const ownerNotice = {
+          id: `whitelabel-customizations-data-${selectedOwnerId}`,
+          title: `Whitelabel Customizations: ${selectedOwnerId}`,
+          content: JSON.stringify([configToSave]),
+          date: new Date().toLocaleDateString('en-IN'),
+          owner_id: selectedOwnerId
+        };
+        await supabase.from('notices').upsert([ownerNotice], { onConflict: 'id' });
+
+        // Also sync into global notice array
+        const updatedList = [...allWhitelabelConfigs];
+        const idx = updatedList.findIndex(c => c.ownerId === selectedOwnerId);
+        if (idx > -1) updatedList[idx] = configToSave;
+        else updatedList.push(configToSave);
+
+        await supabase.from('notices').upsert([{
+          id: 'whitelabel-customizations-data',
+          title: 'Platform Whitelabel Customizations',
+          content: JSON.stringify(updatedList),
+          date: new Date().toLocaleDateString('en-IN'),
+          owner_id: 'acc1'
+        }], { onConflict: 'id' });
+      }
+
+      // Update local memory list
+      setAllWhitelabelConfigs(prev => {
+        const next = [...prev];
+        const idx = next.findIndex(c => c.ownerId === selectedOwnerId);
+        if (idx > -1) next[idx] = configToSave;
+        else next.push(configToSave);
+        return next;
+      });
 
       // Inject custom CSS if present
-      if (whitelabel.customCss) {
+      if (configToSave.customCss) {
         const styleId = 'superadmin-custom-css';
         let el = document.getElementById(styleId);
         if (!el) {
@@ -437,9 +558,15 @@ export const SuperAdmin: React.FC = () => {
           el.id = styleId;
           document.head.appendChild(el);
         }
-        el.innerHTML = whitelabel.customCss;
+        el.innerHTML = configToSave.customCss;
       }
-      showToast('System-wide default coliving customizations and modules compiled!');
+
+      const targetOwner = accounts.find(a => a.id === selectedOwnerId);
+      showToast(
+        selectedOwnerId === 'system_default'
+          ? 'System-wide default coliving customizations and modules compiled!'
+          : `Successfully customized and assigned whitelabel node for PG Proprietor: ${targetOwner?.name || 'Selected Owner'}!`
+      );
     } catch (e: any) {
       showToast(e.message || 'Failed to save whitelabel settings', 'error');
     }
@@ -1426,11 +1553,32 @@ export const SuperAdmin: React.FC = () => {
       {/* 13. Whitelabel & Toggles */}
       {activeTab === 'customizations' && (
         <div className="bg-slate-800/60 rounded-2xl border border-slate-700/60 p-6 max-w-3xl mx-auto space-y-6">
-          <div className="border-b border-slate-700 pb-4">
-            <h3 className="font-bold text-white text-base flex items-center gap-2">
-              <Palette className="w-5 h-5 text-purple-400" /> SaaS Customization & Whitelabel Command Center
-            </h3>
-            <p className="text-xs text-slate-400">Configure multi-tenant branding, colors, and modular section toggles.</p>
+          <div className="border-b border-slate-700 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-bold text-white text-base flex items-center gap-2">
+                <Palette className="w-5 h-5 text-purple-400" /> SaaS Customization & Whitelabel Command Center
+              </h3>
+              <p className="text-xs text-slate-400">Configure multi-tenant branding, colors, and modular section toggles per PG Proprietor.</p>
+            </div>
+
+            {/* Assign Customization to PG Owner Dropdown */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                Assign Customization to PG Owner:
+              </label>
+              <select
+                value={selectedOwnerId}
+                onChange={e => handleSelectWhitelabelOwner(e.target.value)}
+                className="px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white outline-none focus:border-purple-500 font-bold"
+              >
+                <option value="system_default">🌐 System Default Branding (Global Default)</option>
+                {accounts.filter(a => a.role === 'OWNER').map(owner => (
+                  <option key={owner.id} value={owner.id}>
+                    🏢 Target: {owner.name} ({owner.plan_name || 'Starter Node'})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <form onSubmit={handleSaveWhitelabel} className="space-y-4">
