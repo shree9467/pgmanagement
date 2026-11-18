@@ -1,0 +1,8 @@
+id,tenant,room,amount,status,date,method
+INV-001,Rahul Verma,302-B,12500,PAID,05 Jun 2025,UPI
+INV-002,Priya Singh,105-A,14000,PENDING,01 Jun 2025,-
+INV-003,Amit Patel,201-C,11000,PAID,03 Jun 2025,Cash
+INV-004,Sneha Reddy,412-A,12500,OVERDUE,25 May 2025,-
+INV-005,Vikram Malhotra,501-A,15000,OVERDUE,20 May 2025,-
+INV-06,arvi,101,6000,PAID,29 May 2026,Cash
+INV-07,manu,101,1000,PAID,02 Jun 2026,Cash

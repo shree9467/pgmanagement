@@ -1,0 +1,4 @@
+id,name,phone,email,company_college,room_preference,sharing_preference,food_preference,status,created_at
+app2,Tanvi Shah,+91 96666 54321,tanvi.shah@college.com,NIFT Bangalore,AC,Single Sharing,Veg & Egg,APPROVED,2026-05-24T17:34:53.525494+00:00
+app1,Kunal Sen,+91 95555 12345,kunal.sen@wipro.com,Wipro HSR,AC,Double Sharing,Veg Only,APPROVED,2026-05-24T17:34:53.525494+00:00
+app3,Radha,4556,radha@gmail.com,Wns,Non-AC,Triple Sharing,Veg Only,APPROVED,2026-05-27T06:59:45.649329+00:00

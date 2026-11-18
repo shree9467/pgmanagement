@@ -1,0 +1,59 @@
+[
+  {
+    "id": "p2",
+    "name": "Scale Grow",
+    "price": "1500",
+    "period": "1/month (6/months plan)",
+    "desc": "{\"active\":true,\"maxUsers\":50,\"text\":\"For single building owners managing up to 50residents.\"}",
+    "features": [
+      "2 Building License",
+      "50 Tenants max capacity",
+      "WhatsApp rent alerts",
+      "UPI payment portal",
+      "Basic expense sheet",
+      "SLA ticket board"
+    ],
+    "popular": true,
+    "color": "border-blue-500 ring-4 ring-blue-500/5 hover:border-blue-600",
+    "max_buildings": 3,
+    "created_at": "2026-05-25T10:50:43.572759+00:00"
+  },
+  {
+    "id": "p1",
+    "name": "Starter Node",
+    "price": "1999",
+    "period": "1/month",
+    "desc": "{\"active\":true,\"maxUsers\":50,\"text\":\"For single building owners managing up to 50 residents.\"}",
+    "features": [
+      "2 Building License",
+      "50 Tenants max capacity",
+      "WhatsApp rent alerts",
+      "UPI payment portal",
+      "Basic expense sheet",
+      "SLA ticket board"
+    ],
+    "popular": false,
+    "color": "border-slate-200 hover:border-slate-300",
+    "max_buildings": 3,
+    "created_at": "2026-05-25T10:50:43.572759+00:00"
+  },
+  {
+    "id": "p3",
+    "name": "Enterprise Hub",
+    "price": "999",
+    "period": "1/month. (12/months Plan)",
+    "desc": "{\"active\":true,\"maxUsers\":50,\"text\":\"For professional co-living networks and student living campuses.\"}",
+    "features": [
+      "2 Building License",
+      "50 Tenants max capacity",
+      "WhatsApp rent alerts",
+      "UPI payment portal",
+      "Basic expense sheet",
+      "SLA ticket board"
+    ],
+    "popular": false,
+    "color": "border-slate-200 hover:border-slate-300",
+    "max_buildings": 3,
+    "created_at": "2026-05-25T10:50:43.572759+00:00"
+  }
+]

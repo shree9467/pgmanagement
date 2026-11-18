@@ -1,0 +1,10 @@
+room_key,id,building,floor,type,sharing,occupied,status,price,deposit,advance,owner_id,created_at
+Building A_1st Floor_101,101,Building A,1st Floor,Non-AC,5,0,AVAILABLE,"₹8,000","5,000",30000,acc-1779709334605,2026-05-26T18:20:37.187555+00:00
+Building A_1st Floor_104,104,Building A,1st Floor,Non-AC,5,0,AVAILABLE,"₹8,000","5,000","2,000",acc-1779709334605,2026-05-26T18:23:02.564228+00:00
+Building A_2nd Floor_201,201,Building A,2nd Floor,Non-AC,5,0,AVAILABLE,"₹8,000","5,000","2,000",acc-1779709334605,2026-05-26T18:23:26.070716+00:00
+Building A_2nd Floor_202,202,Building A,2nd Floor,Non-AC,5,0,AVAILABLE,"₹8,000","5,000","2,000",acc-1779709334605,2026-05-26T18:23:46.998298+00:00
+Building A_2nd Floor_103,103,Building A,2nd Floor,Non-AC,5,0,AVAILABLE,"₹8,000","5,000","2,000",acc-1779709334605,2026-05-26T18:24:00.678972+00:00
+Building A_2nd Floor_204,204,Building A,2nd Floor,Non-AC,5,0,AVAILABLE,"₹8,000","5,000","2,000",acc-1779709334605,2026-05-26T18:24:15.399813+00:00
+Building A_1st Floor_10`,101,Building A,Ground Floor,Non-AC,2,3,AVAILABLE,8000,"5,000","2,000",acc2,2026-05-26T18:17:53.350018+00:00
+Building A_1st Floor_102,102,Building A,Ground Floor,Non-AC,2,4,AVAILABLE,"₹₹8,000","5,000","2,000",acc2,2026-05-26T18:22:08.657731+00:00
+Building B (Girls Only)_1st Floor_101,101,Building B (Girls Only),1st Floor,Non-AC,2,0,AVAILABLE,"₹8,000","5,000",10000,acc-1779709334605,2026-05-26T18:46:18.519449+00:00

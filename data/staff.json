@@ -1,0 +1,38 @@
+[
+  {
+    "id": "s2",
+    "name": "Suresh Kumar",
+    "role": "Chief Plumber Technician",
+    "attendance": "PRESENT",
+    "tasks": [
+      "Fix AC leak Ground floor",
+      "Audit Block C pipes"
+    ],
+    "owner_id": "acc2",
+    "created_at": "2026-05-25T11:24:18.996784+00:00"
+  },
+  {
+    "id": "s3",
+    "name": "Meena Sahni",
+    "role": "Operational Sanitizer",
+    "attendance": "PRESENT",
+    "tasks": [
+      "Clean rooms Ground floor",
+      "Disinfect kitchen"
+    ],
+    "owner_id": "acc2",
+    "created_at": "2026-05-25T11:24:18.996784+00:00"
+  },
+  {
+    "id": "s1",
+    "name": "Karan Mehra",
+    "role": "Security Guard",
+    "attendance": "CHECKED_OUT",
+    "tasks": [
+      "Inspect main gate logs",
+      "Verify QR visitors"
+    ],
+    "owner_id": "acc2",
+    "created_at": "2026-05-25T11:24:18.996784+00:00"
+  }
+]

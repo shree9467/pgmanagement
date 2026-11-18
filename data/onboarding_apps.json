@@ -1,0 +1,38 @@
+[
+  {
+    "id": "app2",
+    "name": "Tanvi Shah",
+    "phone": "+91 96666 54321",
+    "email": "tanvi.shah@college.com",
+    "company_college": "NIFT Bangalore",
+    "room_preference": "AC",
+    "sharing_preference": "Single Sharing",
+    "food_preference": "Veg & Egg",
+    "status": "APPROVED",
+    "created_at": "2026-05-24T17:34:53.525494+00:00"
+  },
+  {
+    "id": "app1",
+    "name": "Kunal Sen",
+    "phone": "+91 95555 12345",
+    "email": "kunal.sen@wipro.com",
+    "company_college": "Wipro HSR",
+    "room_preference": "AC",
+    "sharing_preference": "Double Sharing",
+    "food_preference": "Veg Only",
+    "status": "APPROVED",
+    "created_at": "2026-05-24T17:34:53.525494+00:00"
+  },
+  {
+    "id": "app3",
+    "name": "Radha",
+    "phone": "4556",
+    "email": "radha@gmail.com",
+    "company_college": "Wns",
+    "room_preference": "Non-AC",
+    "sharing_preference": "Triple Sharing",
+    "food_preference": "Veg Only",
+    "status": "APPROVED",
+    "created_at": "2026-05-27T06:59:45.649329+00:00"
+  }
+]

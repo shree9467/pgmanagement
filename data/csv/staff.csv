@@ -1,0 +1,4 @@
+id,name,role,attendance,tasks,owner_id,created_at
+s2,Suresh Kumar,Chief Plumber Technician,PRESENT,"[""Fix AC leak Ground floor"", ""Audit Block C pipes""]",acc2,2026-05-25T11:24:18.996784+00:00
+s3,Meena Sahni,Operational Sanitizer,PRESENT,"[""Clean rooms Ground floor"", ""Disinfect kitchen""]",acc2,2026-05-25T11:24:18.996784+00:00
+s1,Karan Mehra,Security Guard,CHECKED_OUT,"[""Inspect main gate logs"", ""Verify QR visitors""]",acc2,2026-05-25T11:24:18.996784+00:00

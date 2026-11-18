@@ -1,0 +1,65 @@
+[
+  {
+    "id": "INV-001",
+    "tenant": "Rahul Verma",
+    "room": "302-B",
+    "amount": 12500,
+    "status": "PAID",
+    "date": "05 Jun 2025",
+    "method": "UPI"
+  },
+  {
+    "id": "INV-002",
+    "tenant": "Priya Singh",
+    "room": "105-A",
+    "amount": 14000,
+    "status": "PENDING",
+    "date": "01 Jun 2025",
+    "method": "-"
+  },
+  {
+    "id": "INV-003",
+    "tenant": "Amit Patel",
+    "room": "201-C",
+    "amount": 11000,
+    "status": "PAID",
+    "date": "03 Jun 2025",
+    "method": "Cash"
+  },
+  {
+    "id": "INV-004",
+    "tenant": "Sneha Reddy",
+    "room": "412-A",
+    "amount": 12500,
+    "status": "OVERDUE",
+    "date": "25 May 2025",
+    "method": "-"
+  },
+  {
+    "id": "INV-005",
+    "tenant": "Vikram Malhotra",
+    "room": "501-A",
+    "amount": 15000,
+    "status": "OVERDUE",
+    "date": "20 May 2025",
+    "method": "-"
+  },
+  {
+    "id": "INV-06",
+    "tenant": "arvi",
+    "room": "101",
+    "amount": 6000,
+    "status": "PAID",
+    "date": "29 May 2026",
+    "method": "Cash"
+  },
+  {
+    "id": "INV-07",
+    "tenant": "manu",
+    "room": "101",
+    "amount": 1000,
+    "status": "PAID",
+    "date": "02 Jun 2026",
+    "method": "Cash"
+  }
+]
