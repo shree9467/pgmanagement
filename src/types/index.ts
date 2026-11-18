@@ -186,6 +186,7 @@ export interface WhitelabelConfig {
   enableExpensesSection: boolean;
   enableReportsSection: boolean;
   enableFoodSection: boolean;
+  enableAiAssistantSection?: boolean;
   showRevenueWidget: boolean;
   showOccupancyWidget: boolean;
   showComplaintsWidget: boolean;

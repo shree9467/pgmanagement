@@ -98,6 +98,7 @@ export const SuperAdmin: React.FC = () => {
     enableExpensesSection: true,
     enableReportsSection: true,
     enableFoodSection: true,
+          enableAiAssistantSection: true,
     showRevenueWidget: true,
     showOccupancyWidget: true,
     showComplaintsWidget: true,
@@ -479,7 +480,8 @@ export const SuperAdmin: React.FC = () => {
           enablePaymentsSection: existing.enablePaymentsSection ?? true,
           enableExpensesSection: existing.enableExpensesSection ?? true,
           enableReportsSection: existing.enableReportsSection ?? true,
-          enableFoodSection: existing.enableFoodSection ?? true
+          enableFoodSection: existing.enableFoodSection ?? true,
+          enableAiAssistantSection: existing.enableAiAssistantSection ?? true
         });
       } else {
         setWhitelabel({
@@ -519,7 +521,8 @@ export const SuperAdmin: React.FC = () => {
         enablePaymentsSection: whitelabel.enablePaymentsSection !== false,
         enableExpensesSection: whitelabel.enableExpensesSection !== false,
         enableReportsSection: whitelabel.enableReportsSection !== false,
-        enableFoodSection: whitelabel.enableFoodSection !== false
+        enableFoodSection: whitelabel.enableFoodSection !== false,
+        enableAiAssistantSection: whitelabel.enableAiAssistantSection !== false
       };
 
       const updatedList = [...allWhitelabelConfigs];
@@ -1699,7 +1702,8 @@ export const SuperAdmin: React.FC = () => {
                   { label: 'Rent Billing Ledger', desc: 'Invoices, ledger trackers & balance controls', key: 'enablePaymentsSection' },
                   { label: 'Expense Logging & Petty Cash', desc: 'Allows tracking expenses and manual cash outlays', key: 'enableExpensesSection' },
                   { label: 'Financial Reports & Printing', desc: 'Allows printing statements and exporting Excel CSV data', key: 'enableReportsSection' },
-                  { label: 'Dining Menu Module', desc: 'Opt-outs and weekly coliving dining logs', key: 'enableFoodSection' }
+                  { label: 'Dining Menu Module', desc: 'Opt-outs and weekly coliving dining logs', key: 'enableFoodSection' },
+                  { label: 'AI Operations Assistant', desc: 'Real-time NLP intelligent queries & live database analytics', key: 'enableAiAssistantSection' }
                 ].map(item => {
                   const isChecked = (whitelabel as any)[item.key] !== false;
                   return (
