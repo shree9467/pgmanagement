@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Tenant, Room, Expense, Invoice, Notice, WhitelabelConfig } from '../types';
+import { Tenant, Room, Expense, Invoice, Notice, WhitelabelConfig, Account } from '../types';
 import {
   Users,
   Building,
+  Building2,
+  Layers,
   CreditCard,
   TrendingDown,
   Bell,
@@ -21,13 +23,25 @@ import {
 } from 'lucide-react';
 
 export const OwnerHub: React.FC = () => {
+  const sessionUser = JSON.parse(sessionStorage.getItem('srinoos_session_user') || '{}');
+  const storedOwner = sessionStorage.getItem('active_owner_id') || localStorage.getItem('active_owner_id');
+  const initialOwnerId = (sessionUser.role === 'OWNER' && sessionUser.id) ? sessionUser.id : (storedOwner || 'owner-1786516458271');
+
+  const [activeOwnerId, setActiveOwnerId] = useState<string>(initialOwnerId);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [activeTab, setActiveTab] = useState<'tenants' | 'rooms' | 'invoices' | 'expenses' | 'notices' | 'reports'>('tenants');
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
-  const [whitelabel, setWhitelabel] = useState<WhitelabelConfig | null>(null);
+  const [whitelabel, setWhitelabel] = useState<WhitelabelConfig | null>(() => {
+    const cached = localStorage.getItem(`whitelabel_config_${initialOwnerId}`) || localStorage.getItem('active_whitelabel_config');
+    if (cached) {
+      try { return JSON.parse(cached); } catch {}
+    }
+    return null;
+  });
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -77,39 +91,15 @@ export const OwnerHub: React.FC = () => {
       const { data: iData } = await supabase.from('invoices').select('*');
       if (iData) setInvoices(iData);
 
+      // Fetch Accounts
+      const { data: aData } = await supabase.from('accounts').select('*');
+      if (aData) setAccounts(aData);
+
       // Fetch Notices & Whitelabel Configuration
       const { data: nData } = await supabase.from('notices').select('*');
       if (nData) {
         setNotices(nData);
-        try {
-          const sessionUser = JSON.parse(sessionStorage.getItem('srinoos_session_user') || '{}');
-          const storedOwner = sessionStorage.getItem('active_owner_id') || localStorage.getItem('active_owner_id');
-          const activeOwnerId = (sessionUser.role === 'OWNER' ? sessionUser.id : storedOwner) || sessionUser.id || 'acc-1782895136356';
-          
-          let resolvedConfig: WhitelabelConfig | null = null;
-          const ownerNotice = nData.find(n => n.id === `whitelabel-customizations-data-${activeOwnerId}`);
-          if (ownerNotice && ownerNotice.content) {
-            const p = JSON.parse(ownerNotice.content);
-            resolvedConfig = Array.isArray(p) ? p[0] : p;
-          }
-          
-          let sysDefault: WhitelabelConfig | null = null;
-          const globalNotice = nData.find(n => n.id === 'whitelabel-customizations-data');
-          if (globalNotice && globalNotice.content) {
-            const p = JSON.parse(globalNotice.content);
-            if (Array.isArray(p)) {
-              sysDefault = p.find((x: any) => x.ownerId === 'system_default') || null;
-              if (!resolvedConfig) {
-                resolvedConfig = p.find((x: any) => x.ownerId === activeOwnerId) || null;
-              }
-            }
-          }
-          
-          const finalConfig = resolvedConfig ? { ...(sysDefault || {}), ...resolvedConfig } : sysDefault;
-          if (finalConfig) setWhitelabel(finalConfig);
-        } catch (e) {
-          console.error('Error loading whitelabel customization:', e);
-        }
+        resolveWhitelabelForOwner(activeOwnerId, nData);
       }
     } catch (err) {
       console.error('Error fetching data from Supabase:', err);
@@ -117,6 +107,75 @@ export const OwnerHub: React.FC = () => {
       setLoading(false);
     }
   };
+
+
+  const resolveWhitelabelForOwner = (ownerId: string, noticesList: Notice[]) => {
+    let resolved: WhitelabelConfig | null = null;
+    const cached = localStorage.getItem(`whitelabel_config_${ownerId}`);
+    if (cached) {
+      try { resolved = JSON.parse(cached); } catch {}
+    }
+
+    const ownerNotice = noticesList.find(n => n.id === `whitelabel-customizations-data-${ownerId}`);
+    if (ownerNotice && ownerNotice.content) {
+      try {
+        const p = JSON.parse(ownerNotice.content);
+        const conf = Array.isArray(p) ? p[0] : p;
+        if (conf) resolved = conf;
+      } catch {}
+    }
+
+    let sysDefault: WhitelabelConfig | null = null;
+    const globalNotice = noticesList.find(n => n.id === 'whitelabel-customizations-data');
+    if (globalNotice && globalNotice.content) {
+      try {
+        const p = JSON.parse(globalNotice.content);
+        if (Array.isArray(p)) {
+          sysDefault = p.find((x: any) => x.ownerId === 'system_default') || null;
+          if (!resolved) {
+            resolved = p.find((x: any) => x.ownerId === ownerId) || null;
+          }
+        }
+      } catch {}
+    }
+
+    const finalConfig = resolved ? { ...(sysDefault || {}), ...resolved } : sysDefault;
+    if (finalConfig) {
+      setWhitelabel(finalConfig);
+      localStorage.setItem(`whitelabel_config_${ownerId}`, JSON.stringify(finalConfig));
+    }
+    return finalConfig;
+  };
+
+  const handleSwitchOwner = (newOwnerId: string) => {
+    setActiveOwnerId(newOwnerId);
+    sessionStorage.setItem('active_owner_id', newOwnerId);
+    localStorage.setItem('active_owner_id', newOwnerId);
+    resolveWhitelabelForOwner(newOwnerId, notices);
+    const targetAcc = accounts.find(a => a.id === newOwnerId);
+    showToast(`Switched active PG Owner workspace to: ${targetAcc?.name || newOwnerId}`);
+  };
+
+  useEffect(() => {
+    const onWhitelabelUpdated = (e: any) => {
+      const detail = e.detail;
+      if (detail && (detail.ownerId === activeOwnerId || detail.ownerId === 'system_default')) {
+        setWhitelabel(detail);
+      }
+    };
+    window.addEventListener('whitelabel-updated', onWhitelabelUpdated);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'active_owner_id' && e.newValue && e.newValue !== activeOwnerId) {
+        setActiveOwnerId(e.newValue);
+        resolveWhitelabelForOwner(e.newValue, notices);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('whitelabel-updated', onWhitelabelUpdated);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [activeOwnerId, notices]);
 
   const handleAddGuest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -219,26 +278,25 @@ export const OwnerHub: React.FC = () => {
       t.phone?.includes(searchQuery)
   );
 
+  const currentOwnerAccount = accounts.find(a => a.id === activeOwnerId) || accounts.find(a => a.role === 'OWNER');
+
+  const availableTabs = [
+    ...(whitelabel?.enableTenantsSection !== false ? [{ id: 'tenants', label: 'Residents Roster', icon: Users }] : []),
+    ...(whitelabel?.enableRoomsSection !== false ? [{ id: 'rooms', label: 'Rooms & Beds', icon: Building }] : []),
+    ...(whitelabel?.enablePaymentsSection !== false ? [{ id: 'invoices', label: 'Rent Invoices', icon: CreditCard }] : []),
+    ...(whitelabel?.enableExpensesSection !== false ? [{ id: 'expenses', label: 'Expenses Outlay', icon: TrendingDown }] : []),
+    { id: 'notices', label: 'Notices Board', icon: Bell },
+    ...(whitelabel?.enableReportsSection !== false ? [{ id: 'reports', label: 'CSV Statements', icon: FileSpreadsheet }] : []),
+  ];
+
   // Auto-redirect if active tab is disabled by Whitelabel toggles
   useEffect(() => {
     if (!whitelabel) return;
-    if (activeTab === 'tenants' && whitelabel.enableTenantsSection === false) {
-      if (whitelabel.enableRoomsSection !== false) setActiveTab('rooms');
-      else if (whitelabel.enablePaymentsSection !== false) setActiveTab('invoices');
-      else if (whitelabel.enableExpensesSection !== false) setActiveTab('expenses');
-      else setActiveTab('notices');
-    } else if (activeTab === 'rooms' && whitelabel.enableRoomsSection === false) {
-      if (whitelabel.enableTenantsSection !== false) setActiveTab('tenants');
-      else if (whitelabel.enablePaymentsSection !== false) setActiveTab('invoices');
-      else setActiveTab('notices');
-    } else if (activeTab === 'invoices' && whitelabel.enablePaymentsSection === false) {
-      setActiveTab('notices');
-    } else if (activeTab === 'expenses' && whitelabel.enableExpensesSection === false) {
-      setActiveTab('notices');
-    } else if (activeTab === 'reports' && whitelabel.enableReportsSection === false) {
-      setActiveTab('notices');
+    const isCurrentTabValid = availableTabs.some(t => t.id === activeTab);
+    if (!isCurrentTabValid && availableTabs.length > 0) {
+      setActiveTab(availableTabs[0].id as any);
     }
-  }, [whitelabel, activeTab]);
+  }, [whitelabel, activeTab, availableTabs]);
 
   return (
     <div className="space-y-6 pb-12">
@@ -252,13 +310,52 @@ export const OwnerHub: React.FC = () => {
         </div>
       )}
 
+      {/* Workspace Indicator & PG Owner Switcher */}
+      <div className="bg-slate-800/80 border border-purple-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-inner">
+            <Building2 className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-black text-white tracking-tight">
+                {currentOwnerAccount?.name ? currentOwnerAccount.name + ' Coliving Workspace' : 'PG Proprietor Workspace'}
+              </h2>
+              <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-md">
+                {whitelabel?.appName || 'Proprietor Node'}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+              Active Modules: <span className="text-purple-400 font-bold">{availableTabs.length}</span> enabled • Custom Branding & Toggles Synchronized
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+            PG Proprietor View:
+          </label>
+          <select
+            value={activeOwnerId}
+            onChange={e => handleSwitchOwner(e.target.value)}
+            className="px-3.5 py-2 bg-slate-900 border border-slate-700 hover:border-purple-500/50 rounded-xl text-xs font-bold text-white outline-none focus:border-purple-500 cursor-pointer shadow-sm transition"
+          >
+            {accounts.filter(a => a.role === 'OWNER').map(owner => (
+              <option key={owner.id} value={owner.id}>
+                🏢 {owner.name} ({owner.email})
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {/* Top Banner / Metrics Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {whitelabel?.enableTenantsSection !== false && (
           <div className="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl shadow-lg flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Residents</p>
-              <span className="text-3xl font-black text-white">{tenants.length || 0}</span>
+              <span className="text-3xl font-black text-white">{filteredTenants.length || 0}</span>
               <span className="text-xs text-emerald-400 block font-semibold mt-1">Active verified</span>
             </div>
             <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
@@ -308,18 +405,7 @@ export const OwnerHub: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      {(() => {
-        const availableTabs = [
-          ...(whitelabel?.enableTenantsSection !== false ? [{ id: 'tenants', label: 'Residents Roster', icon: Users }] : []),
-          ...(whitelabel?.enableRoomsSection !== false ? [{ id: 'rooms', label: 'Rooms & Beds', icon: Building }] : []),
-          ...(whitelabel?.enablePaymentsSection !== false ? [{ id: 'invoices', label: 'Rent Invoices', icon: CreditCard }] : []),
-          ...(whitelabel?.enableExpensesSection !== false ? [{ id: 'expenses', label: 'Expenses Outlay', icon: TrendingDown }] : []),
-          { id: 'notices', label: 'Notices Board', icon: Bell },
-          ...(whitelabel?.enableReportsSection !== false ? [{ id: 'reports', label: 'CSV Statements', icon: FileSpreadsheet }] : []),
-        ];
-
-        return (
-          <div className="flex flex-wrap items-center justify-between border-b border-slate-700/80 pb-3 gap-4">
+      <div className="flex flex-wrap items-center justify-between border-b border-slate-700/80 pb-3 gap-4">
             <div className="flex flex-wrap gap-2">
               {availableTabs.map((tab) => {
                 const Icon = tab.icon;
@@ -349,8 +435,6 @@ export const OwnerHub: React.FC = () => {
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-purple-400' : ''}`} />
             </button>
           </div>
-        );
-      })()}
 
       {/* Tab Content: Tenants */}
       {activeTab === 'tenants' && (

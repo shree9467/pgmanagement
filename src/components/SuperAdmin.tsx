@@ -4,7 +4,7 @@ import {
   Users, Building2, CreditCard, DollarSign, Settings, Palette,
   TrendingUp, Activity, Bell, Plus, Edit, Trash2, Check, X,
   FileText, Search, Filter, Download, ArrowUpRight, Lock, Eye,
-  RefreshCw, Landmark, BedDouble, AlertCircle, Sparkles
+  RefreshCw, Landmark, BedDouble, AlertCircle, Sparkles, Layers
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { 
@@ -165,30 +165,35 @@ export const SuperAdmin: React.FC = () => {
           }
         }
 
-        const allConfigs: WhitelabelConfig[] = [];
-        noticeData.forEach(n => {
-          if (n.id.startsWith('whitelabel-customizations-data-') && n.content) {
-            try {
-              const p = JSON.parse(n.content);
-              if (Array.isArray(p)) allConfigs.push(...p);
-              else if (p && typeof p === 'object') allConfigs.push(p);
-            } catch (e) {}
-          }
-        });
+        const configMap = new Map<string, WhitelabelConfig>();
         const wlSetting = noticeData.find(n => n.id === 'whitelabel-customizations-data');
         if (wlSetting && wlSetting.content) {
           try {
             const parsed = JSON.parse(wlSetting.content);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              allConfigs.push(...parsed);
-              const sys = parsed.find((p: any) => p.ownerId === 'system_default') || parsed[0];
-              if (sys) setWhitelabel(sys);
+            if (Array.isArray(parsed)) {
+              parsed.forEach((c: any) => {
+                if (c && c.ownerId) configMap.set(c.ownerId, c);
+              });
             }
           } catch (e) {
-            console.error('Error parsing whitelabel settings', e);
+            console.error('Error parsing global whitelabel settings', e);
           }
         }
+        noticeData.forEach(n => {
+          if (n.id.startsWith('whitelabel-customizations-data-') && n.content) {
+            try {
+              const p = JSON.parse(n.content);
+              const conf = Array.isArray(p) ? p[0] : p;
+              if (conf && conf.ownerId) {
+                configMap.set(conf.ownerId, conf);
+              }
+            } catch (e) {}
+          }
+        });
+        const allConfigs = Array.from(configMap.values());
         setAllWhitelabelConfigs(allConfigs);
+        const sys = configMap.get('system_default') || allConfigs[0];
+        if (sys) setWhitelabel(sys);
       }
 
       // Seed Initial Buildings if empty
@@ -457,7 +462,14 @@ export const SuperAdmin: React.FC = () => {
       };
       setWhitelabel(sys);
     } else {
-      const existing = allWhitelabelConfigs.find(c => c.ownerId === ownerId);
+      let existing: WhitelabelConfig | undefined;
+      const cached = localStorage.getItem(`whitelabel_config_${ownerId}`);
+      if (cached) {
+        try { existing = JSON.parse(cached); } catch {}
+      }
+      if (!existing) {
+        existing = allWhitelabelConfigs.find(c => c.ownerId === ownerId);
+      }
       const ownerAcc = accounts.find(a => a.id === ownerId);
       if (existing) {
         setWhitelabel({
@@ -501,7 +513,13 @@ export const SuperAdmin: React.FC = () => {
     try {
       const configToSave: WhitelabelConfig = {
         ...whitelabel,
-        ownerId: selectedOwnerId
+        ownerId: selectedOwnerId,
+        enableTenantsSection: whitelabel.enableTenantsSection !== false,
+        enableRoomsSection: whitelabel.enableRoomsSection !== false,
+        enablePaymentsSection: whitelabel.enablePaymentsSection !== false,
+        enableExpensesSection: whitelabel.enableExpensesSection !== false,
+        enableReportsSection: whitelabel.enableReportsSection !== false,
+        enableFoodSection: whitelabel.enableFoodSection !== false
       };
 
       const updatedList = [...allWhitelabelConfigs];
@@ -541,6 +559,15 @@ export const SuperAdmin: React.FC = () => {
         sessionStorage.setItem('active_owner_id', selectedOwnerId);
         localStorage.setItem('active_owner_id', selectedOwnerId);
       }
+
+      // Save to localStorage for instant synchronous zero-latency hydration
+      localStorage.setItem(`whitelabel_config_${selectedOwnerId}`, JSON.stringify(configToSave));
+      localStorage.setItem('active_whitelabel_config', JSON.stringify(configToSave));
+      if (selectedOwnerId !== 'system_default') {
+        sessionStorage.setItem('active_owner_id', selectedOwnerId);
+        localStorage.setItem('active_owner_id', selectedOwnerId);
+      }
+      window.dispatchEvent(new CustomEvent('whitelabel-updated', { detail: configToSave }));
 
       // Update local memory list
       setAllWhitelabelConfigs(prev => {
@@ -1654,34 +1681,54 @@ export const SuperAdmin: React.FC = () => {
 
             {/* Feature Toggles */}
             <div className="pt-4 border-t border-slate-700 space-y-3">
-              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Module Toggles</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-purple-400" /> Sidebar Navigation Menu and Module Permissions
+                </h4>
+                <span className="text-[10px] text-purple-400 font-semibold bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                  Per-Proprietor Access
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Uncheck specific modules to disable and hide them from the selected PG Owner navigation sidebar and workspace.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {[
-                  { label: 'Tenants Section', key: 'enableTenantsSection' },
-                  { label: 'Rooms Section', key: 'enableRoomsSection' },
-                  { label: 'Payments Section', key: 'enablePaymentsSection' },
-                  { label: 'Expenses Section', key: 'enableExpensesSection' },
-                  { label: 'Reports & Exports', key: 'enableReportsSection' },
-                  { label: 'Dining Menu', key: 'enableFoodSection' }
-                ].map(item => (
-                  <label key={item.key} className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer p-2 bg-slate-900/60 rounded-xl border border-slate-700/50">
-                    <input 
-                      type="checkbox"
-                      checked={(whitelabel as any)[item.key]}
-                      onChange={e => setWhitelabel({ ...whitelabel, [item.key]: e.target.checked })}
-                      className="rounded accent-purple-600"
-                    />
-                    {item.label}
-                  </label>
-                ))}
+                  { label: 'Tenants Roster Wing', desc: 'Allows access to tenants listing & details', key: 'enableTenantsSection' },
+                  { label: 'Rooms & Beds Roster Wing', desc: 'Central Floor/Room hierarchical grids Map', key: 'enableRoomsSection' },
+                  { label: 'Rent Billing Ledger', desc: 'Invoices, ledger trackers & balance controls', key: 'enablePaymentsSection' },
+                  { label: 'Expense Logging & Petty Cash', desc: 'Allows tracking expenses and manual cash outlays', key: 'enableExpensesSection' },
+                  { label: 'Financial Reports & Printing', desc: 'Allows printing statements and exporting Excel CSV data', key: 'enableReportsSection' },
+                  { label: 'Dining Menu Module', desc: 'Opt-outs and weekly coliving dining logs', key: 'enableFoodSection' }
+                ].map(item => {
+                  const isChecked = (whitelabel as any)[item.key] !== false;
+                  return (
+                    <label 
+                      key={item.key} 
+                      className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer ${isChecked ? "bg-purple-950/20 border-purple-500/40 text-white" : "bg-slate-900/60 border-slate-700/50 text-slate-400 opacity-60"}`}
+                    >
+                      <input 
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={e => setWhitelabel(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                        className="rounded accent-purple-600 mt-0.5 w-4 h-4 cursor-pointer"
+                      />
+                      <div>
+                        <div className="text-xs font-bold leading-tight">{item.label}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{item.desc}</div>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
             <button 
               type="submit" 
-              className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer mt-4"
+              className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-purple-600/30 cursor-pointer mt-4 flex items-center justify-center gap-2"
             >
-              Compile & Apply All Whitelabel Settings
+              <CheckCircle2 className="w-4 h-4" />
+              Compile and Apply Whitelabel Settings
             </button>
           </form>
         </div>
