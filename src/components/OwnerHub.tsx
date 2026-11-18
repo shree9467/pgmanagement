@@ -83,22 +83,30 @@ export const OwnerHub: React.FC = () => {
         setNotices(nData);
         try {
           const sessionUser = JSON.parse(sessionStorage.getItem('srinoos_session_user') || '{}');
-          const activeOwnerId = sessionUser.id || 'acc-1782895136356';
+          const storedOwner = sessionStorage.getItem('active_owner_id') || localStorage.getItem('active_owner_id');
+          const activeOwnerId = (sessionUser.role === 'OWNER' ? sessionUser.id : storedOwner) || sessionUser.id || 'acc-1782895136356';
+          
+          let resolvedConfig: WhitelabelConfig | null = null;
           const ownerNotice = nData.find(n => n.id === `whitelabel-customizations-data-${activeOwnerId}`);
           if (ownerNotice && ownerNotice.content) {
             const p = JSON.parse(ownerNotice.content);
-            const conf = Array.isArray(p) ? p[0] : p;
-            if (conf) setWhitelabel(conf);
-          } else {
-            const globalNotice = nData.find(n => n.id === 'whitelabel-customizations-data');
-            if (globalNotice && globalNotice.content) {
-              const p = JSON.parse(globalNotice.content);
-              if (Array.isArray(p)) {
-                const conf = p.find((x: any) => x.ownerId === activeOwnerId) || p.find((x: any) => x.ownerId === 'system_default');
-                if (conf) setWhitelabel(conf);
+            resolvedConfig = Array.isArray(p) ? p[0] : p;
+          }
+          
+          let sysDefault: WhitelabelConfig | null = null;
+          const globalNotice = nData.find(n => n.id === 'whitelabel-customizations-data');
+          if (globalNotice && globalNotice.content) {
+            const p = JSON.parse(globalNotice.content);
+            if (Array.isArray(p)) {
+              sysDefault = p.find((x: any) => x.ownerId === 'system_default') || null;
+              if (!resolvedConfig) {
+                resolvedConfig = p.find((x: any) => x.ownerId === activeOwnerId) || null;
               }
             }
           }
+          
+          const finalConfig = resolvedConfig ? { ...(sysDefault || {}), ...resolvedConfig } : sysDefault;
+          if (finalConfig) setWhitelabel(finalConfig);
         } catch (e) {
           console.error('Error loading whitelabel customization:', e);
         }
@@ -211,6 +219,27 @@ export const OwnerHub: React.FC = () => {
       t.phone?.includes(searchQuery)
   );
 
+  // Auto-redirect if active tab is disabled by Whitelabel toggles
+  useEffect(() => {
+    if (!whitelabel) return;
+    if (activeTab === 'tenants' && whitelabel.enableTenantsSection === false) {
+      if (whitelabel.enableRoomsSection !== false) setActiveTab('rooms');
+      else if (whitelabel.enablePaymentsSection !== false) setActiveTab('invoices');
+      else if (whitelabel.enableExpensesSection !== false) setActiveTab('expenses');
+      else setActiveTab('notices');
+    } else if (activeTab === 'rooms' && whitelabel.enableRoomsSection === false) {
+      if (whitelabel.enableTenantsSection !== false) setActiveTab('tenants');
+      else if (whitelabel.enablePaymentsSection !== false) setActiveTab('invoices');
+      else setActiveTab('notices');
+    } else if (activeTab === 'invoices' && whitelabel.enablePaymentsSection === false) {
+      setActiveTab('notices');
+    } else if (activeTab === 'expenses' && whitelabel.enableExpensesSection === false) {
+      setActiveTab('notices');
+    } else if (activeTab === 'reports' && whitelabel.enableReportsSection === false) {
+      setActiveTab('notices');
+    }
+  }, [whitelabel, activeTab]);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Toast Notification */}
@@ -225,49 +254,57 @@ export const OwnerHub: React.FC = () => {
 
       {/* Top Banner / Metrics Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl shadow-lg flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Residents</p>
-            <span className="text-3xl font-black text-white">{tenants.length || 0}</span>
-            <span className="text-xs text-emerald-400 block font-semibold mt-1">Active verified</span>
+        {whitelabel?.enableTenantsSection !== false && (
+          <div className="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl shadow-lg flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Residents</p>
+              <span className="text-3xl font-black text-white">{tenants.length || 0}</span>
+              <span className="text-xs text-emerald-400 block font-semibold mt-1">Active verified</span>
+            </div>
+            <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
+              <Users className="w-6 h-6" />
+            </div>
           </div>
-          <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400">
-            <Users className="w-6 h-6" />
-          </div>
-        </div>
+        )}
 
-        <div className="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl shadow-lg flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Available Rooms</p>
-            <span className="text-3xl font-black text-white">{rooms.length || 0}</span>
-            <span className="text-xs text-purple-400 block font-semibold mt-1">Multi-sharing active</span>
+        {whitelabel?.enableRoomsSection !== false && (
+          <div className="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl shadow-lg flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Available Rooms</p>
+              <span className="text-3xl font-black text-white">{rooms.length || 0}</span>
+              <span className="text-xs text-purple-400 block font-semibold mt-1">Multi-sharing active</span>
+            </div>
+            <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400">
+              <Building className="w-6 h-6" />
+            </div>
           </div>
-          <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400">
-            <Building className="w-6 h-6" />
-          </div>
-        </div>
+        )}
 
-        <div className="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl shadow-lg flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Invoices</p>
-            <span className="text-3xl font-black text-white">₹{invoices.reduce((a, b) => a + (Number(b.amount) || 0), 0).toLocaleString('en-IN')}</span>
-            <span className="text-xs text-emerald-400 block font-semibold mt-1">Reconciled via UPI</span>
+        {whitelabel?.enablePaymentsSection !== false && whitelabel?.showRevenueWidget !== false && (
+          <div className="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl shadow-lg flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Invoices</p>
+              <span className="text-3xl font-black text-white">₹{invoices.reduce((a, b) => a + (Number(b.amount) || 0), 0).toLocaleString('en-IN')}</span>
+              <span className="text-xs text-emerald-400 block font-semibold mt-1">Reconciled via UPI</span>
+            </div>
+            <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
+              <CreditCard className="w-6 h-6" />
+            </div>
           </div>
-          <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
-            <CreditCard className="w-6 h-6" />
-          </div>
-        </div>
+        )}
 
-        <div className="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl shadow-lg flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Expenses Outlay</p>
-            <span className="text-3xl font-black text-white">₹{expenses.reduce((a, b) => a + (Number(b.amount) || 0), 0).toLocaleString('en-IN')}</span>
-            <span className="text-xs text-amber-400 block font-semibold mt-1">Audited daily log</span>
+        {whitelabel?.enableExpensesSection !== false && (
+          <div className="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl shadow-lg flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Expenses Outlay</p>
+              <span className="text-3xl font-black text-white">₹{expenses.reduce((a, b) => a + (Number(b.amount) || 0), 0).toLocaleString('en-IN')}</span>
+              <span className="text-xs text-amber-400 block font-semibold mt-1">Audited daily log</span>
+            </div>
+            <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400">
+              <TrendingDown className="w-6 h-6" />
+            </div>
           </div>
-          <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400">
-            <TrendingDown className="w-6 h-6" />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Navigation Tabs */}

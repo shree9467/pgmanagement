@@ -504,11 +504,16 @@ export const SuperAdmin: React.FC = () => {
         ownerId: selectedOwnerId
       };
 
+      const updatedList = [...allWhitelabelConfigs];
+      const idx = updatedList.findIndex(c => c.ownerId === selectedOwnerId);
+      if (idx > -1) updatedList[idx] = configToSave;
+      else updatedList.push(configToSave);
+
       if (selectedOwnerId === 'system_default') {
         const noticePayload = {
           id: 'whitelabel-customizations-data',
           title: 'Platform Whitelabel Customizations',
-          content: JSON.stringify([configToSave]),
+          content: JSON.stringify(updatedList),
           date: new Date().toLocaleDateString('en-IN'),
           owner_id: 'acc1'
         };
@@ -525,12 +530,6 @@ export const SuperAdmin: React.FC = () => {
         };
         await supabase.from('notices').upsert([ownerNotice], { onConflict: 'id' });
 
-        // Also sync into global notice array
-        const updatedList = [...allWhitelabelConfigs];
-        const idx = updatedList.findIndex(c => c.ownerId === selectedOwnerId);
-        if (idx > -1) updatedList[idx] = configToSave;
-        else updatedList.push(configToSave);
-
         await supabase.from('notices').upsert([{
           id: 'whitelabel-customizations-data',
           title: 'Platform Whitelabel Customizations',
@@ -538,6 +537,9 @@ export const SuperAdmin: React.FC = () => {
           date: new Date().toLocaleDateString('en-IN'),
           owner_id: 'acc1'
         }], { onConflict: 'id' });
+
+        sessionStorage.setItem('active_owner_id', selectedOwnerId);
+        localStorage.setItem('active_owner_id', selectedOwnerId);
       }
 
       // Update local memory list
