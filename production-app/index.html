@@ -369,7 +369,234 @@ to {
           <script>
             window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };
           <\/script>
-        </body>
+        
+<!-- Custom Light / Dark Mode Toggle Component & Controller -->
+<style id="srinoos-custom-theme-styles">
+  .srinoos-theme-switch-container {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 9999px;
+    padding: 3px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(99, 102, 241, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: "Outfit", "Inter", -apple-system, sans-serif;
+    user-select: none;
+  }
+  .theme-glass-light .srinoos-theme-switch-container,
+  :root:not(.dark) .srinoos-theme-switch-container {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(203, 213, 225, 0.9);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 15px rgba(16, 185, 129, 0.2);
+  }
+  .srinoos-theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    border-radius: 9999px;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #94a3b8;
+    background: transparent;
+    outline: none;
+  }
+  .srinoos-theme-btn svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.3s ease;
+  }
+  .srinoos-theme-btn:hover {
+    color: #f1f5f9;
+  }
+  .theme-glass-light .srinoos-theme-btn:hover,
+  :root:not(.dark) .srinoos-theme-btn:hover {
+    color: #0f172a;
+  }
+  .srinoos-theme-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  }
+  .theme-glass-light .srinoos-theme-btn.active,
+  :root:not(.dark) .srinoos-theme-btn.active {
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+  }
+  .srinoos-theme-btn.active svg {
+    transform: scale(1.15) rotate(10deg);
+  }
+
+  /* Full Light Mode Overrides for Complete Readability */
+  html.theme-glass-light,
+  html:not(.dark) {
+    color-scheme: light !important;
+  }
+  html.theme-glass-light body,
+  html:not(.dark) body {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .bg-slate-900,
+  html:not(.dark) .bg-slate-900 {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+  }
+  html.theme-glass-light .bg-slate-950,
+  html:not(.dark) .bg-slate-950 {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .bg-slate-800,
+  html:not(.dark) .bg-slate-800 {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .border-slate-800,
+  html.theme-glass-light .border-slate-700,
+  html:not(.dark) .border-slate-800,
+  html:not(.dark) .border-slate-700 {
+    border-color: #cbd5e1 !important;
+  }
+  html.theme-glass-light .text-slate-100,
+  html.theme-glass-light .text-slate-200,
+  html.theme-glass-light .text-slate-300,
+  html.theme-glass-light .text-white:not(.app-theme-button-primary):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not(.srinoos-theme-btn),
+  html:not(.dark) .text-slate-100,
+  html:not(.dark) .text-slate-200,
+  html:not(.dark) .text-slate-300,
+  html:not(.dark) .text-white:not(.app-theme-button-primary):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not(.srinoos-theme-btn) {
+    color: #0f172a !important;
+  }
+
+  /* Full Dark Mode Overrides */
+  html.dark body,
+  html.theme-neo-dark body {
+    background-color: #080b18 !important;
+    color: #f8fafc !important;
+  }
+</style>
+
+<div class="srinoos-theme-switch-container" id="srinoos-theme-switcher" title="Toggle Light / Dark Mode">
+  <button type="button" class="srinoos-theme-btn" id="btn-theme-light" onclick="window.srinoosSetTheme('light')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+    <span>Light</span>
+  </button>
+  <button type="button" class="srinoos-theme-btn active" id="btn-theme-dark" onclick="window.srinoosSetTheme('dark')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    <span>Dark</span>
+  </button>
+</div>
+
+<script>
+  (function() {
+    function getSavedTheme() {
+      try {
+        const stored = localStorage.getItem("srinoos_user_theme");
+        if (stored === "light" || stored === "dark") return stored;
+        return "dark";
+      } catch (e) {
+        return "dark";
+      }
+    }
+
+    window.srinoosSetTheme = function(mode) {
+      const isDark = mode === "dark";
+      const root = document.documentElement;
+      
+      try {
+        localStorage.setItem("srinoos_user_theme", mode);
+      } catch (e) {}
+
+      if (isDark) {
+        root.classList.add("dark");
+        root.classList.remove("theme-glass-light");
+        root.classList.add("theme-neo-dark");
+        root.style.colorScheme = "dark";
+        if (document.body) {
+          document.body.style.backgroundColor = "#080b18";
+          document.body.style.color = "#f8fafc";
+        }
+      } else {
+        root.classList.remove("dark");
+        root.classList.remove("theme-neo-dark", "theme-cyber-sunset", "theme-royal-navy");
+        root.classList.add("theme-glass-light");
+        root.style.colorScheme = "light";
+        if (document.body) {
+          document.body.style.backgroundColor = "#f8fafc";
+          document.body.style.color = "#0f172a";
+        }
+      }
+
+      // Sync with Zustand store if initialized
+      try {
+        if (window.store && typeof window.store.setState === "function") {
+          const currentSettings = (window.store.getState() && window.store.getState().customSettings) || {};
+          window.store.setState({
+            customSettings: {
+              ...currentSettings,
+              selectedTheme: isDark ? "neo-dark" : "glass-light"
+            }
+          });
+        }
+      } catch (e) {}
+
+      // Update button visual states
+      const btnLight = document.getElementById("btn-theme-light");
+      const btnDark = document.getElementById("btn-theme-dark");
+      if (btnLight && btnDark) {
+        if (isDark) {
+          btnDark.classList.add("active");
+          btnLight.classList.remove("active");
+        } else {
+          btnLight.classList.add("active");
+          btnDark.classList.remove("active");
+        }
+      }
+    };
+
+    // Apply saved theme immediately on script run
+    const initialTheme = getSavedTheme();
+    window.srinoosSetTheme(initialTheme);
+
+    // Keep active theme applied on lifecycle events
+    document.addEventListener("DOMContentLoaded", function() {
+      window.srinoosSetTheme(getSavedTheme());
+    });
+    window.addEventListener("load", function() {
+      window.srinoosSetTheme(getSavedTheme());
+    });
+
+    // Guard against React component re-renders overriding user choice
+    let isEnforcing = false;
+    const observer = new MutationObserver(function() {
+      if (isEnforcing) return;
+      const targetTheme = getSavedTheme();
+      const hasDark = document.documentElement.classList.contains("dark");
+      if ((targetTheme === "dark" && !hasDark) || (targetTheme === "light" && hasDark)) {
+        isEnforcing = true;
+        window.srinoosSetTheme(targetTheme);
+        setTimeout(function() { isEnforcing = false; }, 60);
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  })();
+</script>
+
+</body>
       </html>
     `),ye.document.close(),z.success(`Daily statement for ${F} dispatched to print node!`)},Hd=()=>{const F=window.open("","_blank","width=850,height=750");F&&(F.document.write(`
         <html>
@@ -458,7 +685,234 @@ to {
             <script>
               window.onload = function() { window.print(); window.onafterprint = function() { window.close(); }; };
             <\/script>
-          </body>
+          
+<!-- Custom Light / Dark Mode Toggle Component & Controller -->
+<style id="srinoos-custom-theme-styles">
+  .srinoos-theme-switch-container {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 9999px;
+    padding: 3px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(99, 102, 241, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: "Outfit", "Inter", -apple-system, sans-serif;
+    user-select: none;
+  }
+  .theme-glass-light .srinoos-theme-switch-container,
+  :root:not(.dark) .srinoos-theme-switch-container {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(203, 213, 225, 0.9);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 15px rgba(16, 185, 129, 0.2);
+  }
+  .srinoos-theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    border-radius: 9999px;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #94a3b8;
+    background: transparent;
+    outline: none;
+  }
+  .srinoos-theme-btn svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.3s ease;
+  }
+  .srinoos-theme-btn:hover {
+    color: #f1f5f9;
+  }
+  .theme-glass-light .srinoos-theme-btn:hover,
+  :root:not(.dark) .srinoos-theme-btn:hover {
+    color: #0f172a;
+  }
+  .srinoos-theme-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  }
+  .theme-glass-light .srinoos-theme-btn.active,
+  :root:not(.dark) .srinoos-theme-btn.active {
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+  }
+  .srinoos-theme-btn.active svg {
+    transform: scale(1.15) rotate(10deg);
+  }
+
+  /* Full Light Mode Overrides for Complete Readability */
+  html.theme-glass-light,
+  html:not(.dark) {
+    color-scheme: light !important;
+  }
+  html.theme-glass-light body,
+  html:not(.dark) body {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .bg-slate-900,
+  html:not(.dark) .bg-slate-900 {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+  }
+  html.theme-glass-light .bg-slate-950,
+  html:not(.dark) .bg-slate-950 {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .bg-slate-800,
+  html:not(.dark) .bg-slate-800 {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .border-slate-800,
+  html.theme-glass-light .border-slate-700,
+  html:not(.dark) .border-slate-800,
+  html:not(.dark) .border-slate-700 {
+    border-color: #cbd5e1 !important;
+  }
+  html.theme-glass-light .text-slate-100,
+  html.theme-glass-light .text-slate-200,
+  html.theme-glass-light .text-slate-300,
+  html.theme-glass-light .text-white:not(.app-theme-button-primary):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not(.srinoos-theme-btn),
+  html:not(.dark) .text-slate-100,
+  html:not(.dark) .text-slate-200,
+  html:not(.dark) .text-slate-300,
+  html:not(.dark) .text-white:not(.app-theme-button-primary):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not(.srinoos-theme-btn) {
+    color: #0f172a !important;
+  }
+
+  /* Full Dark Mode Overrides */
+  html.dark body,
+  html.theme-neo-dark body {
+    background-color: #080b18 !important;
+    color: #f8fafc !important;
+  }
+</style>
+
+<div class="srinoos-theme-switch-container" id="srinoos-theme-switcher" title="Toggle Light / Dark Mode">
+  <button type="button" class="srinoos-theme-btn" id="btn-theme-light" onclick="window.srinoosSetTheme('light')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+    <span>Light</span>
+  </button>
+  <button type="button" class="srinoos-theme-btn active" id="btn-theme-dark" onclick="window.srinoosSetTheme('dark')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    <span>Dark</span>
+  </button>
+</div>
+
+<script>
+  (function() {
+    function getSavedTheme() {
+      try {
+        const stored = localStorage.getItem("srinoos_user_theme");
+        if (stored === "light" || stored === "dark") return stored;
+        return "dark";
+      } catch (e) {
+        return "dark";
+      }
+    }
+
+    window.srinoosSetTheme = function(mode) {
+      const isDark = mode === "dark";
+      const root = document.documentElement;
+      
+      try {
+        localStorage.setItem("srinoos_user_theme", mode);
+      } catch (e) {}
+
+      if (isDark) {
+        root.classList.add("dark");
+        root.classList.remove("theme-glass-light");
+        root.classList.add("theme-neo-dark");
+        root.style.colorScheme = "dark";
+        if (document.body) {
+          document.body.style.backgroundColor = "#080b18";
+          document.body.style.color = "#f8fafc";
+        }
+      } else {
+        root.classList.remove("dark");
+        root.classList.remove("theme-neo-dark", "theme-cyber-sunset", "theme-royal-navy");
+        root.classList.add("theme-glass-light");
+        root.style.colorScheme = "light";
+        if (document.body) {
+          document.body.style.backgroundColor = "#f8fafc";
+          document.body.style.color = "#0f172a";
+        }
+      }
+
+      // Sync with Zustand store if initialized
+      try {
+        if (window.store && typeof window.store.setState === "function") {
+          const currentSettings = (window.store.getState() && window.store.getState().customSettings) || {};
+          window.store.setState({
+            customSettings: {
+              ...currentSettings,
+              selectedTheme: isDark ? "neo-dark" : "glass-light"
+            }
+          });
+        }
+      } catch (e) {}
+
+      // Update button visual states
+      const btnLight = document.getElementById("btn-theme-light");
+      const btnDark = document.getElementById("btn-theme-dark");
+      if (btnLight && btnDark) {
+        if (isDark) {
+          btnDark.classList.add("active");
+          btnLight.classList.remove("active");
+        } else {
+          btnLight.classList.add("active");
+          btnDark.classList.remove("active");
+        }
+      }
+    };
+
+    // Apply saved theme immediately on script run
+    const initialTheme = getSavedTheme();
+    window.srinoosSetTheme(initialTheme);
+
+    // Keep active theme applied on lifecycle events
+    document.addEventListener("DOMContentLoaded", function() {
+      window.srinoosSetTheme(getSavedTheme());
+    });
+    window.addEventListener("load", function() {
+      window.srinoosSetTheme(getSavedTheme());
+    });
+
+    // Guard against React component re-renders overriding user choice
+    let isEnforcing = false;
+    const observer = new MutationObserver(function() {
+      if (isEnforcing) return;
+      const targetTheme = getSavedTheme();
+      const hasDark = document.documentElement.classList.contains("dark");
+      if ((targetTheme === "dark" && !hasDark) || (targetTheme === "light" && hasDark)) {
+        isEnforcing = true;
+        window.srinoosSetTheme(targetTheme);
+        setTimeout(function() { isEnforcing = false; }, 60);
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  })();
+</script>
+
+</body>
         </html>
       `),F.document.close(),z.success("P&L statement dispatched to system print node!"))},gl=()=>{const F=`Category,Type,Debit (Expense),Credit (Revenue),Date,Verified By
 `;let ye=`Rental Income,Revenue,-,${Ar},June 2026,Master Roster
@@ -480,7 +934,234 @@ to {
                           <p><strong>Receipt Status:</strong> VERIFIED CLEAR (${Ft.method})</p>
                         </div>
                         <script>window.onload = function() { window.print(); window.close(); };<\/script>
-                      </body>
+                      
+<!-- Custom Light / Dark Mode Toggle Component & Controller -->
+<style id="srinoos-custom-theme-styles">
+  .srinoos-theme-switch-container {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 9999px;
+    padding: 3px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(99, 102, 241, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: "Outfit", "Inter", -apple-system, sans-serif;
+    user-select: none;
+  }
+  .theme-glass-light .srinoos-theme-switch-container,
+  :root:not(.dark) .srinoos-theme-switch-container {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(203, 213, 225, 0.9);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 15px rgba(16, 185, 129, 0.2);
+  }
+  .srinoos-theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    border-radius: 9999px;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #94a3b8;
+    background: transparent;
+    outline: none;
+  }
+  .srinoos-theme-btn svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.3s ease;
+  }
+  .srinoos-theme-btn:hover {
+    color: #f1f5f9;
+  }
+  .theme-glass-light .srinoos-theme-btn:hover,
+  :root:not(.dark) .srinoos-theme-btn:hover {
+    color: #0f172a;
+  }
+  .srinoos-theme-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  }
+  .theme-glass-light .srinoos-theme-btn.active,
+  :root:not(.dark) .srinoos-theme-btn.active {
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+  }
+  .srinoos-theme-btn.active svg {
+    transform: scale(1.15) rotate(10deg);
+  }
+
+  /* Full Light Mode Overrides for Complete Readability */
+  html.theme-glass-light,
+  html:not(.dark) {
+    color-scheme: light !important;
+  }
+  html.theme-glass-light body,
+  html:not(.dark) body {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .bg-slate-900,
+  html:not(.dark) .bg-slate-900 {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+  }
+  html.theme-glass-light .bg-slate-950,
+  html:not(.dark) .bg-slate-950 {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .bg-slate-800,
+  html:not(.dark) .bg-slate-800 {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .border-slate-800,
+  html.theme-glass-light .border-slate-700,
+  html:not(.dark) .border-slate-800,
+  html:not(.dark) .border-slate-700 {
+    border-color: #cbd5e1 !important;
+  }
+  html.theme-glass-light .text-slate-100,
+  html.theme-glass-light .text-slate-200,
+  html.theme-glass-light .text-slate-300,
+  html.theme-glass-light .text-white:not(.app-theme-button-primary):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not(.srinoos-theme-btn),
+  html:not(.dark) .text-slate-100,
+  html:not(.dark) .text-slate-200,
+  html:not(.dark) .text-slate-300,
+  html:not(.dark) .text-white:not(.app-theme-button-primary):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not(.srinoos-theme-btn) {
+    color: #0f172a !important;
+  }
+
+  /* Full Dark Mode Overrides */
+  html.dark body,
+  html.theme-neo-dark body {
+    background-color: #080b18 !important;
+    color: #f8fafc !important;
+  }
+</style>
+
+<div class="srinoos-theme-switch-container" id="srinoos-theme-switcher" title="Toggle Light / Dark Mode">
+  <button type="button" class="srinoos-theme-btn" id="btn-theme-light" onclick="window.srinoosSetTheme('light')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+    <span>Light</span>
+  </button>
+  <button type="button" class="srinoos-theme-btn active" id="btn-theme-dark" onclick="window.srinoosSetTheme('dark')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    <span>Dark</span>
+  </button>
+</div>
+
+<script>
+  (function() {
+    function getSavedTheme() {
+      try {
+        const stored = localStorage.getItem("srinoos_user_theme");
+        if (stored === "light" || stored === "dark") return stored;
+        return "dark";
+      } catch (e) {
+        return "dark";
+      }
+    }
+
+    window.srinoosSetTheme = function(mode) {
+      const isDark = mode === "dark";
+      const root = document.documentElement;
+      
+      try {
+        localStorage.setItem("srinoos_user_theme", mode);
+      } catch (e) {}
+
+      if (isDark) {
+        root.classList.add("dark");
+        root.classList.remove("theme-glass-light");
+        root.classList.add("theme-neo-dark");
+        root.style.colorScheme = "dark";
+        if (document.body) {
+          document.body.style.backgroundColor = "#080b18";
+          document.body.style.color = "#f8fafc";
+        }
+      } else {
+        root.classList.remove("dark");
+        root.classList.remove("theme-neo-dark", "theme-cyber-sunset", "theme-royal-navy");
+        root.classList.add("theme-glass-light");
+        root.style.colorScheme = "light";
+        if (document.body) {
+          document.body.style.backgroundColor = "#f8fafc";
+          document.body.style.color = "#0f172a";
+        }
+      }
+
+      // Sync with Zustand store if initialized
+      try {
+        if (window.store && typeof window.store.setState === "function") {
+          const currentSettings = (window.store.getState() && window.store.getState().customSettings) || {};
+          window.store.setState({
+            customSettings: {
+              ...currentSettings,
+              selectedTheme: isDark ? "neo-dark" : "glass-light"
+            }
+          });
+        }
+      } catch (e) {}
+
+      // Update button visual states
+      const btnLight = document.getElementById("btn-theme-light");
+      const btnDark = document.getElementById("btn-theme-dark");
+      if (btnLight && btnDark) {
+        if (isDark) {
+          btnDark.classList.add("active");
+          btnLight.classList.remove("active");
+        } else {
+          btnLight.classList.add("active");
+          btnDark.classList.remove("active");
+        }
+      }
+    };
+
+    // Apply saved theme immediately on script run
+    const initialTheme = getSavedTheme();
+    window.srinoosSetTheme(initialTheme);
+
+    // Keep active theme applied on lifecycle events
+    document.addEventListener("DOMContentLoaded", function() {
+      window.srinoosSetTheme(getSavedTheme());
+    });
+    window.addEventListener("load", function() {
+      window.srinoosSetTheme(getSavedTheme());
+    });
+
+    // Guard against React component re-renders overriding user choice
+    let isEnforcing = false;
+    const observer = new MutationObserver(function() {
+      if (isEnforcing) return;
+      const targetTheme = getSavedTheme();
+      const hasDark = document.documentElement.classList.contains("dark");
+      if ((targetTheme === "dark" && !hasDark) || (targetTheme === "light" && hasDark)) {
+        isEnforcing = true;
+        window.srinoosSetTheme(targetTheme);
+        setTimeout(function() { isEnforcing = false; }, 60);
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  })();
+</script>
+
+</body>
                     </html>
                   `),F.document.close(),jt(null))},className:"w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs transition-all shadow border-none cursor-pointer",children:"Print Earning Receipt"})]})]})})]})}var NT=1,foe=.9,hoe=.8,poe=.17,Ww=.1,Vw=.999,moe=.9999,goe=.99,boe=/[\\\/_+.#"@\[\(\{&]/,xoe=/[\\\/_+.#"@\[\(\{&]/g,voe=/[\s-]/,NM=/[\s-]/g;function vj(e,t,r,n,s,o,c){if(o===t.length)return s===e.length?NT:goe;var d=`${s},${o}`;if(c[d]!==void 0)return c[d];for(var f=n.charAt(o),h=r.indexOf(f,s),m=0,g,x,y,w;h>=0;)g=vj(e,t,r,n,h+1,o+1,c),g>m&&(h===s?g*=NT:boe.test(e.charAt(h-1))?(g*=hoe,y=e.slice(s,h-1).match(xoe),y&&s>0&&(g*=Math.pow(Vw,y.length))):voe.test(e.charAt(h-1))?(g*=foe,w=e.slice(s,h-1).match(NM),w&&s>0&&(g*=Math.pow(Vw,w.length))):(g*=poe,s>0&&(g*=Math.pow(Vw,h-s))),e.charAt(h)!==t.charAt(o)&&(g*=moe)),(g<Ww&&r.charAt(h-1)===n.charAt(o+1)||n.charAt(o+1)===n.charAt(o)&&r.charAt(h-1)!==n.charAt(o))&&(x=vj(e,t,r,n,h+1,o+2,c),x*Ww>g&&(g=x*Ww)),g>m&&(m=g),h=r.indexOf(f,h+1);return c[d]=m,m}function ST(e){return e.toLowerCase().replace(NM," ")}function yoe(e,t,r){return e=r&&r.length>0?`${e+" "+r.join(" ")}`:e,vj(e,t,ST(e),ST(t),0,0,{})}function ic(e,t,{checkForDefaultPrevented:r=!0}={}){return function(s){if(e?.(s),r===!1||!s.defaultPrevented)return t?.(s)}}function AT(e,t){if(typeof e=="function")return e(t);e!=null&&(e.current=t)}function fc(...e){return t=>{let r=!1;const n=e.map(s=>{const o=AT(s,t);return!r&&typeof o=="function"&&(r=!0),o});if(r)return()=>{for(let s=0;s<n.length;s++){const o=n[s];typeof o=="function"?o():AT(e[s],null)}}}}function Ud(...e){return b.useCallback(fc(...e),e)}function woe(e,t){const r=b.createContext(t),n=o=>{const{children:c,...d}=o,f=b.useMemo(()=>d,Object.values(d));return a.jsx(r.Provider,{value:f,children:c})};n.displayName=e+"Provider";function s(o){const c=b.useContext(r);if(c)return c;if(t!==void 0)return t;throw new Error(`\`${o}\` must be used within \`${e}\``)}return[n,s]}function joe(e,t=[]){let r=[];function n(o,c){const d=b.createContext(c),f=r.length;r=[...r,c];const h=g=>{const{scope:x,children:y,...w}=g,k=x?.[e]?.[f]||d,A=b.useMemo(()=>w,Object.values(w));return a.jsx(k.Provider,{value:A,children:y})};h.displayName=o+"Provider";function m(g,x){const y=x?.[e]?.[f]||d,w=b.useContext(y);if(w)return w;if(c!==void 0)return c;throw new Error(`\`${g}\` must be used within \`${o}\``)}return[h,m]}const s=()=>{const o=r.map(c=>b.createContext(c));return function(d){const f=d?.[e]||o;return b.useMemo(()=>({[`__scope${e}`]:{...d,[e]:f}}),[d,f])}};return s.scopeName=e,[n,koe(s,...t)]}function koe(...e){const t=e[0];if(e.length===1)return t;const r=()=>{const n=e.map(s=>({useScope:s(),scopeName:s.scopeName}));return function(o){const c=n.reduce((d,{useScope:f,scopeName:h})=>{const g=f(o)[`__scope${h}`];return{...d,...g}},{});return b.useMemo(()=>({[`__scope${t.scopeName}`]:c}),[c])}};return r.scopeName=t.scopeName,r}var Fp=globalThis?.document?b.useLayoutEffect:()=>{},Noe=jb[" useId ".trim().toString()]||(()=>{}),Soe=0;function tl(e){const[t,r]=b.useState(Noe());return Fp(()=>{r(n=>n??String(Soe++))},[e]),t?`radix-${t}`:""}var Aoe=jb[" useInsertionEffect ".trim().toString()]||Fp;function _oe({prop:e,defaultProp:t,onChange:r=()=>{},caller:n}){const[s,o,c]=Eoe({defaultProp:t,onChange:r}),d=e!==void 0,f=d?e:s;{const m=b.useRef(e!==void 0);b.useEffect(()=>{const g=m.current;g!==d&&console.warn(`${n} is changing from ${g?"controlled":"uncontrolled"} to ${d?"controlled":"uncontrolled"}. Components should not switch from controlled to uncontrolled (or vice versa). Decide between using a controlled or uncontrolled value for the lifetime of the component.`),m.current=d},[d,n])}const h=b.useCallback(m=>{if(d){const g=Coe(m)?m(e):m;g!==e&&c.current?.(g)}else o(m)},[d,e,o,c]);return[f,h]}function Eoe({defaultProp:e,onChange:t}){const[r,n]=b.useState(e),s=b.useRef(r),o=b.useRef(t);return Aoe(()=>{o.current=t},[t]),b.useEffect(()=>{s.current!==r&&(o.current?.(r),s.current=r)},[r,s]),[r,n,o]}function Coe(e){return typeof e=="function"}function gm(e){const t=Ooe(e),r=b.forwardRef((n,s)=>{const{children:o,...c}=n,d=b.Children.toArray(o),f=d.find(Poe);if(f){const h=f.props.children,m=d.map(g=>g===f?b.Children.count(h)>1?b.Children.only(null):b.isValidElement(h)?h.props.children:null:g);return a.jsx(t,{...c,ref:s,children:b.isValidElement(h)?b.cloneElement(h,void 0,m):null})}return a.jsx(t,{...c,ref:s,children:o})});return r.displayName=`${e}.Slot`,r}function Ooe(e){const t=b.forwardRef((r,n)=>{const{children:s,...o}=r;if(b.isValidElement(s)){const c=Doe(s),d=Roe(o,s.props);return s.type!==b.Fragment&&(d.ref=n?fc(n,c):c),b.cloneElement(s,d)}return b.Children.count(s)>1?b.Children.only(null):null});return t.displayName=`${e}.SlotClone`,t}var Toe=Symbol("radix.slottable");function Poe(e){return b.isValidElement(e)&&typeof e.type=="function"&&"__radixId"in e.type&&e.type.__radixId===Toe}function Roe(e,t){const r={...t};for(const n in t){const s=e[n],o=t[n];/^on[A-Z]/.test(n)?s&&o?r[n]=(...d)=>{const f=o(...d);return s(...d),f}:s&&(r[n]=s):n==="style"?r[n]={...s,...o}:n==="className"&&(r[n]=[s,o].filter(Boolean).join(" "))}return{...e,...r}}function Doe(e){let t=Object.getOwnPropertyDescriptor(e.props,"ref")?.get,r=t&&"isReactWarning"in t&&t.isReactWarning;return r?e.ref:(t=Object.getOwnPropertyDescriptor(e,"ref")?.get,r=t&&"isReactWarning"in t&&t.isReactWarning,r?e.props.ref:e.props.ref||e.ref)}var Ioe=["a","button","div","form","h2","h3","img","input","label","li","nav","ol","p","select","span","svg","ul"],SM=Ioe.reduce((e,t)=>{const r=gm(`Primitive.${t}`),n=b.forwardRef((s,o)=>{const{asChild:c,...d}=s,f=c?r:t;return typeof window<"u"&&(window[Symbol.for("radix-ui")]=!0),a.jsx(f,{...d,ref:o})});return n.displayName=`Primitive.${t}`,{...e,[t]:n}},{});function Moe(e,t){e&&Ob.flushSync(()=>e.dispatchEvent(t))}function qp(e){const t=b.useRef(e);return b.useEffect(()=>{t.current=e}),b.useMemo(()=>(...r)=>t.current?.(...r),[])}function Loe(e,t=globalThis?.document){const r=qp(e);b.useEffect(()=>{const n=s=>{s.key==="Escape"&&r(s)};return t.addEventListener("keydown",n,{capture:!0}),()=>t.removeEventListener("keydown",n,{capture:!0})},[r,t])}var $oe="DismissableLayer",yj="dismissableLayer.update",Boe="dismissableLayer.pointerDownOutside",zoe="dismissableLayer.focusOutside",_T,AM=b.createContext({layers:new Set,layersWithOutsidePointerEventsDisabled:new Set,branches:new Set}),_M=b.forwardRef((e,t)=>{const{disableOutsidePointerEvents:r=!1,onEscapeKeyDown:n,onPointerDownOutside:s,onFocusOutside:o,onInteractOutside:c,onDismiss:d,...f}=e,h=b.useContext(AM),[m,g]=b.useState(null),x=m?.ownerDocument??globalThis?.document,[,y]=b.useState({}),w=Ud(t,B=>g(B)),k=Array.from(h.layers),[A]=[...h.layersWithOutsidePointerEventsDisabled].slice(-1),S=k.indexOf(A),O=m?k.indexOf(m):-1,_=h.layersWithOutsidePointerEventsDisabled.size>0,C=O>=S,T=qoe(B=>{const G=B.target,K=[...h.branches].some(se=>se.contains(G));!C||K||(s?.(B),c?.(B),B.defaultPrevented||d?.())},x),R=Goe(B=>{const G=B.target;[...h.branches].some(se=>se.contains(G))||(o?.(B),c?.(B),B.defaultPrevented||d?.())},x);return Loe(B=>{O===h.layers.size-1&&(n?.(B),!B.defaultPrevented&&d&&(B.preventDefault(),d()))},x),b.useEffect(()=>{if(m)return r&&(h.layersWithOutsidePointerEventsDisabled.size===0&&(_T=x.body.style.pointerEvents,x.body.style.pointerEvents="none"),h.layersWithOutsidePointerEventsDisabled.add(m)),h.layers.add(m),ET(),()=>{r&&h.layersWithOutsidePointerEventsDisabled.size===1&&(x.body.style.pointerEvents=_T)}},[m,x,r,h]),b.useEffect(()=>()=>{m&&(h.layers.delete(m),h.layersWithOutsidePointerEventsDisabled.delete(m),ET())},[m,h]),b.useEffect(()=>{const B=()=>y({});return document.addEventListener(yj,B),()=>document.removeEventListener(yj,B)},[]),a.jsx(SM.div,{...f,ref:w,style:{pointerEvents:_?C?"auto":"none":void 0,...e.style},onFocusCapture:ic(e.onFocusCapture,R.onFocusCapture),onBlurCapture:ic(e.onBlurCapture,R.onBlurCapture),onPointerDownCapture:ic(e.onPointerDownCapture,T.onPointerDownCapture)})});_M.displayName=$oe;var Uoe="DismissableLayerBranch",Foe=b.forwardRef((e,t)=>{const r=b.useContext(AM),n=b.useRef(null),s=Ud(t,n);return b.useEffect(()=>{const o=n.current;if(o)return r.branches.add(o),()=>{r.branches.delete(o)}},[r.branches]),a.jsx(SM.div,{...e,ref:s})});Foe.displayName=Uoe;function qoe(e,t=globalThis?.document){const r=qp(e),n=b.useRef(!1),s=b.useRef(()=>{});return b.useEffect(()=>{const o=d=>{if(d.target&&!n.current){let f=function(){EM(Boe,r,h,{discrete:!0})};const h={originalEvent:d};d.pointerType==="touch"?(t.removeEventListener("click",s.current),s.current=f,t.addEventListener("click",s.current,{once:!0})):f()}else t.removeEventListener("click",s.current);n.current=!1},c=window.setTimeout(()=>{t.addEventListener("pointerdown",o)},0);return()=>{window.clearTimeout(c),t.removeEventListener("pointerdown",o),t.removeEventListener("click",s.current)}},[t,r]),{onPointerDownCapture:()=>n.current=!0}}function Goe(e,t=globalThis?.document){const r=qp(e),n=b.useRef(!1);return b.useEffect(()=>{const s=o=>{o.target&&!n.current&&EM(zoe,r,{originalEvent:o},{discrete:!1})};return t.addEventListener("focusin",s),()=>t.removeEventListener("focusin",s)},[t,r]),{onFocusCapture:()=>n.current=!0,onBlurCapture:()=>n.current=!1}}function ET(){const e=new CustomEvent(yj);document.dispatchEvent(e)}function EM(e,t,r,{discrete:n}){const s=r.originalEvent.target,o=new CustomEvent(e,{bubbles:!1,cancelable:!0,detail:r});t&&s.addEventListener(e,t,{once:!0}),n?Moe(s,o):s.dispatchEvent(o)}var Hoe=["a","button","div","form","h2","h3","img","input","label","li","nav","ol","p","select","span","svg","ul"],Woe=Hoe.reduce((e,t)=>{const r=gm(`Primitive.${t}`),n=b.forwardRef((s,o)=>{const{asChild:c,...d}=s,f=c?r:t;return typeof window<"u"&&(window[Symbol.for("radix-ui")]=!0),a.jsx(f,{...d,ref:o})});return n.displayName=`Primitive.${t}`,{...e,[t]:n}},{}),Kw="focusScope.autoFocusOnMount",Yw="focusScope.autoFocusOnUnmount",CT={bubbles:!1,cancelable:!0},Voe="FocusScope",CM=b.forwardRef((e,t)=>{const{loop:r=!1,trapped:n=!1,onMountAutoFocus:s,onUnmountAutoFocus:o,...c}=e,[d,f]=b.useState(null),h=qp(s),m=qp(o),g=b.useRef(null),x=Ud(t,k=>f(k)),y=b.useRef({paused:!1,pause(){this.paused=!0},resume(){this.paused=!1}}).current;b.useEffect(()=>{if(n){let k=function(_){if(y.paused||!d)return;const C=_.target;d.contains(C)?g.current=C:Kl(g.current,{select:!0})},A=function(_){if(y.paused||!d)return;const C=_.relatedTarget;C!==null&&(d.contains(C)||Kl(g.current,{select:!0}))},S=function(_){if(document.activeElement===document.body)for(const T of _)T.removedNodes.length>0&&Kl(d)};document.addEventListener("focusin",k),document.addEventListener("focusout",A);const O=new MutationObserver(S);return d&&O.observe(d,{childList:!0,subtree:!0}),()=>{document.removeEventListener("focusin",k),document.removeEventListener("focusout",A),O.disconnect()}}},[n,d,y.paused]),b.useEffect(()=>{if(d){TT.add(y);const k=document.activeElement;if(!d.contains(k)){const S=new CustomEvent(Kw,CT);d.addEventListener(Kw,h),d.dispatchEvent(S),S.defaultPrevented||(Koe(Zoe(OM(d)),{select:!0}),document.activeElement===k&&Kl(d))}return()=>{d.removeEventListener(Kw,h),setTimeout(()=>{const S=new CustomEvent(Yw,CT);d.addEventListener(Yw,m),d.dispatchEvent(S),S.defaultPrevented||Kl(k??document.body,{select:!0}),d.removeEventListener(Yw,m),TT.remove(y)},0)}}},[d,h,m,y]);const w=b.useCallback(k=>{if(!r&&!n||y.paused)return;const A=k.key==="Tab"&&!k.altKey&&!k.ctrlKey&&!k.metaKey,S=document.activeElement;if(A&&S){const O=k.currentTarget,[_,C]=Yoe(O);_&&C?!k.shiftKey&&S===C?(k.preventDefault(),r&&Kl(_,{select:!0})):k.shiftKey&&S===_&&(k.preventDefault(),r&&Kl(C,{select:!0})):S===O&&k.preventDefault()}},[r,n,y.paused]);return a.jsx(Woe.div,{tabIndex:-1,...c,ref:x,onKeyDown:w})});CM.displayName=Voe;function Koe(e,{select:t=!1}={}){const r=document.activeElement;for(const n of e)if(Kl(n,{select:t}),document.activeElement!==r)return}function Yoe(e){const t=OM(e),r=OT(t,e),n=OT(t.reverse(),e);return[r,n]}function OM(e){const t=[],r=document.createTreeWalker(e,NodeFilter.SHOW_ELEMENT,{acceptNode:n=>{const s=n.tagName==="INPUT"&&n.type==="hidden";return n.disabled||n.hidden||s?NodeFilter.FILTER_SKIP:n.tabIndex>=0?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP}});for(;r.nextNode();)t.push(r.currentNode);return t}function OT(e,t){for(const r of e)if(!Joe(r,{upTo:t}))return r}function Joe(e,{upTo:t}){if(getComputedStyle(e).visibility==="hidden")return!0;for(;e;){if(t!==void 0&&e===t)return!1;if(getComputedStyle(e).display==="none")return!0;e=e.parentElement}return!1}function Xoe(e){return e instanceof HTMLInputElement&&"select"in e}function Kl(e,{select:t=!1}={}){if(e&&e.focus){const r=document.activeElement;e.focus({preventScroll:!0}),e!==r&&Xoe(e)&&t&&e.select()}}var TT=Qoe();function Qoe(){let e=[];return{add(t){const r=e[0];t!==r&&r?.pause(),e=PT(e,t),e.unshift(t)},remove(t){e=PT(e,t),e[0]?.resume()}}}function PT(e,t){const r=[...e],n=r.indexOf(t);return n!==-1&&r.splice(n,1),r}function Zoe(e){return e.filter(t=>t.tagName!=="A")}var ele=["a","button","div","form","h2","h3","img","input","label","li","nav","ol","p","select","span","svg","ul"],tle=ele.reduce((e,t)=>{const r=gm(`Primitive.${t}`),n=b.forwardRef((s,o)=>{const{asChild:c,...d}=s,f=c?r:t;return typeof window<"u"&&(window[Symbol.for("radix-ui")]=!0),a.jsx(f,{...d,ref:o})});return n.displayName=`Primitive.${t}`,{...e,[t]:n}},{}),rle="Portal",TM=b.forwardRef((e,t)=>{const{container:r,...n}=e,[s,o]=b.useState(!1);Fp(()=>o(!0),[]);const c=r||s&&globalThis?.document?.body;return c?IF.createPortal(a.jsx(tle.div,{...n,ref:t}),c):null});TM.displayName=rle;function nle(e,t){return b.useReducer((r,n)=>t[r][n]??r,e)}var kx=e=>{const{present:t,children:r}=e,n=ale(t),s=typeof r=="function"?r({present:n.isPresent}):b.Children.only(r),o=Ud(n.ref,sle(s));return typeof r=="function"||n.isPresent?b.cloneElement(s,{ref:o}):null};kx.displayName="Presence";function ale(e){const[t,r]=b.useState(),n=b.useRef(null),s=b.useRef(e),o=b.useRef("none"),c=e?"mounted":"unmounted",[d,f]=nle(c,{mounted:{UNMOUNT:"unmounted",ANIMATION_OUT:"unmountSuspended"},unmountSuspended:{MOUNT:"mounted",ANIMATION_END:"unmounted"},unmounted:{MOUNT:"mounted"}});return b.useEffect(()=>{const h=J0(n.current);o.current=d==="mounted"?h:"none"},[d]),Fp(()=>{const h=n.current,m=s.current;if(m!==e){const x=o.current,y=J0(h);e?f("MOUNT"):y==="none"||h?.display==="none"?f("UNMOUNT"):f(m&&x!==y?"ANIMATION_OUT":"UNMOUNT"),s.current=e}},[e,f]),Fp(()=>{if(t){let h;const m=t.ownerDocument.defaultView??window,g=y=>{const k=J0(n.current).includes(CSS.escape(y.animationName));if(y.target===t&&k&&(f("ANIMATION_END"),!s.current)){const A=t.style.animationFillMode;t.style.animationFillMode="forwards",h=m.setTimeout(()=>{t.style.animationFillMode==="forwards"&&(t.style.animationFillMode=A)})}},x=y=>{y.target===t&&(o.current=J0(n.current))};return t.addEventListener("animationstart",x),t.addEventListener("animationcancel",g),t.addEventListener("animationend",g),()=>{m.clearTimeout(h),t.removeEventListener("animationstart",x),t.removeEventListener("animationcancel",g),t.removeEventListener("animationend",g)}}else f("ANIMATION_END")},[t,f]),{isPresent:["mounted","unmountSuspended"].includes(d),ref:b.useCallback(h=>{n.current=h?getComputedStyle(h):null,r(h)},[])}}function J0(e){return e?.animationName||"none"}function sle(e){let t=Object.getOwnPropertyDescriptor(e.props,"ref")?.get,r=t&&"isReactWarning"in t&&t.isReactWarning;return r?e.ref:(t=Object.getOwnPropertyDescriptor(e,"ref")?.get,r=t&&"isReactWarning"in t&&t.isReactWarning,r?e.props.ref:e.props.ref||e.ref)}var ile=["a","button","div","form","h2","h3","img","input","label","li","nav","ol","p","select","span","svg","ul"],bm=ile.reduce((e,t)=>{const r=gm(`Primitive.${t}`),n=b.forwardRef((s,o)=>{const{asChild:c,...d}=s,f=c?r:t;return typeof window<"u"&&(window[Symbol.for("radix-ui")]=!0),a.jsx(f,{...d,ref:o})});return n.displayName=`Primitive.${t}`,{...e,[t]:n}},{}),Jw=0;function ole(){b.useEffect(()=>{const e=document.querySelectorAll("[data-radix-focus-guard]");return document.body.insertAdjacentElement("afterbegin",e[0]??RT()),document.body.insertAdjacentElement("beforeend",e[1]??RT()),Jw++,()=>{Jw===1&&document.querySelectorAll("[data-radix-focus-guard]").forEach(t=>t.remove()),Jw--}},[])}function RT(){const e=document.createElement("span");return e.setAttribute("data-radix-focus-guard",""),e.tabIndex=0,e.style.outline="none",e.style.opacity="0",e.style.position="fixed",e.style.pointerEvents="none",e}var ug="right-scroll-bar-position",fg="width-before-scroll-bar",lle="with-scroll-bars-hidden",cle="--removed-body-scroll-bar-size";function Xw(e,t){return typeof e=="function"?e(t):e&&(e.current=t),e}function dle(e,t){var r=b.useState(function(){return{value:e,callback:t,facade:{get current(){return r.value},set current(n){var s=r.value;s!==n&&(r.value=n,r.callback(n,s))}}}})[0];return r.callback=t,r.facade}var ule=typeof window<"u"?b.useLayoutEffect:b.useEffect,DT=new WeakMap;function fle(e,t){var r=dle(null,function(n){return e.forEach(function(s){return Xw(s,n)})});return ule(function(){var n=DT.get(r);if(n){var s=new Set(n),o=new Set(e),c=r.current;s.forEach(function(d){o.has(d)||Xw(d,null)}),o.forEach(function(d){s.has(d)||Xw(d,c)})}DT.set(r,e)},[e]),r}function hle(e){return e}function ple(e,t){t===void 0&&(t=hle);var r=[],n=!1,s={read:function(){if(n)throw new Error("Sidecar: could not `read` from an `assigned` medium. `read` could be used only with `useMedium`.");return r.length?r[r.length-1]:e},useMedium:function(o){var c=t(o,n);return r.push(c),function(){r=r.filter(function(d){return d!==c})}},assignSyncMedium:function(o){for(n=!0;r.length;){var c=r;r=[],c.forEach(o)}r={push:function(d){return o(d)},filter:function(){return r}}},assignMedium:function(o){n=!0;var c=[];if(r.length){var d=r;r=[],d.forEach(o),c=r}var f=function(){var m=c;c=[],m.forEach(o)},h=function(){return Promise.resolve().then(f)};h(),r={push:function(m){c.push(m),h()},filter:function(m){return c=c.filter(m),r}}}};return s}function mle(e){e===void 0&&(e={});var t=ple(null);return t.options=Ki({async:!0,ssr:!1},e),t}var PM=function(e){var t=e.sideCar,r=Pf(e,["sideCar"]);if(!t)throw new Error("Sidecar: please provide `sideCar` property to import the right car");var n=t.read();if(!n)throw new Error("Sidecar medium not found");return b.createElement(n,Ki({},r))};PM.isSideCarExport=!0;function gle(e,t){return e.useMedium(t),PM}var RM=mle(),Qw=function(){},Nx=b.forwardRef(function(e,t){var r=b.useRef(null),n=b.useState({onScrollCapture:Qw,onWheelCapture:Qw,onTouchMoveCapture:Qw}),s=n[0],o=n[1],c=e.forwardProps,d=e.children,f=e.className,h=e.removeScrollBar,m=e.enabled,g=e.shards,x=e.sideCar,y=e.noRelative,w=e.noIsolation,k=e.inert,A=e.allowPinchZoom,S=e.as,O=S===void 0?"div":S,_=e.gapMode,C=Pf(e,["forwardProps","children","className","removeScrollBar","enabled","shards","sideCar","noRelative","noIsolation","inert","allowPinchZoom","as","gapMode"]),T=x,R=fle([r,t]),B=Ki(Ki({},C),s);return b.createElement(b.Fragment,null,m&&b.createElement(T,{sideCar:RM,removeScrollBar:h,shards:g,noRelative:y,noIsolation:w,inert:k,setCallbacks:o,allowPinchZoom:!!A,lockRef:r,gapMode:_}),c?b.cloneElement(b.Children.only(d),Ki(Ki({},B),{ref:R})):b.createElement(O,Ki({},B,{className:f,ref:R}),d))});Nx.defaultProps={enabled:!0,removeScrollBar:!0,inert:!1};Nx.classNames={fullWidth:fg,zeroRight:ug};var ble=function(){if(typeof __webpack_nonce__<"u")return __webpack_nonce__};function xle(){if(!document)return null;var e=document.createElement("style");e.type="text/css";var t=ble();return t&&e.setAttribute("nonce",t),e}function vle(e,t){e.styleSheet?e.styleSheet.cssText=t:e.appendChild(document.createTextNode(t))}function yle(e){var t=document.head||document.getElementsByTagName("head")[0];t.appendChild(e)}var wle=function(){var e=0,t=null;return{add:function(r){e==0&&(t=xle())&&(vle(t,r),yle(t)),e++},remove:function(){e--,!e&&t&&(t.parentNode&&t.parentNode.removeChild(t),t=null)}}},jle=function(){var e=wle();return function(t,r){b.useEffect(function(){return e.add(t),function(){e.remove()}},[t&&r])}},DM=function(){var e=jle(),t=function(r){var n=r.styles,s=r.dynamic;return e(n,s),null};return t},kle={left:0,top:0,right:0,gap:0},Zw=function(e){return parseInt(e||"",10)||0},Nle=function(e){var t=window.getComputedStyle(document.body),r=t[e==="padding"?"paddingLeft":"marginLeft"],n=t[e==="padding"?"paddingTop":"marginTop"],s=t[e==="padding"?"paddingRight":"marginRight"];return[Zw(r),Zw(n),Zw(s)]},Sle=function(e){if(e===void 0&&(e="margin"),typeof window>"u")return kle;var t=Nle(e),r=document.documentElement.clientWidth,n=window.innerWidth;return{left:t[0],top:t[1],right:t[2],gap:Math.max(0,n-r+t[2]-t[0])}},Ale=DM(),gf="data-scroll-locked",_le=function(e,t,r,n){var s=e.left,o=e.top,c=e.right,d=e.gap;return r===void 0&&(r="margin"),`
   .`.concat(lle,` {
@@ -835,7 +1516,234 @@ For security, please log in and change your password in the dashboard settings i
                 window.onafterprint = function() { window.close(); };
               };
             <\/script>
-          </body>
+          
+<!-- Custom Light / Dark Mode Toggle Component & Controller -->
+<style id="srinoos-custom-theme-styles">
+  .srinoos-theme-switch-container {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 9999px;
+    padding: 3px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(99, 102, 241, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: "Outfit", "Inter", -apple-system, sans-serif;
+    user-select: none;
+  }
+  .theme-glass-light .srinoos-theme-switch-container,
+  :root:not(.dark) .srinoos-theme-switch-container {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(203, 213, 225, 0.9);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 15px rgba(16, 185, 129, 0.2);
+  }
+  .srinoos-theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    border-radius: 9999px;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #94a3b8;
+    background: transparent;
+    outline: none;
+  }
+  .srinoos-theme-btn svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.3s ease;
+  }
+  .srinoos-theme-btn:hover {
+    color: #f1f5f9;
+  }
+  .theme-glass-light .srinoos-theme-btn:hover,
+  :root:not(.dark) .srinoos-theme-btn:hover {
+    color: #0f172a;
+  }
+  .srinoos-theme-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  }
+  .theme-glass-light .srinoos-theme-btn.active,
+  :root:not(.dark) .srinoos-theme-btn.active {
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+  }
+  .srinoos-theme-btn.active svg {
+    transform: scale(1.15) rotate(10deg);
+  }
+
+  /* Full Light Mode Overrides for Complete Readability */
+  html.theme-glass-light,
+  html:not(.dark) {
+    color-scheme: light !important;
+  }
+  html.theme-glass-light body,
+  html:not(.dark) body {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .bg-slate-900,
+  html:not(.dark) .bg-slate-900 {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+  }
+  html.theme-glass-light .bg-slate-950,
+  html:not(.dark) .bg-slate-950 {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .bg-slate-800,
+  html:not(.dark) .bg-slate-800 {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .border-slate-800,
+  html.theme-glass-light .border-slate-700,
+  html:not(.dark) .border-slate-800,
+  html:not(.dark) .border-slate-700 {
+    border-color: #cbd5e1 !important;
+  }
+  html.theme-glass-light .text-slate-100,
+  html.theme-glass-light .text-slate-200,
+  html.theme-glass-light .text-slate-300,
+  html.theme-glass-light .text-white:not(.app-theme-button-primary):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not(.srinoos-theme-btn),
+  html:not(.dark) .text-slate-100,
+  html:not(.dark) .text-slate-200,
+  html:not(.dark) .text-slate-300,
+  html:not(.dark) .text-white:not(.app-theme-button-primary):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not(.srinoos-theme-btn) {
+    color: #0f172a !important;
+  }
+
+  /* Full Dark Mode Overrides */
+  html.dark body,
+  html.theme-neo-dark body {
+    background-color: #080b18 !important;
+    color: #f8fafc !important;
+  }
+</style>
+
+<div class="srinoos-theme-switch-container" id="srinoos-theme-switcher" title="Toggle Light / Dark Mode">
+  <button type="button" class="srinoos-theme-btn" id="btn-theme-light" onclick="window.srinoosSetTheme('light')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+    <span>Light</span>
+  </button>
+  <button type="button" class="srinoos-theme-btn active" id="btn-theme-dark" onclick="window.srinoosSetTheme('dark')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    <span>Dark</span>
+  </button>
+</div>
+
+<script>
+  (function() {
+    function getSavedTheme() {
+      try {
+        const stored = localStorage.getItem("srinoos_user_theme");
+        if (stored === "light" || stored === "dark") return stored;
+        return "dark";
+      } catch (e) {
+        return "dark";
+      }
+    }
+
+    window.srinoosSetTheme = function(mode) {
+      const isDark = mode === "dark";
+      const root = document.documentElement;
+      
+      try {
+        localStorage.setItem("srinoos_user_theme", mode);
+      } catch (e) {}
+
+      if (isDark) {
+        root.classList.add("dark");
+        root.classList.remove("theme-glass-light");
+        root.classList.add("theme-neo-dark");
+        root.style.colorScheme = "dark";
+        if (document.body) {
+          document.body.style.backgroundColor = "#080b18";
+          document.body.style.color = "#f8fafc";
+        }
+      } else {
+        root.classList.remove("dark");
+        root.classList.remove("theme-neo-dark", "theme-cyber-sunset", "theme-royal-navy");
+        root.classList.add("theme-glass-light");
+        root.style.colorScheme = "light";
+        if (document.body) {
+          document.body.style.backgroundColor = "#f8fafc";
+          document.body.style.color = "#0f172a";
+        }
+      }
+
+      // Sync with Zustand store if initialized
+      try {
+        if (window.store && typeof window.store.setState === "function") {
+          const currentSettings = (window.store.getState() && window.store.getState().customSettings) || {};
+          window.store.setState({
+            customSettings: {
+              ...currentSettings,
+              selectedTheme: isDark ? "neo-dark" : "glass-light"
+            }
+          });
+        }
+      } catch (e) {}
+
+      // Update button visual states
+      const btnLight = document.getElementById("btn-theme-light");
+      const btnDark = document.getElementById("btn-theme-dark");
+      if (btnLight && btnDark) {
+        if (isDark) {
+          btnDark.classList.add("active");
+          btnLight.classList.remove("active");
+        } else {
+          btnLight.classList.add("active");
+          btnDark.classList.remove("active");
+        }
+      }
+    };
+
+    // Apply saved theme immediately on script run
+    const initialTheme = getSavedTheme();
+    window.srinoosSetTheme(initialTheme);
+
+    // Keep active theme applied on lifecycle events
+    document.addEventListener("DOMContentLoaded", function() {
+      window.srinoosSetTheme(getSavedTheme());
+    });
+    window.addEventListener("load", function() {
+      window.srinoosSetTheme(getSavedTheme());
+    });
+
+    // Guard against React component re-renders overriding user choice
+    let isEnforcing = false;
+    const observer = new MutationObserver(function() {
+      if (isEnforcing) return;
+      const targetTheme = getSavedTheme();
+      const hasDark = document.documentElement.classList.contains("dark");
+      if ((targetTheme === "dark" && !hasDark) || (targetTheme === "light" && hasDark)) {
+        isEnforcing = true;
+        window.srinoosSetTheme(targetTheme);
+        setTimeout(function() { isEnforcing = false; }, 60);
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  })();
+</script>
+
+</body>
         </html>
       `),le.document.close(),z.success(`${S.toUpperCase()} operational report downloaded!`)}},Nn=()=>{let le=`Category,Classification,Type,Debit Amount,Credit Amount,Status,Date
 `;le+=`Rental Income,Verified Collections,Credit,-,${at},Received,${new Date().toLocaleDateString()}
@@ -851,5 +1759,232 @@ For security, please log in and change your password in the dashboard settings i
   </head>
   <body>
     <div id="root"></div>
-  </body>
+  
+<!-- Custom Light / Dark Mode Toggle Component & Controller -->
+<style id="srinoos-custom-theme-styles">
+  .srinoos-theme-switch-container {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 9999px;
+    padding: 3px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(99, 102, 241, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: "Outfit", "Inter", -apple-system, sans-serif;
+    user-select: none;
+  }
+  .theme-glass-light .srinoos-theme-switch-container,
+  :root:not(.dark) .srinoos-theme-switch-container {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(203, 213, 225, 0.9);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 15px rgba(16, 185, 129, 0.2);
+  }
+  .srinoos-theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    border-radius: 9999px;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #94a3b8;
+    background: transparent;
+    outline: none;
+  }
+  .srinoos-theme-btn svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.3s ease;
+  }
+  .srinoos-theme-btn:hover {
+    color: #f1f5f9;
+  }
+  .theme-glass-light .srinoos-theme-btn:hover,
+  :root:not(.dark) .srinoos-theme-btn:hover {
+    color: #0f172a;
+  }
+  .srinoos-theme-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  }
+  .theme-glass-light .srinoos-theme-btn.active,
+  :root:not(.dark) .srinoos-theme-btn.active {
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+  }
+  .srinoos-theme-btn.active svg {
+    transform: scale(1.15) rotate(10deg);
+  }
+
+  /* Full Light Mode Overrides for Complete Readability */
+  html.theme-glass-light,
+  html:not(.dark) {
+    color-scheme: light !important;
+  }
+  html.theme-glass-light body,
+  html:not(.dark) body {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .bg-slate-900,
+  html:not(.dark) .bg-slate-900 {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+  }
+  html.theme-glass-light .bg-slate-950,
+  html:not(.dark) .bg-slate-950 {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .bg-slate-800,
+  html:not(.dark) .bg-slate-800 {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  html.theme-glass-light .border-slate-800,
+  html.theme-glass-light .border-slate-700,
+  html:not(.dark) .border-slate-800,
+  html:not(.dark) .border-slate-700 {
+    border-color: #cbd5e1 !important;
+  }
+  html.theme-glass-light .text-slate-100,
+  html.theme-glass-light .text-slate-200,
+  html.theme-glass-light .text-slate-300,
+  html.theme-glass-light .text-white:not(.app-theme-button-primary):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not(.srinoos-theme-btn),
+  html:not(.dark) .text-slate-100,
+  html:not(.dark) .text-slate-200,
+  html:not(.dark) .text-slate-300,
+  html:not(.dark) .text-white:not(.app-theme-button-primary):not([class*="bg-indigo"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-blue"]):not(.srinoos-theme-btn) {
+    color: #0f172a !important;
+  }
+
+  /* Full Dark Mode Overrides */
+  html.dark body,
+  html.theme-neo-dark body {
+    background-color: #080b18 !important;
+    color: #f8fafc !important;
+  }
+</style>
+
+<div class="srinoos-theme-switch-container" id="srinoos-theme-switcher" title="Toggle Light / Dark Mode">
+  <button type="button" class="srinoos-theme-btn" id="btn-theme-light" onclick="window.srinoosSetTheme('light')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+    <span>Light</span>
+  </button>
+  <button type="button" class="srinoos-theme-btn active" id="btn-theme-dark" onclick="window.srinoosSetTheme('dark')">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+    <span>Dark</span>
+  </button>
+</div>
+
+<script>
+  (function() {
+    function getSavedTheme() {
+      try {
+        const stored = localStorage.getItem("srinoos_user_theme");
+        if (stored === "light" || stored === "dark") return stored;
+        return "dark";
+      } catch (e) {
+        return "dark";
+      }
+    }
+
+    window.srinoosSetTheme = function(mode) {
+      const isDark = mode === "dark";
+      const root = document.documentElement;
+      
+      try {
+        localStorage.setItem("srinoos_user_theme", mode);
+      } catch (e) {}
+
+      if (isDark) {
+        root.classList.add("dark");
+        root.classList.remove("theme-glass-light");
+        root.classList.add("theme-neo-dark");
+        root.style.colorScheme = "dark";
+        if (document.body) {
+          document.body.style.backgroundColor = "#080b18";
+          document.body.style.color = "#f8fafc";
+        }
+      } else {
+        root.classList.remove("dark");
+        root.classList.remove("theme-neo-dark", "theme-cyber-sunset", "theme-royal-navy");
+        root.classList.add("theme-glass-light");
+        root.style.colorScheme = "light";
+        if (document.body) {
+          document.body.style.backgroundColor = "#f8fafc";
+          document.body.style.color = "#0f172a";
+        }
+      }
+
+      // Sync with Zustand store if initialized
+      try {
+        if (window.store && typeof window.store.setState === "function") {
+          const currentSettings = (window.store.getState() && window.store.getState().customSettings) || {};
+          window.store.setState({
+            customSettings: {
+              ...currentSettings,
+              selectedTheme: isDark ? "neo-dark" : "glass-light"
+            }
+          });
+        }
+      } catch (e) {}
+
+      // Update button visual states
+      const btnLight = document.getElementById("btn-theme-light");
+      const btnDark = document.getElementById("btn-theme-dark");
+      if (btnLight && btnDark) {
+        if (isDark) {
+          btnDark.classList.add("active");
+          btnLight.classList.remove("active");
+        } else {
+          btnLight.classList.add("active");
+          btnDark.classList.remove("active");
+        }
+      }
+    };
+
+    // Apply saved theme immediately on script run
+    const initialTheme = getSavedTheme();
+    window.srinoosSetTheme(initialTheme);
+
+    // Keep active theme applied on lifecycle events
+    document.addEventListener("DOMContentLoaded", function() {
+      window.srinoosSetTheme(getSavedTheme());
+    });
+    window.addEventListener("load", function() {
+      window.srinoosSetTheme(getSavedTheme());
+    });
+
+    // Guard against React component re-renders overriding user choice
+    let isEnforcing = false;
+    const observer = new MutationObserver(function() {
+      if (isEnforcing) return;
+      const targetTheme = getSavedTheme();
+      const hasDark = document.documentElement.classList.contains("dark");
+      if ((targetTheme === "dark" && !hasDark) || (targetTheme === "light" && hasDark)) {
+        isEnforcing = true;
+        window.srinoosSetTheme(targetTheme);
+        setTimeout(function() { isEnforcing = false; }, 60);
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  })();
+</script>
+
+</body>
 </html>

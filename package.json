@@ -4,9 +4,11 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "dev": "python3 -m http.server 3000",
+    "build": "mkdir -p dist && cp -f production-app/index.html dist/index.html && cp -f public/* dist/ 2>/dev/null || true && cp -rf data dist/ 2>/dev/null || true",
+    "preview": "python3 -m http.server 4173 --directory dist",
+    "dev:react": "vite",
+    "build:react": "tsc && vite build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.48.1",
