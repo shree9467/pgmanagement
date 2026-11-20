@@ -2992,8 +2992,8 @@ function PGTenantLeadGenerationHub() {
   // Filter leads assigned to this owner and from authorized sources
   const ownerLeads = b.useMemo(() => {
     return leadData.leads.filter(l => {
-      const isOwnerMatch = l.ownerId === activeOwnerId || l.ownerId === "acc2" || !l.ownerId;
-      const isSourceActive = enabledSourceIds.has(l.sourceId);
+      const isOwnerMatch = l.ownerId === activeOwnerId || (!l.ownerId && activeOwnerId === "acc2");
+      const isSourceActive = enabledSourceIds.has(l.sourceId) || l.ownerId === activeOwnerId;
       return isOwnerMatch && isSourceActive;
     });
   }, [leadData.leads, activeOwnerId, enabledSourceIds]);
