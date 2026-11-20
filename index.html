@@ -3832,6 +3832,11 @@ function SuperAdminLeadGenConsole() {
   const [ingestBudget, setIngestBudget] = b.useState("₹9,500 / mo");
   const [ingestProfession, setIngestProfession] = b.useState("IT Engineer");
   const [ingestNotes, setIngestNotes] = b.useState("");
+  const [ingestEmail, setIngestEmail] = b.useState("");
+  const [ingestWhatsapp, setIngestWhatsapp] = b.useState("");
+  const [ingestMoveInDate, setIngestMoveInDate] = b.useState(() => new Date(Date.now() + 86400000 * 3).toISOString().substring(0, 10));
+  const [ingestGender, setIngestGender] = b.useState("Male");
+  const [ingestStatus, setIngestStatus] = b.useState("NEW");
 
   const { rawAccounts = [], accounts = [] } = Ee();
   const ownerAccounts = (rawAccounts.length > 0 ? rawAccounts : accounts).filter(a => a.role === "OWNER");
@@ -3964,31 +3969,33 @@ function SuperAdminLeadGenConsole() {
       sourceIcon: srcObj.icon || "🏢",
       tenantName: ingestName.trim(),
       phone: ingestPhone.trim(),
-      whatsapp: ingestPhone.trim(),
-      email: ingestName.toLowerCase().replace(/\s+/g, '') + "@gmail.com",
+      whatsapp: (ingestWhatsapp.trim() && ingestWhatsapp.trim() !== "+91") ? ingestWhatsapp.trim() : ingestPhone.trim(),
+      email: ingestEmail.trim() || (ingestName.toLowerCase().replace(/\s+/g, '') + "@gmail.com"),
       sharingPreference: ingestSharing,
       budgetRange: ingestBudget,
       budget: parseInt(ingestBudget.replace(/[^0-9]/g, ""), 10) || 9500,
-      preferredMoveInDate: new Date(Date.now() + 86400000 * 4).toISOString().substring(0, 10),
-      profession: ingestProfession.trim() || "Software Engineer",
-      gender: "Male",
+      preferredMoveInDate: ingestMoveInDate || new Date(Date.now() + 86400000 * 3).toISOString().substring(0, 10),
+      profession: ingestProfession.trim() || "Working Professional",
+      gender: ingestGender || "Male",
       foodPreference: "Veg & Non-Veg",
-      notes: ingestNotes.trim() || ("Direct portal webhook lead from " + srcObj.name + " for " + targetOwner.name),
-      status: "NEW",
+      notes: ingestNotes.trim() || ("Manually added genuine lead from " + srcObj.name + " for " + targetOwner.name),
+      status: ingestStatus || "NEW",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       convertedTenantId: null
     };
 
     const updated = [newLead, ...leadData.leads];
-    const loadId = z.loading("Dispatching enquiry to PG Owner...");
+    const loadId = z.loading("Saving and assigning genuine lead to PG Owner...");
     await window.saveLeadGenData(leadData.sources, updated, leadData.ownerPermissions);
     setLeadData(prev => ({ ...prev, leads: updated }));
     setIsIngestModalOpen(!1);
     z.dismiss(loadId);
-    z.success("Dispatched genuine lead to " + targetOwner.name + " via " + srcObj.name + "!");
+    z.success("🎉 Successfully added genuine lead for " + ingestName.trim() + " and assigned to " + targetOwner.name + "!");
     setIngestName("");
     setIngestPhone("+91 ");
+    setIngestWhatsapp("");
+    setIngestEmail("");
     setIngestNotes("");
   };
 
@@ -4031,7 +4038,7 @@ function SuperAdminLeadGenConsole() {
                 type: "button",
                 onClick: () => setIsIngestModalOpen(!0),
                 className: "px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer",
-                children: [a.jsx("span", { children: "⚡" }), "Dispatch Portal Lead"]
+                children: [a.jsx("span", { className: "text-base font-black leading-none", children: "+" }), "Add Leads Manually"]
               }),
               a.jsxs("button", {
                 type: "button",
@@ -4221,7 +4228,7 @@ function SuperAdminLeadGenConsole() {
                   a.jsx("p", { className: "text-xs text-slate-500", children: "Real-time feed of all tenant enquiries across all PG Owners and connected portals." })
                 ]
               }),
-              a.jsxs("span", { className: "text-xs font-bold text-slate-400", children: ["Total: ", a.jsx("strong", { className: "text-slate-800 dark:text-slate-200", children: totalLeads }), " (", convertedTotal, " onboarded)"] })
+              a.jsxs("div", { className: "flex items-center gap-3", children: [a.jsxs("span", { className: "text-xs font-bold text-slate-400", children: ["Total: ", a.jsx("strong", { className: "text-slate-800 dark:text-slate-200", children: totalLeads }), " (", convertedTotal, " onboarded)"] }), a.jsxs("button", { type: "button", onClick: () => setIsIngestModalOpen(!0), className: "px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-[11px] flex items-center gap-1 shadow-xs cursor-pointer transition-all", children: [a.jsx("span", { children: "+" }), "Add Leads Manually"] })] })
             ]
           }),
           a.jsx("div", {
@@ -4426,15 +4433,16 @@ function SuperAdminLeadGenConsole() {
       isIngestModalOpen && a.jsx("div", {
         className: "fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4",
         children: a.jsxs("div", {
-          className: "bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200",
+          className: "bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200",
           children: [
             a.jsxs("div", {
-              className: "p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between",
+              className: "p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-emerald-50 to-purple-50 dark:from-slate-800 dark:to-slate-850",
               children: [
                 a.jsxs("div", {
                   children: [
-                    a.jsx("span", { className: "text-[10px] font-black uppercase tracking-wider text-purple-600 block", children: "Super Admin Lead Ingest" }),
-                    a.jsx("h3", { className: "text-base font-black text-slate-900 dark:text-white", children: "Dispatch Genuine Lead to PG Owner" })
+                    a.jsx("span", { className: "text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block", children: "Super Admin Manual Lead Ingestion" }),
+                    a.jsx("h3", { className: "text-lg font-black text-slate-900 dark:text-white", children: "Add Leads Manually" }),
+                    a.jsx("p", { className: "text-[11px] text-slate-500 dark:text-slate-400 font-medium", children: "Manually enter genuine tenant leads from online portals and assign directly to the PG Owner Hub." })
                   ]
                 }),
                 a.jsx("button", {
@@ -4448,10 +4456,10 @@ function SuperAdminLeadGenConsole() {
 
             a.jsxs("form", {
               onSubmit: handleIngestLeadSubmit,
-              className: "p-6 space-y-4 text-xs font-sans text-left",
+              className: "p-6 space-y-4 text-xs font-sans text-left max-h-[80vh] overflow-y-auto custom-scrollbar",
               children: [
                 a.jsxs("div", {
-                  className: "grid grid-cols-2 gap-3",
+                  className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
                   children: [
                     a.jsxs("div", {
                       children: [
@@ -4466,12 +4474,12 @@ function SuperAdminLeadGenConsole() {
                     }),
                     a.jsxs("div", {
                       children: [
-                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Source Portal *" }),
+                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Online Platform / Source *" }),
                         a.jsx("select", {
                           value: ingestSourceId,
                           onChange: e => setIngestSourceId(e.target.value),
                           className: "w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs outline-none",
-                          children: leadData.sources.map(s => a.jsx("option", { value: s.id, children: s.name }, s.id))
+                          children: leadData.sources.map(s => a.jsxs("option", { value: s.id, children: [s.icon, " ", s.name] }, s.id))
                         })
                       ]
                     })
@@ -4479,15 +4487,15 @@ function SuperAdminLeadGenConsole() {
                 }),
 
                 a.jsxs("div", {
-                  className: "grid grid-cols-2 gap-3",
+                  className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
                   children: [
                     a.jsxs("div", {
                       children: [
-                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Candidate Name *" }),
+                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Candidate Full Name *" }),
                         a.jsx("input", {
                           type: "text",
                           required: !0,
-                          placeholder: "e.g. Kartik Nair",
+                          placeholder: "e.g. Rahul Verma",
                           value: ingestName,
                           onChange: e => setIngestName(e.target.value),
                           className: "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs outline-none"
@@ -4496,12 +4504,13 @@ function SuperAdminLeadGenConsole() {
                     }),
                     a.jsxs("div", {
                       children: [
-                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Phone Number *" }),
+                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Primary Phone Number *" }),
                         a.jsx("input", {
                           type: "text",
                           required: !0,
                           value: ingestPhone,
                           onChange: e => setIngestPhone(e.target.value),
+                          placeholder: "+91 98765 43210",
                           className: "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs outline-none"
                         })
                       ]
@@ -4510,7 +4519,37 @@ function SuperAdminLeadGenConsole() {
                 }),
 
                 a.jsxs("div", {
-                  className: "grid grid-cols-2 gap-3",
+                  className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+                  children: [
+                    a.jsxs("div", {
+                      children: [
+                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "WhatsApp Number" }),
+                        a.jsx("input", {
+                          type: "text",
+                          value: ingestWhatsapp,
+                          onChange: e => setIngestWhatsapp(e.target.value),
+                          placeholder: "+91 98765 43210 (defaults to phone)",
+                          className: "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-xs outline-none"
+                        })
+                      ]
+                    }),
+                    a.jsxs("div", {
+                      children: [
+                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Candidate Email" }),
+                        a.jsx("input", {
+                          type: "email",
+                          value: ingestEmail,
+                          onChange: e => setIngestEmail(e.target.value),
+                          placeholder: "e.g. rahul.verma@gmail.com",
+                          className: "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-xs outline-none"
+                        })
+                      ]
+                    })
+                  ]
+                }),
+
+                a.jsxs("div", {
+                  className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
                   children: [
                     a.jsxs("div", {
                       children: [
@@ -4520,20 +4559,22 @@ function SuperAdminLeadGenConsole() {
                           onChange: e => setIngestSharing(e.target.value),
                           className: "w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs outline-none",
                           children: [
-                            a.jsx("option", { value: "Single Room", children: "Single Room" }),
+                            a.jsx("option", { value: "Single Room", children: "Single Private Room" }),
                             a.jsx("option", { value: "Double Sharing", children: "Double Sharing" }),
-                            a.jsx("option", { value: "Triple Sharing", children: "Triple Sharing" })
+                            a.jsx("option", { value: "Triple Sharing", children: "Triple Sharing" }),
+                            a.jsx("option", { value: "Four Sharing", children: "Four Sharing" })
                           ]
                         })
                       ]
                     }),
                     a.jsxs("div", {
                       children: [
-                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Budget" }),
+                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Budget / Max Rent" }),
                         a.jsx("input", {
                           type: "text",
                           value: ingestBudget,
                           onChange: e => setIngestBudget(e.target.value),
+                          placeholder: "e.g. ₹9,500 / mo",
                           className: "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs outline-none"
                         })
                       ]
@@ -4542,32 +4583,86 @@ function SuperAdminLeadGenConsole() {
                 }),
 
                 a.jsxs("div", {
+                  className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
                   children: [
-                    a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Profession" }),
-                    a.jsx("input", {
-                      type: "text",
-                      value: ingestProfession,
-                      onChange: e => setIngestProfession(e.target.value),
-                      className: "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs outline-none"
+                    a.jsxs("div", {
+                      children: [
+                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Gender" }),
+                        a.jsxs("select", {
+                          value: ingestGender,
+                          onChange: e => setIngestGender(e.target.value),
+                          className: "w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs outline-none",
+                          children: [
+                            a.jsx("option", { value: "Male", children: "Male" }),
+                            a.jsx("option", { value: "Female", children: "Female" }),
+                            a.jsx("option", { value: "Any", children: "Any" })
+                          ]
+                        })
+                      ]
+                    }),
+                    a.jsxs("div", {
+                      children: [
+                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Profession / Company / College" }),
+                        a.jsx("input", {
+                          type: "text",
+                          value: ingestProfession,
+                          onChange: e => setIngestProfession(e.target.value),
+                          placeholder: "e.g. Infosys Engineer / Symbiosis Student",
+                          className: "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs outline-none"
+                        })
+                      ]
+                    })
+                  ]
+                }),
+
+                a.jsxs("div", {
+                  className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+                  children: [
+                    a.jsxs("div", {
+                      children: [
+                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Preferred Move-in Date" }),
+                        a.jsx("input", {
+                          type: "date",
+                          value: ingestMoveInDate,
+                          onChange: e => setIngestMoveInDate(e.target.value),
+                          className: "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs outline-none"
+                        })
+                      ]
+                    }),
+                    a.jsxs("div", {
+                      children: [
+                        a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Initial Status" }),
+                        a.jsxs("select", {
+                          value: ingestStatus,
+                          onChange: e => setIngestStatus(e.target.value),
+                          className: "w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs outline-none",
+                          children: [
+                            a.jsx("option", { value: "NEW", children: "🔥 New Enquiry (Action Required)" }),
+                            a.jsx("option", { value: "CONTACTED", children: "📞 Already Contacted" }),
+                            a.jsx("option", { value: "VISITED", children: "🚶 PG Visit Scheduled" }),
+                            a.jsx("option", { value: "INTERESTED", children: "⭐ Highly Interested" })
+                          ]
+                        })
+                      ]
                     })
                   ]
                 }),
 
                 a.jsxs("div", {
                   children: [
-                    a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Enquiry Details / Message" }),
+                    a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase mb-1", children: "Enquiry Details & Specific Preferences" }),
                     a.jsx("textarea", {
                       rows: 2,
                       value: ingestNotes,
                       onChange: e => setIngestNotes(e.target.value),
-                      placeholder: "e.g. Inquiring for immediate check-in next Monday. Needs Wi-Fi and food.",
+                      placeholder: "e.g. Inquired on Magicbricks for 1st floor AC room with Wi-Fi & parking. Move-in next week.",
                       className: "w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-xs outline-none"
                     })
                   ]
                 }),
 
                 a.jsxs("div", {
-                  className: "pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3",
+                  className: "pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3",
                   children: [
                     a.jsx("button", {
                       type: "button",
@@ -4575,10 +4670,10 @@ function SuperAdminLeadGenConsole() {
                       className: "px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl font-bold cursor-pointer",
                       children: "Cancel"
                     }),
-                    a.jsx("button", {
+                    a.jsxs("button", {
                       type: "submit",
-                      className: "px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black shadow-md cursor-pointer",
-                      children: "Dispatch Lead"
+                      className: "px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-1.5 transition-all",
+                      children: [a.jsx("span", { children: "✓" }), "Save & Assign Lead to PG Owner"]
                     })
                   ]
                 })
