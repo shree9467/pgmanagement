@@ -5726,17 +5726,265 @@ For security, please log in and change your password in the dashboard settings i
   body {
     background-color: #f8fafc !important;
     color: #0f172a !important;
+    -webkit-font-smoothing: antialiased !important;
+    text-rendering: optimizeLegibility !important;
   }
   #root, .min-h-screen:not([class*="bg-gradient-"]) {
     background-color: #f8fafc;
     color: #0f172a;
   }
-  .bg-white, .bg-white\/80, .bg-white\/75 {
+  .bg-white, .bg-white\/80, .bg-white\/75, .bg-white\/90 {
     background-color: #ffffff !important;
-    border-color: #e2e8f0 !important;
+    border-color: #cbd5e1 !important;
   }
 
-  /* HIGH CONTRAST TEXT */
+  /* ==========================================================================
+     1. FORM LABELS & HEADINGS (HIGH CONTRAST, CRISP & BOLD)
+     ========================================================================== */
+  label:not([class*="text-white"]):not([class*="bg-indigo-"]):not([class*="bg-purple-"]):not([class*="bg-emerald-"]):not([class*="bg-slate-900"]),
+  .form-label,
+  th {
+    color: #0f172a !important;
+    font-weight: 800 !important;
+  }
+
+  /* Small uppercase labels & section headers */
+  .text-\[8px\], .text-\[9px\], .text-\[10px\], .text-\[11px\] {
+    font-weight: 700 !important;
+  }
+
+  span[class*="uppercase"][class*="text-slate-400"]:not([class*="bg-slate-900"] *):not([class*="text-white"] *),
+  p[class*="uppercase"][class*="text-slate-400"]:not([class*="bg-slate-900"] *):not([class*="text-white"] *),
+  label[class*="uppercase"]:not([class*="bg-slate-900"] *):not([class*="text-white"] *) {
+    color: #1e293b !important;
+    font-weight: 800 !important;
+  }
+
+  /* ==========================================================================
+     2. FORM INPUTS, TEXTAREAS, SELECTS & DROPDOWN OPTIONS
+     ========================================================================== */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+  textarea,
+  select {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border: 1.5px solid #94a3b8 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):focus,
+  textarea:focus,
+  select:focus {
+    border-color: #4f46e5 !important;
+    outline: 2px solid rgba(79, 70, 229, 0.2) !important;
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+  }
+
+  /* Crisp placeholder text */
+  input::placeholder,
+  textarea::placeholder {
+    color: #64748b !important;
+    font-weight: 500 !important;
+    opacity: 1 !important;
+  }
+
+  /* Dropdown Options & Optgroups */
+  select option,
+  select optgroup {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+
+  select option:checked {
+    background-color: #e0e7ff !important;
+    color: #312e81 !important;
+    font-weight: 800 !important;
+  }
+
+  /* Disabled & Read-only form controls */
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    background-color: #f1f5f9 !important;
+    color: #1e293b !important;
+    border-color: #cbd5e1 !important;
+    opacity: 0.95 !important;
+    -webkit-text-fill-color: #1e293b !important;
+    font-weight: 700 !important;
+    cursor: not-allowed !important;
+  }
+
+  /* ==========================================================================
+     3. BUTTONS: PRIMARY, SECONDARY, ICON & ACTION BUTTONS
+     ========================================================================== */
+  /* Primary Action Buttons */
+  .app-theme-button-primary,
+  button.bg-indigo-600,
+  button.bg-purple-600,
+  button.bg-emerald-600,
+  button.bg-rose-600,
+  button.bg-amber-600,
+  button.bg-blue-600,
+  button.bg-slate-900,
+  button[class*="bg-indigo-600"],
+  button[class*="bg-purple-600"],
+  button[class*="bg-emerald-600"],
+  button[class*="bg-rose-600"],
+  button[class*="bg-blue-600"],
+  button[class*="bg-slate-900"],
+  .btn-pg-hub,
+  .btn-hub-back-top,
+  label[class*="text-white"],
+  label[class*="bg-indigo-"],
+  label[class*="bg-slate-900"],
+  label[class*="bg-purple-"] {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+
+  /* Ensure child text and SVGs inside primary buttons stay white */
+  button.bg-indigo-600 *,
+  button.bg-purple-600 *,
+  button.bg-emerald-600 *,
+  button.bg-rose-600 *,
+  button.bg-amber-600 *,
+  button.bg-blue-600 *,
+  button.bg-slate-900 *,
+  button[class*="bg-indigo-600"] *,
+  button[class*="bg-purple-600"] *,
+  button[class*="bg-emerald-600"] *,
+  button[class*="bg-rose-600"] *,
+  button[class*="bg-slate-900"] *,
+  .btn-pg-hub *,
+  label[class*="text-white"] * {
+    color: #ffffff !important;
+    fill: currentColor;
+  }
+
+  /* Secondary / Ghost / Outline Buttons */
+  button.bg-slate-100,
+  button.bg-slate-200,
+  button.bg-white,
+  button[class*="bg-slate-100"],
+  button[class*="bg-slate-200"],
+  button[class*="border-slate-"] {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+  }
+
+  /* Quick Action Buttons (WhatsApp, Call, Delete, Edit) */
+  .btn-wa,
+  button[class*="text-emerald-700"],
+  button[class*="text-green-700"] {
+    color: #064e3b !important;
+    font-weight: 800 !important;
+  }
+
+  button[class*="text-rose-600"],
+  button[class*="text-rose-700"] {
+    color: #881337 !important;
+    font-weight: 800 !important;
+  }
+
+  /* ==========================================================================
+     4. DARK CONTAINER CONTEXT (UPGRADE SUBSCRIPTION, SAAS LICENSE CARD, ETC.)
+     Inside dark cards, child text MUST remain bright, crisp, and high-contrast!
+     ========================================================================== */
+  .bg-slate-900,
+  .bg-slate-850,
+  .bg-slate-800,
+  .bg-slate-950,
+  [class*="bg-slate-900"]:not(:is(button)),
+  [class*="bg-slate-800"]:not(:is(button)),
+  [class*="bg-slate-950"]:not(:is(button)),
+  [class*="bg-indigo-950"],
+  [class*="bg-purple-950"] {
+    color: #ffffff !important;
+  }
+
+  /* Headings inside dark containers */
+  .bg-slate-900 h1, .bg-slate-900 h2, .bg-slate-900 h3, .bg-slate-900 h4, .bg-slate-900 h5, .bg-slate-900 h6,
+  [class*="bg-slate-900"] h1, [class*="bg-slate-900"] h2, [class*="bg-slate-900"] h3, [class*="bg-slate-900"] h4, [class*="bg-slate-900"] h5, [class*="bg-slate-900"] h6,
+  [class*="bg-slate-800"] h1, [class*="bg-slate-800"] h2, [class*="bg-slate-800"] h3, [class*="bg-slate-800"] h4 {
+    color: #ffffff !important;
+  }
+
+  /* Subtitles, labels, and helper text inside dark containers */
+  .bg-slate-900 .text-slate-400,
+  .bg-slate-900 .text-slate-350,
+  .bg-slate-900 .text-slate-300,
+  .bg-slate-900 .text-slate-200,
+  .bg-slate-900 .text-slate-100,
+  .bg-slate-900 .text-slate-500,
+  [class*="bg-slate-900"] .text-slate-400,
+  [class*="bg-slate-900"] .text-slate-350,
+  [class*="bg-slate-900"] .text-slate-300,
+  [class*="bg-slate-900"] .text-slate-200,
+  [class*="bg-slate-900"] .text-slate-100,
+  [class*="bg-slate-900"] .text-slate-500,
+  [class*="bg-slate-800"] .text-slate-400,
+  [class*="bg-slate-800"] .text-slate-300,
+  [class*="bg-slate-800"] .text-slate-200,
+  [class*="bg-slate-950"] .text-slate-400,
+  [class*="bg-slate-950"] .text-slate-300,
+  [class*="bg-slate-950"] .text-slate-200 {
+    color: #f1f5f9 !important;
+    font-weight: 600 !important;
+  }
+
+  /* Accent highlights inside dark containers */
+  .bg-slate-900 .text-indigo-400,
+  [class*="bg-slate-900"] .text-indigo-400,
+  [class*="bg-slate-950"] .text-indigo-400 {
+    color: #a5b4fc !important;
+    font-weight: 800 !important;
+  }
+
+  .bg-slate-900 .text-emerald-400,
+  [class*="bg-slate-900"] .text-emerald-400,
+  [class*="bg-slate-950"] .text-emerald-400 {
+    color: #6ee7b7 !important;
+    font-weight: 800 !important;
+  }
+
+  .bg-slate-900 .text-amber-400,
+  [class*="bg-slate-900"] .text-amber-400,
+  [class*="bg-slate-950"] .text-amber-400 {
+    color: #fde68a !important;
+    font-weight: 800 !important;
+  }
+
+  .bg-slate-900 .text-purple-400,
+  .bg-slate-900 .text-purple-300,
+  [class*="bg-slate-900"] .text-purple-400,
+  [class*="bg-slate-900"] .text-purple-300 {
+    color: #d8b4fe !important;
+    font-weight: 800 !important;
+  }
+
+  /* Sub-badges on dark backgrounds (e.g. SaaS License pill) */
+  .bg-slate-900 .bg-white\/10,
+  [class*="bg-slate-900"] .bg-white\/10,
+  [class*="bg-slate-950"] .bg-white\/10 {
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+  }
+
+  /* Dividers on dark backgrounds */
+  .bg-slate-900 .border-white\/10,
+  [class*="bg-slate-900"] .border-white\/10 {
+    border-color: rgba(255, 255, 255, 0.18) !important;
+  }
+
+  /* ==========================================================================
+     5. LIGHT THEME TEXT CONTRAST (DEFAULT PAGE CONTEXT)
+     ========================================================================== */
   .text-slate-900, .text-slate-850, .text-slate-800, .text-gray-900, .text-gray-800 {
     color: #0f172a !important;
     font-weight: 700 !important;
@@ -5745,103 +5993,162 @@ For security, please log in and change your password in the dashboard settings i
     color: #1e293b !important;
     font-weight: 600 !important;
   }
-  .text-slate-500, .text-slate-450, .text-slate-455, .text-gray-500, .text-gray-400 {
+  .text-slate-500, .text-slate-450, .text-slate-455, .text-slate-550, .text-slate-555, .text-gray-500, .text-gray-400 {
     color: #334155 !important;
     font-weight: 600 !important;
   }
   .text-slate-400, .text-slate-350, .text-slate-300 {
-    color: #475569 !important;
+    color: #334155 !important;
     font-weight: 600 !important;
   }
-  .text-\[8px\], .text-\[9px\], .text-\[10px\] {
+  .text-slate-200:not([class*="bg-slate-900"] *):not([class*="bg-slate-800"] *):not([class*="bg-slate-950"] *):not([class*="text-white"] *),
+  .text-slate-100:not([class*="bg-slate-900"] *):not([class*="bg-slate-800"] *):not([class*="bg-slate-950"] *):not([class*="text-white"] *),
+  .text-gray-300:not([class*="bg-slate-900"] *):not([class*="text-white"] *),
+  .text-zinc-400:not([class*="bg-slate-900"] *):not([class*="text-white"] *) {
+    color: #1e293b !important;
     font-weight: 700 !important;
   }
 
-  /* LABELS & TH - DO NOT OVERRIDE BUTTON/INPUT LABEL COLORS */
-  label:not([class*="text-white"]):not([class*="bg-"]):not([class*="cursor-pointer"]),
-  th {
-    color: #0f172a !important;
+  /* High contrast colors on light backgrounds */
+  .text-indigo-600, .text-indigo-500, .text-indigo-400, .text-indigo-300 {
+    color: #3730a3 !important;
+    font-weight: 700 !important;
+  }
+  .text-emerald-600, .text-emerald-500, .text-emerald-400, .text-emerald-300,
+  .text-green-600, .text-green-500, .text-green-400, .text-green-300 {
+    color: #065f46 !important;
+    font-weight: 700 !important;
+  }
+  .text-amber-600, .text-amber-500, .text-amber-400, .text-amber-300,
+  .text-yellow-600, .text-yellow-500, .text-yellow-400, .text-yellow-300 {
+    color: #92400e !important;
+    font-weight: 700 !important;
+  }
+  .text-purple-600, .text-purple-500, .text-purple-400, .text-purple-300 {
+    color: #581c87 !important;
+    font-weight: 700 !important;
+  }
+  .text-rose-600, .text-rose-500, .text-rose-400, .text-rose-300,
+  .text-red-600, .text-red-500, .text-red-400, .text-red-300 {
+    color: #9f1239 !important;
+    font-weight: 700 !important;
+  }
+  .text-blue-600, .text-blue-500, .text-blue-400, .text-blue-300 {
+    color: #1e40af !important;
     font-weight: 700 !important;
   }
 
-  /* ENSURE ALL BUTTONS AND UPLOAD LABELS ARE CRISP & CLEARLY VISIBLE */
-  label[class*="text-white"],
-  label[class*="bg-indigo-"],
-  label[class*="bg-slate-900"],
-  label[class*="bg-purple-"],
-  button[class*="text-white"],
-  .btn-pg-hub,
-  .btn-hub-back-top {
-    color: #ffffff !important;
+  /* ==========================================================================
+     6. BADGES, CHIPS & STATUS PILLS (DEEP HIGH CONTRAST)
+     ========================================================================== */
+  .bg-indigo-50, .bg-indigo-100 {
+    background-color: #eef2ff !important;
+    border-color: #c7d2fe !important;
   }
-
-  label[class*="text-white"] svg,
-  label[class*="bg-indigo-"] svg,
-  label[class*="bg-slate-900"] svg,
-  button[class*="text-white"] svg {
-    color: #ffffff !important;
-    fill: currentColor;
-  }
-
-  /* BADGES & CHIPS WITH HIGH CONTRAST TEXT */
-  .bg-indigo-50 .text-indigo-700, .bg-indigo-100 .text-indigo-800, .text-indigo-750, .text-indigo-650, .text-indigo-600 {
+  .bg-indigo-50 *, .bg-indigo-100 * {
     color: #312e81 !important;
     font-weight: 800 !important;
   }
-  .bg-emerald-50 .text-emerald-700, .bg-emerald-100 .text-emerald-800, .text-emerald-600 {
+
+  .bg-emerald-50, .bg-emerald-100, .bg-green-50, .bg-green-100 {
+    background-color: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+  }
+  .bg-emerald-50 *, .bg-emerald-100 *, .bg-green-50 *, .bg-green-100 * {
     color: #064e3b !important;
     font-weight: 800 !important;
   }
-  .bg-amber-50 .text-amber-700, .bg-amber-100 .text-amber-800, .text-amber-600 {
+
+  .bg-amber-50, .bg-amber-100, .bg-yellow-50, .bg-yellow-100 {
+    background-color: #fffbeb !important;
+    border-color: #fde68a !important;
+  }
+  .bg-amber-50 *, .bg-amber-100 *, .bg-yellow-50 *, .bg-yellow-100 * {
     color: #78350f !important;
     font-weight: 800 !important;
   }
-  .bg-rose-50 .text-rose-700, .bg-rose-100 .text-rose-800, .text-rose-600 {
+
+  .bg-rose-50, .bg-rose-100, .bg-red-50, .bg-red-100 {
+    background-color: #fff1f2 !important;
+    border-color: #fecdd3 !important;
+  }
+  .bg-rose-50 *, .bg-rose-100 *, .bg-red-50 *, .bg-red-100 * {
     color: #881337 !important;
     font-weight: 800 !important;
   }
-  .bg-purple-50 .text-purple-700, .bg-purple-100 .text-purple-800, .text-purple-600 {
+
+  .bg-purple-50, .bg-purple-100 {
+    background-color: #faf5ff !important;
+    border-color: #e9d5ff !important;
+  }
+  .bg-purple-50 *, .bg-purple-100 * {
     color: #4c1d95 !important;
     font-weight: 800 !important;
   }
 
-  /* FORM INPUTS & SELECTS */
-  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
-  textarea,
-  select {
-    background-color: #ffffff !important;
+  .bg-slate-100, .bg-slate-200, .bg-gray-100 {
+    background-color: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+  }
+  .bg-slate-100 *, .bg-slate-200 *, .bg-gray-100 * {
+    color: #1e293b !important;
+    font-weight: 700 !important;
+  }
+
+  /* ==========================================================================
+     7. TABLES: HEADERS, ROWS & CELLS
+     ========================================================================== */
+  table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+  th {
     color: #0f172a !important;
-    border-color: #94a3b8 !important;
+    font-weight: 800 !important;
+    background-color: #f8fafc !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+  }
+  td {
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+  td .text-slate-400,
+  td .text-slate-500,
+  td .text-slate-600 {
+    color: #334155 !important;
     font-weight: 600 !important;
   }
-  input::placeholder,
-  textarea::placeholder {
-    color: #64748b !important;
+
+  /* ==========================================================================
+     8. TABS, SIDEBAR & BREADCRUMBS
+     ========================================================================== */
+  /* Inactive tabs */
+  button[class*="text-slate-400"]:not(:is(.bg-slate-900 *)):not([class*="bg-indigo-"]):not([class*="bg-emerald-"]):not([class*="bg-purple-"]),
+  a[class*="text-slate-400"]:not(:is(.bg-slate-900 *)) {
+    color: #334155 !important;
+    font-weight: 700 !important;
+  }
+
+  /* Modal Dialog Titles & Descriptions */
+  .fixed.inset-0 h3,
+  .fixed.inset-0 h2,
+  .fixed.inset-0 h4 {
+    color: #0f172a !important;
+    font-weight: 900 !important;
+  }
+
+  .fixed.inset-0 p {
+    color: #334155 !important;
     font-weight: 500 !important;
   }
 
-  /* BUTTON TEXT COLOR */
-  .app-theme-button-primary,
-  button.bg-indigo-600,
-  button.bg-purple-600,
-  button.bg-emerald-600,
-  button.bg-rose-600,
-  button.bg-amber-600,
-  button.bg-blue-600,
-  [class*="bg-indigo-600"],
-  [class*="bg-purple-600"],
-  [class*="bg-emerald-600"],
-  [class*="bg-rose-600"],
-  [class*="bg-blue-600"] {
-    color: #ffffff !important;
-  }
-  button.bg-slate-900,
-  .bg-slate-900:is(button) {
-    background-color: #0f172a !important;
-    color: #ffffff !important;
-  }
-
-  /* MOBILE RESPONSIVENESS (<= 640px) */
+  /* ==========================================================================
+     9. MOBILE RESPONSIVENESS (<= 640px)
+     ========================================================================== */
   @media (max-width: 640px) {
     body, html, #root {
       overflow-x: hidden !important;
