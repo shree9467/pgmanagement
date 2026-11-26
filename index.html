@@ -83,7 +83,7 @@ ${S}`}class Rn extends Error{constructor({message:t,code:r,cause:n,name:s}){var 
 
 
 ${s}
-/${t}/${o}`,d=n.replace(/-----BEGIN PRIVATE KEY-----/,"").replace(/-----END PRIVATE KEY-----/,"").replace(/\s/g,""),f=atob(d),h=af(f),m=await window.crypto.subtle.importKey("pkcs8",h,{name:"RSASSA-PKCS1-v1_5",hash:{name:"SHA-256"}},!1,["sign"]),g=await window.crypto.subtle.sign("RSASSA-PKCS1-v1_5",m,af(c));let x="";const y=new Uint8Array(g);for(let k=0;k<y.byteLength;k++)x+=String.fromCharCode(y[k]);const w=btoa(x);return`https://storage.googleapis.com/${t}/${o}?GoogleAccessId=${encodeURIComponent(r)}&Expires=${s}&Signature=${encodeURIComponent(w)}`},EP={},I$=EP?.VITE_SUPABASE_URL||"https://fswlweejdyhrywvzhzvw.supabase.co",M$=EP?.VITE_SUPABASE_ANON_KEY||"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzd2x3ZWVqZHlocnl3dnpoenZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MzM0NDAsImV4cCI6MjA5NTIwOTQ0MH0.2jpjjySEfYi5qPZKLeGKVBQzlj60rwI7bKxF5aGYrTI",we=O$(I$,M$),Hs=async(e,t)=>D$(e,t),L$=[{day:"Monday",breakfast:"Idli, Sambar, Coconut Chutney",lunch:"Rice, Dal, Veg Curry, Curd",dinner:"Chapati, Paneer Masala, Dal, Rice"},{day:"Tuesday",breakfast:"Poha, Sev, Lemon Tea",lunch:"Jeera Rice, Chana Masala, Raita",dinner:"Chapati, Aloo Gobi Dry, Dal, Rice"},{day:"Wednesday",breakfast:"Aloo Paratha, Butter, Curd",lunch:"Rice, Sambhar, Papad, Curry",dinner:"Chapati, Chicken Masala / Egg Curry, Rice"}];function sA(e,t){let pName=e.plan_name,cMeta=e.customMeta||null;if(typeof pName==="object"&&pName!==null){if(pName.isCustom){cMeta=pName;pName=JSON.stringify(pName);}else if(pName.name){pName=pName.name;}}if(!pName&&e.email){try{const cp=localStorage.getItem("saas_plan_license_"+e.email.toLowerCase().trim());if(cp)pName=cp;}catch(_){}}if(!pName&&e.id){try{const cp=localStorage.getItem("saas_plan_license_"+e.id);if(cp)pName=cp;}catch(_){}}if(!pName)pName="Starter Node";if(!cMeta&&typeof pName==="string"&&pName.startsWith("{")){try{cMeta=JSON.parse(pName)}catch(_){}}if(cMeta&&cMeta.isCustom){return{...e,plan_name:typeof pName==="string"?pName:JSON.stringify(cMeta),customMeta:cMeta,maxBuildings:cMeta.maxBuildings||5,maxUsers:cMeta.maxUsers||100};}const pLower=String(pName).toLowerCase().trim();let n=1,s=30;if(pLower.includes("enterprise")){n=999;s=99999;}else if(pLower.includes("scale")){n=3;s=999;}else{const r=(t||[]).find(o=>o.name===pName);if(r){n=r.maxBuildings||1;s=r.maxUsers??30;}}return{...e,plan_name:pName,maxBuildings:n,maxUsers:s};}function CP(e){const bList=(Ee.getState().rawBuildings||[]).filter(b=>b.ownerId===e||b.owner_id===e||b.owner===e);return bList.map(b=>b.name||b.id).filter(Boolean)}async function iA(e){const t=new TextEncoder().encode(e),r=await crypto.subtle.digest("SHA-256",t);return Array.from(new Uint8Array(r)).map(s=>s.toString(16).padStart(2,"0")).join("")}const oA=["relational-layout-data","buildings-data","whitelabel-customizations-data","losses-data","shifting-history-data","activity-logs-data","weekly-dining-menu-data","account-limits-data","tenants-data","documents-data","onboarding-apps-data","invoices-data","subscription-payments-data","admin-payment-settings-data","sla-ticket-","guest-reg-","sa-broadcast-","automation-rules-data","automation-logs-data","saas-","owner-support-"],E0=[{id:"owner-1786516458271",name:"dukes",email:"dukes@gmail.com",password:"tenat123",role:"OWNER",status:"ACTIVE"},{id:"acc1",name:"Super Admin Root",email:"admin@srinoos.com",password:"admin@Srinoos#9467",role:"SUPER_ADMIN",status:"ACTIVE"},{id:"acc2",name:"Shrinivas",email:"shree@gmail.com",password:"owner@shreehub#2026",role:"OWNER",status:"ACTIVE"},{id:"acc3",name:"Rahul Verma",email:"resident@RahulVerma#55",password:"tenant@rahul#2026",role:"TENANT",status:"ACTIVE"},{id:"acc4",name:"PG Manager Rajesh",email:"manager@gmail.com",password:"manager@rajesh#2026",role:"MANAGER",status:"ACTIVE",ownerId:"acc2",assignedBuildings:["Building A"],plan_name:"dashboard,tenants,rooms,expenses"}];function Gh(e,t){let r=e?e.split("?metadata=")[0]:"";if(r&&r.length>20000&&r.startsWith("data:image/")){r="https://api.dicebear.com/7.x/adventurer/svg?seed=avatar";}try{const n=btoa(encodeURIComponent(JSON.stringify(t)));return r?`${r}?metadata=${n}`:`?metadata=${n}`}catch(n){return console.error("Failed to encode metadata to base64:",n),r||""}}function lA(e){if(!e)return{avatar:"",metadata:{}};const t=e.split("?metadata="),r=t[0];let n={};if(t[1])try{let b=decodeURIComponent(t[1]).trim(),w=atob(b);try{n=JSON.parse(decodeURIComponent(w))}catch(_){n=JSON.parse(w)}}catch(s){console.error("Failed to decode metadata from base64:",s)}return{avatar:r,metadata:n}}window.lA=lA;window.getTenantPrivateDocs = (tenant, localDocs) => {
+/${t}/${o}`,d=n.replace(/-----BEGIN PRIVATE KEY-----/,"").replace(/-----END PRIVATE KEY-----/,"").replace(/\s/g,""),f=atob(d),h=af(f),m=await window.crypto.subtle.importKey("pkcs8",h,{name:"RSASSA-PKCS1-v1_5",hash:{name:"SHA-256"}},!1,["sign"]),g=await window.crypto.subtle.sign("RSASSA-PKCS1-v1_5",m,af(c));let x="";const y=new Uint8Array(g);for(let k=0;k<y.byteLength;k++)x+=String.fromCharCode(y[k]);const w=btoa(x);return`https://storage.googleapis.com/${t}/${o}?GoogleAccessId=${encodeURIComponent(r)}&Expires=${s}&Signature=${encodeURIComponent(w)}`},EP={},I$=EP?.VITE_SUPABASE_URL||"https://fswlweejdyhrywvzhzvw.supabase.co",M$=EP?.VITE_SUPABASE_ANON_KEY||"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzd2x3ZWVqZHlocnl3dnpoenZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MzM0NDAsImV4cCI6MjA5NTIwOTQ0MH0.2jpjjySEfYi5qPZKLeGKVBQzlj60rwI7bKxF5aGYrTI",we=O$(I$,M$),Hs=async(e,t)=>D$(e,t),L$=[{day:"Monday",breakfast:"Idli, Sambar, Coconut Chutney",lunch:"Rice, Dal, Veg Curry, Curd",dinner:"Chapati, Paneer Masala, Dal, Rice"},{day:"Tuesday",breakfast:"Poha, Sev, Lemon Tea",lunch:"Jeera Rice, Chana Masala, Raita",dinner:"Chapati, Aloo Gobi Dry, Dal, Rice"},{day:"Wednesday",breakfast:"Aloo Paratha, Butter, Curd",lunch:"Rice, Sambhar, Papad, Curry",dinner:"Chapati, Chicken Masala / Egg Curry, Rice"}];function sA(e,t){let pName=e.plan_name,cMeta=e.customMeta||null;if(typeof pName==="object"&&pName!==null){if(pName.isCustom){cMeta=pName;pName=JSON.stringify(pName);}else if(pName.name){pName=pName.name;}}if(!pName&&e.email){try{const cp=localStorage.getItem("saas_plan_license_"+e.email.toLowerCase().trim());if(cp)pName=cp;}catch(_){}}if(!pName&&e.id){try{const cp=localStorage.getItem("saas_plan_license_"+e.id);if(cp)pName=cp;}catch(_){}}if(!pName)pName="Starter Node";if(!cMeta&&typeof pName==="string"&&pName.startsWith("{")){try{cMeta=JSON.parse(pName)}catch(_){}}if(cMeta&&cMeta.isCustom){return{...e,plan_name:typeof pName==="string"?pName:JSON.stringify(cMeta),customMeta:cMeta,maxBuildings:cMeta.maxBuildings||5,maxUsers:cMeta.maxUsers||100};}const pLower=String(pName).toLowerCase().trim();let n=1,s=30;if(pLower.includes("enterprise")){n=999;s=99999;}else if(pLower.includes("scale")){n=3;s=999;}else{const r=(t||[]).find(o=>o.name===pName);if(r){n=r.maxBuildings||1;s=r.maxUsers??30;}}return{...e,plan_name:pName,maxBuildings:n,maxUsers:s};}function CP(e){const bList=(Ee.getState().rawBuildings||[]).filter(b=>b.ownerId===e||b.owner_id===e||b.owner===e);return bList.map(b=>b.name||b.id).filter(Boolean)}async function iA(e){const t=new TextEncoder().encode(e),r=await crypto.subtle.digest("SHA-256",t);return Array.from(new Uint8Array(r)).map(s=>s.toString(16).padStart(2,"0")).join("")}const oA=["relational-layout-data","buildings-data","whitelabel-customizations-data","losses-data","shifting-history-data","activity-logs-data","weekly-dining-menu-data","account-limits-data","tenants-data","documents-data","onboarding-apps-data","invoices-data","subscription-payments-data","admin-payment-settings-data","sla-ticket-","guest-reg-","sa-broadcast-","automation-rules-data","automation-logs-data","saas-","owner-support-","reg-status-registry-data"],E0=[{id:"owner-1786516458271",name:"dukes",email:"dukes@gmail.com",password:"tenat123",role:"OWNER",status:"ACTIVE"},{id:"acc1",name:"Super Admin Root",email:"admin@srinoos.com",password:"admin@Srinoos#9467",role:"SUPER_ADMIN",status:"ACTIVE"},{id:"acc2",name:"Shrinivas",email:"shree@gmail.com",password:"owner@shreehub#2026",role:"OWNER",status:"ACTIVE"},{id:"acc3",name:"Rahul Verma",email:"resident@RahulVerma#55",password:"tenant@rahul#2026",role:"TENANT",status:"ACTIVE"},{id:"acc4",name:"PG Manager Rajesh",email:"manager@gmail.com",password:"manager@rajesh#2026",role:"MANAGER",status:"ACTIVE",ownerId:"acc2",assignedBuildings:["Building A"],plan_name:"dashboard,tenants,rooms,expenses"}];function Gh(e,t){let r=e?e.split("?metadata=")[0]:"";if(r&&r.length>20000&&r.startsWith("data:image/")){r="https://api.dicebear.com/7.x/adventurer/svg?seed=avatar";}try{const n=btoa(encodeURIComponent(JSON.stringify(t)));return r?`${r}?metadata=${n}`:`?metadata=${n}`}catch(n){return console.error("Failed to encode metadata to base64:",n),r||""}}function lA(e){if(!e)return{avatar:"",metadata:{}};const t=e.split("?metadata="),r=t[0];let n={};if(t[1])try{let b=decodeURIComponent(t[1]).trim(),w=atob(b);try{n=JSON.parse(decodeURIComponent(w))}catch(_){n=JSON.parse(w)}}catch(s){console.error("Failed to decode metadata from base64:",s)}return{avatar:r,metadata:n}}window.lA=lA;window.getTenantPrivateDocs = (tenant, localDocs) => {
   if (!tenant) return [];
   const st = (typeof window !== "undefined" && window.store?.getState) ? window.store.getState() : {};
   const allD = Array.from(new Map([...(localDocs || []), ...(st.rawDocuments || []), ...(st.documents || [])].map(item => [item.id || item.name, item])).values());
@@ -9326,10 +9326,47 @@ function OwnerUrgentSupportModal({open:isOpen,onClose,selectedBuildingName}){
 
 
 
+
+window.getGuestRegStatusMap=function(allNotices){
+  const list=allNotices||Ee.getState().allDbNotices||[];
+  const row=list.find(nt=>nt&&nt.id==="reg-status-registry-data");
+  if(!row||!row.content)return{};
+  try{
+    const parsed=typeof row.content==="string"?JSON.parse(row.content):row.content;
+    return (parsed&&typeof parsed==="object")?parsed:{};
+  }catch(_){return{}}
+};
+
+window.saveGuestRegStatus=async function(appId,statusObj){
+  let currentMap=window.getGuestRegStatusMap(Ee.getState().allDbNotices);
+  try{
+    const{data:dbRow}=await we.from("notices").select("*").eq("id","reg-status-registry-data").maybeSingle();
+    if(dbRow&&dbRow.content){
+      const parsed=typeof dbRow.content==="string"?JSON.parse(dbRow.content):dbRow.content;
+      if(parsed&&typeof parsed==="object")currentMap={...parsed,...currentMap};
+    }
+  }catch(_){}
+  const nextMap={...currentMap,[appId]:{...(currentMap[appId]||{}),...statusObj,updatedAt:new Date().toISOString()}};
+  const regRow={
+    id:"reg-status-registry-data",
+    title:"Guest Registration Status Registry",
+    date:new Intl.DateTimeFormat("en-IN",{day:"2-digit",month:"short",year:"numeric"}).format(new Date()),
+    content:JSON.stringify(nextMap),
+    owner_id:"acc1"
+  };
+  const{error:upErr}=await we.from("notices").upsert([regRow],{onConflict:"id"});
+  if(upErr)throw upErr;
+  Ee.setState(prev=>({
+    allDbNotices:[regRow,...(prev.allDbNotices||[]).filter(nt=>nt&&nt.id!=="reg-status-registry-data")]
+  }));
+  return nextMap;
+};
+
 window.fetchGuestRegsSafe=async function(force){
   if(!force&&window.__srinoosGuestRegsTs&&(Date.now()-window.__srinoosGuestRegsTs)<6e4){
     return (Ee.getState().allDbNotices||[]).filter(nt=>nt?.id&&String(nt.id).startsWith("guest-reg-"));
   }
+  try{const{data:sRow}=await we.from("notices").select("*").eq("id","reg-status-registry-data").maybeSingle();if(sRow){Ee.setState(prev=>({allDbNotices:[sRow,...(prev.allDbNotices||[]).filter(nt=>nt&&nt.id!=="reg-status-registry-data")]}))}}catch(_){}
   const{data:meta,error:mErr}=await we.from("notices").select("id,title,date,owner_id").like("id","guest-reg-%").limit(500);
   if(mErr)throw mErr;
   if(!meta||meta.length===0)return[];
@@ -9402,13 +9439,17 @@ function SuperAdminGuestOnboardingSection(){
 
   const apps=b.useMemo(()=>{
     const out=[];
+    const statusMap=window.getGuestRegStatusMap(allDbNotices);
     (allDbNotices||[]).forEach(nt=>{
       if(!nt||!nt.id||!String(nt.id).startsWith("guest-reg-"))return;
       try{
         const p=typeof nt.content==="string"?JSON.parse(nt.content):nt.content;
         if(!p||p.type!=="GUEST_REGISTRATION_APP")return;
+        const stOv=statusMap[nt.id]||{};
         out.push({
           ...p,
+          ...stOv,
+          status:stOv.status||p.status,
           id:nt.id,
           dbOwnerId:nt.owner_id||p.ownerId||"",
           submittedAt:p.submittedAt||nt.date||""
@@ -9471,8 +9512,8 @@ function SuperAdminGuestOnboardingSection(){
         content:JSON.stringify(updatedPayload),
         owner_id:targetOwner.id
       };
-      const{error:upErr}=await we.from("notices").upsert([updatedNotice],{onConflict:"id"});
-      if(upErr)throw upErr;
+      await window.saveGuestRegStatus(ap.id,{status:"PENDING_APPROVAL",ownerId:targetOwner.id,ownerName:targetOwner.name,assignedOwnerId:targetOwner.id,assignedOwnerName:targetOwner.name,assignedBySuperAdmin:!0,buildingId:chosenBld,building:chosenBld});
+      try{await we.from("notices").upsert([updatedNotice],{onConflict:"id"});}catch(_){}
       Ee.setState(prev=>({
         allDbNotices:[updatedNotice,...(prev.allDbNotices||[]).filter(nt=>nt.id!==ap.id)]
       }));
@@ -9838,7 +9879,7 @@ function SuperAdminAnnouncementsSection(){
 }
 function PendingGuestRegistrationsPanel(){
   const{user:e,allDbNotices:t,buildings:r,selectedBuilding:n,bedsRelational:s,roomsRelational:o,floors:c,addTenant:d,allocateTenant:f,addDocument:h,addAccount:m,rawAccounts:g}=Ee();
-  const[x,y]=b.useState(!1),[w,k]=b.useState({}),[A,S]=b.useState({});
+  const[x,y]=b.useState(!1),[w,k]=b.useState({}),[A,S]=b.useState({}),[showHist,setShowHist]=b.useState(!1);
   const activeOwner=Ee.getState().getActiveOwnerId()||e?.id||"";
   const ownerKeys=b.useMemo(()=>{
     const ks=new Set([activeOwner,e?.id].filter(Boolean));
@@ -9855,25 +9896,32 @@ function PendingGuestRegistrationsPanel(){
     finally{y(!1);}
   },[]);
   b.useEffect(()=>{refreshRegs(!0)},[refreshRegs]);
-  const pendingApps=b.useMemo(()=>{
-    const list=t||[],out=[];
+  const{pendingApps,historyApps}=b.useMemo(()=>{
+    const list=t||[],pendingOut=[],histOut=[];
+    const statusMap=window.getGuestRegStatusMap(list);
     list.forEach(nt=>{
       if(!nt||!nt.id||!String(nt.id).startsWith("guest-reg-"))return;
       try{
         const p=typeof nt.content==="string"?JSON.parse(nt.content):nt.content;
-        if(!p||p.type!=="GUEST_REGISTRATION_APP"||p.status!=="PENDING_APPROVAL")return;
-        const pOwner=p.ownerId||nt.owner_id||"";
+        if(!p||p.type!=="GUEST_REGISTRATION_APP")return;
+        const stOv=statusMap[nt.id];
+        const effStatus=stOv?.status||p.status;
+        if(effStatus==="PENDING_SUPER_ADMIN")return;
+        const pOwner=stOv?.ownerId||p.ownerId||nt.owner_id||"";
         if(pOwner&&!ownerKeys.has(pOwner)&&!ownerKeys.has(String(pOwner).toLowerCase().trim()))return;
         if(n&&n!==""&&n!=="ALL"){
           const bMatch=(r||[]).find(bItem=>bItem.name===n||bItem.id===n);
           const nL=String(n).trim().toLowerCase(),idL=String(bMatch?.id||"").trim().toLowerCase(),nmL=String(bMatch?.name||"").trim().toLowerCase();
-          const pb=String(p.buildingId||p.building||"").trim().toLowerCase();
+          const pb=String(stOv?.buildingId||stOv?.building||p.buildingId||p.building||"").trim().toLowerCase();
           if(pb&&pb!==nL&&(!idL||pb!==idL)&&(!nmL||pb!==nmL))return;
         }
-        out.push({...p,id:nt.id,date:p.date||nt.date||""});
+        const merged={...p,...(stOv||{}),status:effStatus,id:nt.id,date:p.date||nt.date||""};
+        if(effStatus==="PENDING_APPROVAL")pendingOut.push(merged);
+        else if(effStatus==="APPROVED"||effStatus==="REJECTED")histOut.push(merged);
       }catch(_){}
     });
-    return out.sort((a1,a2)=>String(a2.submittedAt||a2.id).localeCompare(String(a1.submittedAt||a1.id)));
+    const byDate=(a1,a2)=>String(a2.submittedAt||a2.id).localeCompare(String(a1.submittedAt||a1.id));
+    return{pendingApps:pendingOut.sort(byDate),historyApps:histOut.sort(byDate)};
   },[t,ownerKeys,n,r]);
   const getAvailBedsForApp=app=>{
     const allB=Ee.getState().rawBedsRelational?.length?Ee.getState().rawBedsRelational:(s||[]);
@@ -9939,9 +9987,12 @@ function PendingGuestRegistrationsPanel(){
           await m({id:tenantId,name:app.name,email:app.email,password:(app.phone||"tenant123").replace(/[^0-9a-zA-Z]/g,"")||"tenant123",role:"TENANT",status:"ACTIVE",ownerId:activeOwner});
         }
       }catch(_){}
-      const approvedPayload={...app,status:"APPROVED",approvedAt:new Date().toISOString(),allocatedTenantId:tenantId,allocatedRoom:finalRoom,allocatedBedId:chosenBed?.id||null};
+      const approvedAt=new Date().toISOString();
+      await window.saveGuestRegStatus(app.id,{status:"APPROVED",approvedAt,allocatedTenantId:tenantId,allocatedRoom:finalRoom,allocatedBedId:chosenBed?.id||null,ownerId:app.ownerId||activeOwner});
+      const approvedPayload={...app,status:"APPROVED",approvedAt,allocatedTenantId:tenantId,allocatedRoom:finalRoom,allocatedBedId:chosenBed?.id||null};
       const approvedRow={id:app.id,title:`Guest Registration: ${app.name}`,content:JSON.stringify(approvedPayload),date:app.date,owner_id:app.ownerId||activeOwner};
-      await we.from("notices").upsert([approvedRow],{onConflict:"id"});
+      try{await we.from("notices").upsert([approvedRow],{onConflict:"id"});}catch(_){}
+      try{await we.from("onboarding_apps").update({status:"APPROVED"}).eq("id",app.id);}catch(_){}
       Ee.setState(prev=>({allDbNotices:(prev.allDbNotices||[]).map(nt=>nt.id===app.id?approvedRow:nt)}));
       z.dismiss(ld);
       z.success(chosenBed?`Approved ${app.name} & allocated Room ${finalRoom} (${chosenBed.number})!`:`Approved ${app.name} and added to Tenants!`);
@@ -9955,18 +10006,40 @@ function PendingGuestRegistrationsPanel(){
     if(!window.confirm(`Reject guest registration from ${app.name}?`))return;
     const ld=z.loading("Updating registration status...");
     try{
-      const rejPayload={...app,status:"REJECTED",rejectedAt:new Date().toISOString()};
+      const rejectedAt=new Date().toISOString();
+      await window.saveGuestRegStatus(app.id,{status:"REJECTED",rejectedAt,ownerId:app.ownerId||activeOwner});
+      const rejPayload={...app,status:"REJECTED",rejectedAt};
       const rejRow={id:app.id,title:`Guest Registration: ${app.name}`,content:JSON.stringify(rejPayload),date:app.date,owner_id:app.ownerId||activeOwner};
-      await we.from("notices").upsert([rejRow],{onConflict:"id"});
+      try{await we.from("notices").upsert([rejRow],{onConflict:"id"});}catch(_){}
+      try{await we.from("onboarding_apps").update({status:"REJECTED"}).eq("id",app.id);}catch(_){}
       Ee.setState(prev=>({allDbNotices:(prev.allDbNotices||[]).map(nt=>nt.id===app.id?rejRow:nt)}));
       z.dismiss(ld);
       z.success(`Rejected registration for ${app.name}.`);
     }catch(err){z.dismiss(ld);z.error("Failed to reject registration.");}
   };
+  const historyPanel=showHist&&historyApps.length>0&&a.jsx("div",{className:"mt-3 space-y-2 border-t border-indigo-100 dark:border-indigo-900/40 pt-3",children:historyApps.map(ha=>a.jsxs("div",{className:"flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs",children:[
+    a.jsxs("div",{className:"flex items-center gap-2 flex-wrap",children:[
+      a.jsx("strong",{className:"text-slate-900 dark:text-white",children:ha.name}),
+      a.jsx("span",{className:Be("px-2 py-0.5 rounded-full text-[9px] font-black uppercase border",ha.status==="APPROVED"?"bg-emerald-50 text-emerald-700 border-emerald-200":"bg-rose-50 text-rose-700 border-rose-200"),children:ha.status}),
+      ha.buildingId&&a.jsx("span",{className:"text-[10px] text-slate-500",children:`🏢 ${ha.buildingId}`}),
+      ha.allocatedRoom&&a.jsx("span",{className:"text-[10px] text-emerald-600 font-bold",children:`Room ${ha.allocatedRoom}`})
+    ]}),
+    a.jsxs("div",{className:"flex items-center gap-2 text-[10px] text-slate-500",children:[
+      a.jsx("span",{children:ha.phone||ha.email||""}),
+      ha.aadhaarUrl&&a.jsx("a",{href:ha.aadhaarUrl,target:"_blank",rel:"noopener noreferrer",className:"px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md font-bold no-underline",children:"Aadhaar"}),
+      ha.panUrl&&a.jsx("a",{href:ha.panUrl,target:"_blank",rel:"noopener noreferrer",className:"px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md font-bold no-underline",children:"PAN"})
+    ]})
+  ]},ha.id))});
   if(pendingApps.length===0){
-    return a.jsxs("div",{className:"flex items-center justify-between px-4 py-2.5 bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 rounded-2xl text-xs",children:[
-      a.jsx("span",{className:"font-semibold text-indigo-700 dark:text-indigo-300",children:"📋 Guest Self-Registration Queue: No pending applications right now."}),
-      a.jsx("button",{type:"button",onClick:()=>refreshRegs(!1),disabled:x,className:"px-3 py-1 bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 rounded-lg text-[11px] font-bold cursor-pointer hover:bg-indigo-50",children:x?"Checking...":"↻ Check New Submissions"})
+    return a.jsxs("div",{className:"px-4 py-2.5 bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 rounded-2xl text-xs",children:[
+      a.jsxs("div",{className:"flex flex-wrap items-center justify-between gap-2",children:[
+        a.jsx("span",{className:"font-semibold text-indigo-700 dark:text-indigo-300",children:"📋 Guest Self-Registration Queue: No pending applications right now."}),
+        a.jsxs("div",{className:"flex items-center gap-2",children:[
+          historyApps.length>0&&a.jsx("button",{type:"button",onClick:()=>setShowHist(v=>!v),className:"px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-[11px] font-bold cursor-pointer hover:bg-slate-50",children:showHist?"Hide History":`History (${historyApps.length})`}),
+          a.jsx("button",{type:"button",onClick:()=>refreshRegs(!1),disabled:x,className:"px-3 py-1 bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 rounded-lg text-[11px] font-bold cursor-pointer hover:bg-indigo-50",children:x?"Checking...":"↻ Check New Submissions"})
+        ]})
+      ]}),
+      historyPanel
     ]});
   }
   return a.jsxs("div",{className:"bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900 border-2 border-indigo-200 dark:border-indigo-800/60 rounded-3xl p-5 shadow-sm space-y-4",children:[
