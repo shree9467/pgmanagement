@@ -4617,86 +4617,308 @@ function SuperAdminLeadGenConsole() {
 
   // Printable Smart QR Flyer Window
   const printQrFlyer = () => {
-    const loc = leadData.agentConfig?.address || agentAddress || "Koramangala 4th Block, Bangalore";
-    const qrData = encodeURIComponent("https://mangement-pg.vercel.app");
-    const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=" + qrData;
-    const printWindow = window.open("", "_blank", "width=850,height=1000");
+    const loc = leadData.agentConfig?.address || agentAddress || "Prime Coliving Locations";
+    const contactPhone = Ee.getState().organization?.contactPhone || "+91 98765 43210";
+    const siteUrl = "https://srinooscoliving.com";
+    const siteDomain = "srinooscoliving.com";
+    const qrData = encodeURIComponent(siteUrl);
+    const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=420x420&ecc=H&margin=12&format=png&data=" + qrData;
+    const printWindow = window.open("", "_blank", "width=880,height=1050");
     if (!printWindow) {
       z.error("Popup blocked! Please allow popups to print the marketing flyer.");
       return;
     }
 
-    const flyerHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Print Marketing Flyer - ${loc}</title>
-      <style>
-        @page { size: A4 portrait; margin: 15mm; }
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { margin: 0; padding: 20px; background: #fff; color: #0f172a; }
-        .flyer-container { max-width: 720px; margin: 0 auto; border: 3px solid #7c3aed; border-radius: 24px; padding: 36px; text-align: center; background: #faf5ff; }
-        .badge { display: inline-block; background: #7c3aed; color: #fff; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; padding: 6px 16px; border-radius: 999px; margin-bottom: 12px; }
-        h1 { font-size: 32px; font-weight: 900; margin: 8px 0; color: #4c1d95; line-height: 1.2; }
-        .sub { font-size: 16px; font-weight: 600; color: #6b21a8; margin-bottom: 24px; }
-        .highlight-strip { background: #fff; border: 2px dashed #c084fc; border-radius: 16px; padding: 16px; margin: 20px 0; display: flex; justify-content: space-around; font-weight: 700; color: #581c87; font-size: 14px; }
-        .amenities-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; text-align: left; margin: 24px 0; }
-        .amenity-card { background: #fff; border: 1px solid #e9d5ff; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 700; color: #334155; }
-        .amenity-icon { font-size: 22px; }
-        .qr-section { background: #fff; border: 2px solid #7c3aed; border-radius: 20px; padding: 24px; margin: 24px auto; max-width: 420px; box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.15); }
-        .qr-img { width: 220px; height: 220px; margin: 0 auto 12px auto; display: block; border-radius: 12px; }
-        .qr-caption { font-size: 14px; font-weight: 800; color: #6d28d9; text-transform: uppercase; letter-spacing: 0.5px; }
-        .cta-btn { display: inline-block; background: #059669; color: #fff; font-size: 16px; font-weight: 800; padding: 12px 28px; border-radius: 12px; margin-top: 10px; }
-        .footer { font-size: 12px; color: #64748b; font-weight: 600; margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 16px; }
-        @media print {
-          body { padding: 0; }
-          .flyer-container { border: 2px solid #7c3aed; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="flyer-container">
-        <span class="badge">Verified PG & Coliving</span>
-        <h1>Srinoos Luxury Coliving Stays</h1>
-        <div class="sub">📍 ${loc} • Zero Brokerage • Instant Move-In</div>
-        
-        <div class="highlight-strip">
-          <div>⭐ 4.9/5 Star Rated</div>
-          <div>🍲 3 Fresh Home Meals</div>
-          <div>⚡ 100% Power Backup</div>
-          <div>🔒 24/7 Biometric Entry</div>
-        </div>
+    const flyerHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Srinoos Coliving — Smart QR Marketing Flyer (${loc})</title>
+  <style>
+    @page { size: A4 portrait; margin: 10mm; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body {
+      margin: 0;
+      padding: 18px;
+      background: #f1f5f9;
+      color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .toolbar {
+      max-width: 740px;
+      margin: 0 auto 14px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .toolbar-actions { display: flex; gap: 8px; }
+    .tb-btn {
+      border: none;
+      border-radius: 9px;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .tb-print { background: #10b981; color: #fff; }
+    .tb-close { background: #334155; color: #e2e8f0; }
+    .flyer-page {
+      max-width: 740px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 2.5px solid #6d28d9;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.18);
+    }
+    .hero {
+      background: linear-gradient(135deg, #3b0764 0%, #6d28d9 55%, #4f46e5 100%);
+      color: #ffffff;
+      padding: 28px 34px 24px 34px;
+      text-align: center;
+    }
+    .brand-pill {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      color: #f5f3ff;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      padding: 5px 16px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+    .hero h1 {
+      margin: 4px 0 8px 0;
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+    }
+    .hero-sub {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e9d5ff;
+      margin: 0;
+    }
+    .content { padding: 22px 30px 24px 30px; }
+    .trust-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .trust-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: #3b0764;
+    }
+    .section-title {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1.8px;
+      color: #6d28d9;
+      margin: 0 0 12px 0;
+    }
+    .amenities-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .amenity-card {
+      background: #faf5ff;
+      border: 1px solid #e9d5ff;
+      border-radius: 12px;
+      padding: 11px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .amenity-icon { font-size: 18px; flex-shrink: 0; }
+    .qr-panel {
+      display: grid;
+      grid-template-columns: 230px 1fr;
+      gap: 22px;
+      align-items: center;
+      background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
+      border: 2px solid #7c3aed;
+      border-radius: 20px;
+      padding: 20px 22px;
+      margin-bottom: 18px;
+    }
+    .qr-frame {
+      background: #ffffff;
+      border: 2px solid #ddd6fe;
+      border-radius: 16px;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 8px 20px -6px rgba(109, 40, 217, 0.22);
+    }
+    .qr-img {
+      width: 196px;
+      height: 196px;
+      display: block;
+      margin: 0 auto;
+    }
+    .qr-label {
+      margin-top: 6px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #6d28d9;
+    }
+    .qr-details h2 {
+      margin: 0 0 6px 0;
+      font-size: 20px;
+      font-weight: 900;
+      color: #1e1b4b;
+      line-height: 1.2;
+    }
+    .qr-details p {
+      margin: 0 0 12px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      line-height: 1.45;
+    }
+    .steps {
+      list-style: none;
+      margin: 0 0 14px 0;
+      padding: 0;
+      display: grid;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .domain-pill {
+      display: inline-block;
+      background: #059669;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.3px;
+      padding: 10px 20px;
+      border-radius: 12px;
+      text-decoration: none;
+    }
+    .footer {
+      border-top: 1.5px solid #e2e8f0;
+      padding-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+    }
+    .footer strong { color: #0f172a; }
+    @media print {
+      body { padding: 0; background: #ffffff; }
+      .no-print { display: none !important; }
+      .flyer-page { max-width: 100%; box-shadow: none; border-width: 2px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar no-print">
+    <span>🖨️ A4 Print-Ready Smart QR Marketing Flyer — ${siteDomain}</span>
+    <div class="toolbar-actions">
+      <button type="button" class="tb-btn tb-print" onclick="window.print()">Print / Save PDF</button>
+      <button type="button" class="tb-btn tb-close" onclick="window.close()">Close</button>
+    </div>
+  </div>
+  <div class="flyer-page">
+    <div class="hero">
+      <div class="brand-pill">Verified Luxury PG &amp; Coliving</div>
+      <h1>Srinoos Coliving Residences</h1>
+      <p class="hero-sub">📍 ${loc} &bull; Zero Brokerage &bull; Instant Digital Move-In</p>
+    </div>
+    <div class="content">
+      <div class="trust-strip">
+        <div class="trust-item">⭐ 4.9 / 5 Rated</div>
+        <div class="trust-item">🍲 3 Fresh Meals</div>
+        <div class="trust-item">⚡ 100% Power Backup</div>
+        <div class="trust-item">🔒 24/7 CCTV &amp; Security</div>
+      </div>
 
-        <div class="amenities-grid">
-          <div class="amenity-card"><span class="amenity-icon">🚀</span> 300 Mbps Optical High-Speed WiFi</div>
-          <div class="amenity-card"><span class="amenity-icon">🍳</span> North & South Indian Daily Food</div>
-          <div class="amenity-card"><span class="amenity-icon">❄️</span> AC & Non-AC Rooms with Balcony</div>
-          <div class="amenity-card"><span class="amenity-icon">🧹</span> Daily Room Cleaning & Housekeeping</div>
-          <div class="amenity-card"><span class="amenity-icon">🧺</span> Washing Machines & Free Laundry</div>
-          <div class="amenity-card"><span class="amenity-icon">🛡️</span> CCTV Surveillance & Resident App</div>
-        </div>
+      <p class="section-title">All-Inclusive Living Amenities</p>
+      <div class="amenities-grid">
+        <div class="amenity-card"><span class="amenity-icon">🚀</span> 300 Mbps High-Speed Fiber Wi-Fi</div>
+        <div class="amenity-card"><span class="amenity-icon">🍳</span> Hygienic North &amp; South Indian Meals</div>
+        <div class="amenity-card"><span class="amenity-icon">❄️</span> Fully Furnished AC &amp; Non-AC Rooms</div>
+        <div class="amenity-card"><span class="amenity-icon">🧹</span> Daily Housekeeping &amp; Room Cleaning</div>
+        <div class="amenity-card"><span class="amenity-icon">🧺</span> Automatic Washing Machines &amp; Laundry</div>
+        <div class="amenity-card"><span class="amenity-icon">📱</span> Digital Resident App &amp; Direct UPI Rent</div>
+      </div>
 
-        <div class="qr-section">
-          <img src="${qrUrl}" class="qr-img" alt="Scan QR Code" />
-          <div class="qr-caption">📱 Scan with Any Phone Camera</div>
-          <div style="font-size: 13px; font-weight: 700; color: #0f172a; margin-top: 6px;">Check Live Bed Availability & Claim ₹1,000 Off Token</div>
-          <div class="cta-btn">Instant Booking Link</div>
+      <div class="qr-panel">
+        <div class="qr-frame">
+          <img id="flyerQrImg" src="${qrUrl}" class="qr-img" alt="Scan QR Code to visit ${siteUrl}" />
+          <div class="qr-label">Scan With Phone Camera</div>
         </div>
-
-        <div class="footer">
-          📞 WhatsApp / Call Direct: +91 98765 43210 &bull; 🌐 https://mangement-pg.vercel.app &bull; 100% Security Deposit Refund Guarantee
+        <div class="qr-details">
+          <h2>Scan to Explore Live Rooms &amp; Instant Boarding</h2>
+          <p>Check real-time room availability, view amenities, and complete your digital onboarding in minutes.</p>
+          <ul class="steps">
+            <li>1️⃣ Point any phone camera at the QR code</li>
+            <li>2️⃣ Open <strong>${siteDomain}</strong> directly in your browser</li>
+            <li>3️⃣ Select your stay &amp; complete instant guest boarding</li>
+          </ul>
+          <a href="${siteUrl}" class="domain-pill">🌐 ${siteUrl}</a>
         </div>
       </div>
-      <\script>
-        window.onload = function() {
-          setTimeout(function() {
-            window.print();
-          }, 500);
-        };
-      <\/script>
-    </body>
-    </html>
-    `;
+
+      <div class="footer">
+        <div>📞 Call / WhatsApp: <strong>${contactPhone}</strong></div>
+        <div>🌐 Website: <strong>${siteUrl}</strong></div>
+        <div>✅ 100% Transparent Deposit</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function() {
+      var printed = false;
+      function doPrint() {
+        if (printed) return;
+        printed = true;
+        setTimeout(function() { window.print(); }, 250);
+      }
+      var img = document.getElementById("flyerQrImg");
+      if (img && !img.complete) {
+        img.onload = doPrint;
+        img.onerror = doPrint;
+        setTimeout(doPrint, 2500);
+      } else {
+        window.onload = doPrint;
+      }
+    })();
+  <\/script>
+</body>
+</html>`;
+    printWindow.document.open();
     printWindow.document.write(flyerHtml);
     printWindow.document.close();
   };
@@ -6136,7 +6358,7 @@ function SuperAdminLeadGenConsole() {
                     className: "flex items-center gap-5 p-4 bg-purple-50/50 dark:bg-purple-950/20 rounded-2xl border border-purple-100 dark:border-purple-900/30",
                     children: [
                       a.jsx("img", {
-                        src: "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https%3A%2F%2Fmangement-pg.vercel.app",
+                        src: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&ecc=H&margin=8&data=https%3A%2F%2Fsrinooscoliving.com",
                         alt: "QR Flyer Preview",
                         className: "w-28 h-28 rounded-xl bg-white p-2 border border-purple-200 shrink-0 shadow-sm"
                       }),
