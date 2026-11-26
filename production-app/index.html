@@ -9641,41 +9641,96 @@ function ResidentTenantDetailsCard({tenant:g,user:t,buildingName:myBld,ownerName
   const[previewDoc,setPreviewDoc]=b.useState(null);
   const[expanded,setExpanded]=b.useState(!0);
   const[loadingDocs,setLoadingDocs]=b.useState(!1);
+  const[fetchedDocs,setFetchedDocs]=b.useState([]);
 
-  const ownerId=window.resolveCanonicalOwnerId(g?.ownerId||t?.ownerId||Ee.getState().getActiveOwnerId()||"acc-1795442411871");
+  const tName=String(g?.name||t?.name||"").trim();
+  const tEmail=String(g?.email||t?.email||"").trim().toLowerCase();
+  const tId=String(g?.id||t?.id||"").trim();
 
-  const loadOwnerDocsIfNeeded=b.useCallback(async(manual)=>{
-    const cur=Ee.getState().allDbNotices||[];
-    const hasDocRow=cur.some(nt=>nt&&nt.id===`documents-data-${ownerId}`);
-    if(!manual&&hasDocRow)return;
-    setLoadingDocs(!0);
+  const toSafeBlobUrl=b.useCallback(url=>{
+    if(!url||typeof url!=="string")return"";
+    if(!url.startsWith("data:"))return url;
     try{
-      const{data:dRow}=await we.from("notices").select("*").eq("id",`documents-data-${ownerId}`).maybeSingle();
-      if(dRow&&dRow.content){
-        const parsed=JSON.parse(dRow.content);
-        if(Array.isArray(parsed)){
-          Ee.setState(prev=>{
-            const keep=(prev.allDbNotices||[]).filter(nt=>nt&&nt.id!==dRow.id);
-            const existing=prev.rawDocuments||[];
-            const eIds=new Set(existing.map(x=>x.id));
-            return{allDbNotices:[dRow,...keep],rawDocuments:[...existing,...parsed.filter(x=>x&&(!x.id||!eIds.has(x.id)))]};
+      const parts=url.split(",");
+      const mimeMatch=parts[0].match(/data:([^;]+);base64/i);
+      const mime=mimeMatch?mimeMatch[1]:"application/octet-stream";
+      const bin=atob(parts[1]||"");
+      const bytes=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+      return URL.createObjectURL(new Blob([bytes],{type:mime}));
+    }catch(_){return url}
+  },[]);
+
+  const detectDocExt=doc=>{
+    const u=String(doc?.fileUrl||"");
+    if(doc?.type==="PDF"||u.startsWith("data:application/pdf")||/\.pdf(\?|$)/i.test(u))return".pdf";
+    if(u.startsWith("data:image/png")||/\.png(\?|$)/i.test(u))return".png";
+    if(u.startsWith("data:image/webp")||/\.webp(\?|$)/i.test(u))return".webp";
+    return".jpg";
+  };
+
+  const loadResidentDocs=b.useCallback(async(manual)=>{
+    if(!tName&&!tEmail)return;
+    setLoadingDocs(!0);
+    const collected=[];
+    try{
+      if(tName){
+        const{data:metaRows}=await we.from("documents").select("id,name,type,tenant_name,date").ilike("tenant_name",tName).limit(50);
+        if(metaRows&&metaRows.length>0){
+          const fullRows=await Promise.all(metaRows.map(async mr=>{
+            try{
+              const{data:one}=await we.from("documents").select("id,name,type,tenant_name,date,file_url").eq("id",mr.id).maybeSingle();
+              return one||null;
+            }catch(_){return null}
+          }));
+          fullRows.forEach(fr=>{
+            if(fr&&fr.file_url){
+              collected.push({id:fr.id,name:fr.name||"Uploaded Document",type:fr.type||"IMAGE",tenantName:fr.tenant_name||tName,date:fr.date||"",fileUrl:fr.file_url});
+            }
           });
-          Ee.getState().applyMultiTenantFilter();
         }
       }
-      manual&&z.success("Documents synced!");
-    }catch(_){manual&&z.error("Could not refresh documents.");}
-    finally{setLoadingDocs(!1);}
-  },[ownerId]);
+      if(tName){
+        const{data:gMeta}=await we.from("notices").select("id,title,date").like("id","guest-reg-%").ilike("title",`%${tName}%`).limit(10);
+        if(gMeta&&gMeta.length>0){
+          const gFull=await Promise.all(gMeta.map(async gm=>{
+            try{
+              const{data:one}=await we.from("notices").select("*").eq("id",gm.id).maybeSingle();
+              return one||null;
+            }catch(_){return null}
+          }));
+          gFull.forEach(nt=>{
+            if(!nt||!nt.content)return;
+            try{
+              const p=typeof nt.content==="string"?JSON.parse(nt.content):nt.content;
+              if(!p||p.type!=="GUEST_REGISTRATION_APP")return;
+              const pEmail=String(p.email||"").trim().toLowerCase();
+              const pName=String(p.name||"").trim().toLowerCase();
+              if((tEmail&&pEmail===tEmail)||(tName&&pName===tName.toLowerCase())){
+                if(p.aadhaarUrl)collected.push({id:`${nt.id}-aadhaar`,name:`Aadhaar Card - ${p.name}`,type:p.aadhaarType||"IMAGE",date:p.date||"",fileUrl:p.aadhaarUrl});
+                if(p.panUrl)collected.push({id:`${nt.id}-pan`,name:`PAN Card - ${p.name}`,type:p.panType||"IMAGE",date:p.date||"",fileUrl:p.panUrl});
+              }
+            }catch(_){}
+          });
+        }
+      }
+      if(collected.length>0)setFetchedDocs(collected);
+      manual&&z.success(collected.length>0?`Synced ${collected.length} document(s)!`:"Documents checked — up to date.");
+    }catch(err){
+      console.error("Resident docs sync error:",err);
+      manual&&z.error("Could not refresh documents.");
+    }finally{
+      setLoadingDocs(!1);
+    }
+  },[tName,tEmail]);
 
-  b.useEffect(()=>{loadOwnerDocsIfNeeded(!1)},[loadOwnerDocsIfNeeded]);
+  b.useEffect(()=>{loadResidentDocs(!1)},[loadResidentDocs]);
 
   const myDocs=b.useMemo(()=>{
     const out=[];
     const seen=new Set();
-    const tName=String(g?.name||t?.name||"").trim().toLowerCase();
-    const tEmail=String(g?.email||t?.email||"").trim().toLowerCase();
-    const tId=String(g?.id||t?.id||"").trim().toLowerCase();
+    const tNameL=tName.toLowerCase();
+    const tIdL=tId.toLowerCase();
 
     const addDoc=d=>{
       if(!d||!d.fileUrl)return;
@@ -9691,13 +9746,15 @@ function ResidentTenantDetailsCard({tenant:g,user:t,buildingName:myBld,ownerName
       });
     };
 
+    fetchedDocs.forEach(addDoc);
+
     const allStoreDocs=[...(docs||[]),...(rawDocs||[])];
     allStoreDocs.forEach(d=>{
       if(!d)return;
       const dn=String(d.tenantName||d.tenant_name||"").trim().toLowerCase();
       const dTid=String(d.tenantId||d.tenant_id||"").trim().toLowerCase();
       const dNameStr=String(d.name||"").trim().toLowerCase();
-      if((tId&&dTid===tId)||(tName&&(dn===tName||dNameStr.includes(tName)))){
+      if((tIdL&&dTid===tIdL)||(tNameL&&(dn===tNameL||dNameStr.includes(tNameL)))){
         addDoc(d);
       }
     });
@@ -9715,7 +9772,7 @@ function ResidentTenantDetailsCard({tenant:g,user:t,buildingName:myBld,ownerName
         if(!p||p.type!=="GUEST_REGISTRATION_APP")return;
         const pEmail=String(p.email||"").trim().toLowerCase();
         const pName=String(p.name||"").trim().toLowerCase();
-        if((tEmail&&pEmail===tEmail)||(tName&&pName===tName)){
+        if((tEmail&&pEmail===tEmail)||(tNameL&&pName===tNameL)){
           if(p.aadhaarUrl)addDoc({id:`${nt.id}-aadhaar`,name:`Aadhaar Card - ${p.name}`,type:p.aadhaarType||"IMAGE",date:p.date||"",fileUrl:p.aadhaarUrl});
           if(p.panUrl)addDoc({id:`${nt.id}-pan`,name:`PAN Card - ${p.name}`,type:p.panType||"IMAGE",date:p.date||"",fileUrl:p.panUrl});
         }
@@ -9723,15 +9780,37 @@ function ResidentTenantDetailsCard({tenant:g,user:t,buildingName:myBld,ownerName
     });
 
     return out;
-  },[docs,rawDocs,allN,g,t]);
+  },[fetchedDocs,docs,rawDocs,allN,g,tName,tEmail,tId]);
+
+  const openDocumentTab=doc=>{
+    if(!doc||!doc.fileUrl){z.error("Document file is not available.");return}
+    const safeUrl=toSafeBlobUrl(doc.fileUrl);
+    const w=window.open(safeUrl,"_blank","noopener,noreferrer");
+    if(!w)z.error("Popup blocked! Please allow popups to open documents.");
+  };
+
+  const downloadDocument=doc=>{
+    if(!doc||!doc.fileUrl){z.error("Document file is not available.");return}
+    const safeUrl=toSafeBlobUrl(doc.fileUrl);
+    const base=String(doc.name||"document").replace(/[^a-zA-Z0-9._-]/g,"_");
+    const ext=detectDocExt(doc);
+    const fname=/\.(pdf|png|jpe?g|webp)$/i.test(base)?base:(base+ext);
+    const link=document.createElement("a");
+    link.href=safeUrl;
+    link.download=fname;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const printDocument=doc=>{
     if(!doc||!doc.fileUrl){z.error("Document file is not available.");return}
     const isPdf=doc.type==="PDF"||String(doc.fileUrl).startsWith("data:application/pdf")||/\.pdf(\?|$)/i.test(String(doc.fileUrl));
+    const safeUrl=toSafeBlobUrl(doc.fileUrl);
     const pw=window.open("","_blank","width=900,height=1000");
     if(!pw){z.error("Popup blocked! Please allow popups to print documents.");return}
     const safeName=String(doc.name||"Document").replace(/</g,"&lt;");
-    const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Print ${safeName}</title><style>@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}body{margin:0;padding:20px;background:#fff;color:#0f172a;text-align:center}.bar{display:flex;justify-content:space-between;align-items:center;max-width:780px;margin:0 auto 14px auto;padding:10px 14px;background:#0f172a;color:#fff;border-radius:10px;font-size:13px;font-weight:700}.bar button{background:#10b981;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-weight:800;cursor:pointer}.doc-img{max-width:100%;max-height:82vh;object-fit:contain;border:1px solid #e2e8f0;border-radius:10px}.doc-pdf{width:100%;height:84vh;border:1px solid #e2e8f0;border-radius:10px}@media print{.no-print{display:none!important}body{padding:0}}</style></head><body><div class="bar no-print"><span>📄 ${safeName}</span><button onclick="window.print()">🖨️ Print Document</button></div>${isPdf?`<iframe src="${doc.fileUrl}" class="doc-pdf"></iframe>`:`<img id="pDocImg" src="${doc.fileUrl}" class="doc-img" alt="${safeName}"/>`}<script>(function(){var img=document.getElementById("pDocImg");function go(){setTimeout(function(){window.print()},350)}if(img&&!img.complete){img.onload=go;img.onerror=go}else{window.onload=go}})();<\/script></body></html>`;
+    const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Print ${safeName}</title><style>@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}body{margin:0;padding:20px;background:#fff;color:#0f172a;text-align:center}.bar{display:flex;justify-content:space-between;align-items:center;max-width:780px;margin:0 auto 14px auto;padding:10px 14px;background:#0f172a;color:#fff;border-radius:10px;font-size:13px;font-weight:700}.bar button{background:#10b981;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-weight:800;cursor:pointer}.doc-img{max-width:100%;max-height:82vh;object-fit:contain;border:1px solid #e2e8f0;border-radius:10px}.doc-pdf{width:100%;height:84vh;border:1px solid #e2e8f0;border-radius:10px}@media print{.no-print{display:none!important}body{padding:0}}</style></head><body><div class="bar no-print"><span>📄 ${safeName}</span><button onclick="window.print()">🖨️ Print Document</button></div>${isPdf?`<iframe src="${safeUrl}" class="doc-pdf"></iframe>`:`<img id="pDocImg" src="${safeUrl}" class="doc-img" alt="${safeName}"/>`}<script>(function(){var img=document.getElementById("pDocImg");function go(){setTimeout(function(){window.print()},350)}if(img&&!img.complete){img.onload=go;img.onerror=go}else{window.onload=go}})();<\/script></body></html>`;
     pw.document.open();pw.document.write(html);pw.document.close();
   };
 
@@ -9750,11 +9829,11 @@ function ResidentTenantDetailsCard({tenant:g,user:t,buildingName:myBld,ownerName
     a.jsxs("div",{className:"flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4",children:[
       a.jsxs("div",{children:[
         a.jsxs("h3",{className:"font-black text-base text-slate-900 dark:text-white flex items-center gap-2",children:["👤 Tenant Details & Uploaded Documents",a.jsx("span",{className:"px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/50",children:`${myDocs.length} ${myDocs.length===1?"Document":"Documents"}`})]}),
-        a.jsx("p",{className:"text-xs text-slate-500 dark:text-slate-400 mt-0.5",children:"View your complete resident profile, open/download/print uploaded KYC documents, or print your tenant details sheet."})
+        a.jsx("p",{className:"text-xs text-slate-500 dark:text-slate-400 mt-0.5",children:"View your complete resident profile, open/view/download/print uploaded KYC documents, or print your tenant details sheet."})
       ]}),
       a.jsxs("div",{className:"flex flex-wrap items-center gap-2",children:[
         a.jsx("button",{type:"button",onClick:printTenantDetails,className:"px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl cursor-pointer border-none shadow-sm transition-all",children:"🖨️ Print Tenant Details"}),
-        a.jsx("button",{type:"button",onClick:()=>loadOwnerDocsIfNeeded(!0),disabled:loadingDocs,className:"px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer border-none",children:loadingDocs?"Syncing...":"↻ Sync Docs"}),
+        a.jsx("button",{type:"button",onClick:()=>loadResidentDocs(!0),disabled:loadingDocs,className:"px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer border-none",children:loadingDocs?"Syncing...":"↻ Sync Docs"}),
         a.jsx("button",{type:"button",onClick:()=>setExpanded(v=>!v),className:"px-3 py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl cursor-pointer border border-slate-200 dark:border-slate-700",children:expanded?"Hide":"Show"})
       ]})
     ]}),
@@ -9771,14 +9850,15 @@ function ResidentTenantDetailsCard({tenant:g,user:t,buildingName:myBld,ownerName
       ]}),
       a.jsxs("div",{className:"space-y-2.5",children:[
         a.jsx("p",{className:"text-[10px] font-black uppercase tracking-widest text-slate-400",children:"My Uploaded Documents"}),
-        myDocs.length===0?a.jsx("div",{className:"p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-dashed border-slate-200 dark:border-slate-800 text-xs text-slate-500 text-center",children:"No uploaded KYC documents found yet. Click '↻ Sync Docs' if your PG Owner recently uploaded them."}):a.jsx("div",{className:"grid grid-cols-1 md:grid-cols-2 gap-3",children:myDocs.map(doc=>a.jsxs("div",{className:"p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3",children:[
-          a.jsxs("div",{className:"min-w-0",children:[
+        loadingDocs&&myDocs.length===0?a.jsx("div",{className:"p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 text-xs text-slate-500 text-center",children:"Loading your uploaded documents..."}):myDocs.length===0?a.jsx("div",{className:"p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-dashed border-slate-200 dark:border-slate-800 text-xs text-slate-500 text-center",children:"No uploaded KYC documents found yet. Click '↻ Sync Docs' if your PG Owner recently uploaded them."}):a.jsx("div",{className:"grid grid-cols-1 md:grid-cols-2 gap-3",children:myDocs.map(doc=>a.jsxs("div",{className:"p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2",children:[
+          a.jsxs("div",{className:"min-w-0 flex-1",children:[
             a.jsx("p",{className:"text-xs font-black text-slate-900 dark:text-white truncate",children:doc.name}),
             a.jsxs("p",{className:"text-[10px] text-slate-500 mt-0.5",children:[doc.type,doc.date?` • ${doc.date}`:""]})
           ]}),
-          a.jsxs("div",{className:"flex items-center gap-1.5 shrink-0",children:[
-            a.jsx("button",{type:"button",onClick:()=>setPreviewDoc(doc),className:"px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 text-[11px] font-black rounded-lg border border-indigo-200 dark:border-indigo-800 cursor-pointer",children:"👁️ View"}),
-            a.jsx("a",{href:doc.fileUrl,download:`${String(doc.name||"document").replace(/[^a-zA-Z0-9._-]/g,"_")}`,target:"_blank",rel:"noopener noreferrer",className:"px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-black rounded-lg border border-emerald-200 dark:border-emerald-800 no-underline",children:"⬇ Download"}),
+          a.jsxs("div",{className:"flex flex-wrap items-center gap-1.5 shrink-0",children:[
+            a.jsx("button",{type:"button",onClick:()=>setPreviewDoc({...doc,safeUrl:toSafeBlobUrl(doc.fileUrl)}),className:"px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 text-[11px] font-black rounded-lg border border-indigo-200 dark:border-indigo-800 cursor-pointer",children:"👁️ View"}),
+            a.jsx("button",{type:"button",onClick:()=>openDocumentTab(doc),className:"px-2.5 py-1.5 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-[11px] font-black rounded-lg border border-purple-200 dark:border-purple-800 cursor-pointer",children:"↗ Open"}),
+            a.jsx("button",{type:"button",onClick:()=>downloadDocument(doc),className:"px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-[11px] font-black rounded-lg border border-emerald-200 dark:border-emerald-800 cursor-pointer",children:"⬇ Download"}),
             a.jsx("button",{type:"button",onClick:()=>printDocument(doc),className:"px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 text-white text-[11px] font-black rounded-lg border-none cursor-pointer",children:"🖨️ Print"})
           ]})
         ]},doc.id))})
@@ -9788,12 +9868,13 @@ function ResidentTenantDetailsCard({tenant:g,user:t,buildingName:myBld,ownerName
       a.jsxs("div",{className:"p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2",children:[
         a.jsx("h4",{className:"font-black text-sm text-slate-900 dark:text-white truncate",children:previewDoc.name}),
         a.jsxs("div",{className:"flex items-center gap-2 shrink-0",children:[
-          a.jsx("a",{href:previewDoc.fileUrl,download:`${String(previewDoc.name||"document").replace(/[^a-zA-Z0-9._-]/g,"_")}`,target:"_blank",rel:"noopener noreferrer",className:"px-3 py-1.5 bg-emerald-600 text-white text-xs font-black rounded-xl no-underline",children:"⬇ Download"}),
+          a.jsx("button",{type:"button",onClick:()=>openDocumentTab(previewDoc),className:"px-3 py-1.5 bg-purple-600 text-white text-xs font-black rounded-xl cursor-pointer border-none",children:"↗ Open"}),
+          a.jsx("button",{type:"button",onClick:()=>downloadDocument(previewDoc),className:"px-3 py-1.5 bg-emerald-600 text-white text-xs font-black rounded-xl cursor-pointer border-none",children:"⬇ Download"}),
           a.jsx("button",{type:"button",onClick:()=>printDocument(previewDoc),className:"px-3 py-1.5 bg-indigo-600 text-white text-xs font-black rounded-xl cursor-pointer border-none",children:"🖨️ Print"}),
           a.jsx("button",{type:"button",onClick:()=>setPreviewDoc(null),className:"p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer border-none bg-transparent",children:a.jsx(Ut,{size:18})})
         ]})
       ]}),
-      a.jsx("div",{className:"p-4 overflow-auto flex-1 flex items-center justify-center bg-slate-100 dark:bg-slate-950",children:(previewDoc.type==="PDF"||String(previewDoc.fileUrl||"").startsWith("data:application/pdf")||/\.pdf(\?|$)/i.test(String(previewDoc.fileUrl||"")))?a.jsx("iframe",{src:previewDoc.fileUrl,title:previewDoc.name,className:"w-full h-[70vh] rounded-xl border-0 bg-white"}):a.jsx("img",{src:previewDoc.fileUrl,alt:previewDoc.name,className:"max-w-full max-h-[70vh] rounded-xl shadow-md object-contain"})})
+      a.jsx("div",{className:"p-4 overflow-auto flex-1 flex items-center justify-center bg-slate-100 dark:bg-slate-950",children:(previewDoc.type==="PDF"||String(previewDoc.fileUrl||"").startsWith("data:application/pdf")||/\.pdf(\?|$)/i.test(String(previewDoc.fileUrl||"")))?a.jsx("iframe",{src:previewDoc.safeUrl||previewDoc.fileUrl,title:previewDoc.name,className:"w-full h-[70vh] rounded-xl border-0 bg-white"}):a.jsx("img",{src:previewDoc.safeUrl||previewDoc.fileUrl,alt:previewDoc.name,className:"max-w-full max-h-[70vh] rounded-xl shadow-md object-contain"})})
     ]})})
   ]});
 }
