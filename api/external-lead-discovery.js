@@ -148,95 +148,8 @@ async function searchGoogleAndPublicDiscussions({ city, locality, sharing, maxBu
     }
   }
 
-  // B. Permitted Public Web Search RSS (Bing Search RSS) — real public accommodation-seeking pages
-  const parseRssItems = xml => {
-    const items = [];
-    const itemRe = /<item>([\s\S]*?)<\/item>/gi;
-    let m;
-    while ((m = itemRe.exec(xml)) !== null) {
-      const block = m[1];
-      const getTag = tag => {
-        const tm = block.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"));
-        if (!tm) return "";
-        return tm[1]
-          .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-          .replace(/&amp;/g, "&")
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">")
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          .trim();
-      };
-      items.push({
-        title: getTag("title"),
-        link: getTag("link"),
-        description: getTag("description"),
-        pubDate: getTag("pubDate")
-      });
-    }
-    return items;
-  };
-
+  // B. Permitted Public Community Accommodation Enquiries (PullPush public Reddit index)
   let publicSearchWorked = false;
-  const webQueries = [
-    `"looking for PG" ${shortLoc} site:reddit.com`,
-    `"PG" "looking for" ${shortLoc} ${sharing ? sharing.split(" ")[0] : "room"}`
-  ];
-  for (const wq of webQueries) {
-    try {
-      const bUrl = `https://www.bing.com/search?q=${encodeURIComponent(wq)}&format=rss`;
-      const resp = await fetchWithTimeout(bUrl, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; SrinoosPGAgent/2.0)" }
-      }, 6000);
-      if (!resp.ok) {
-        errors.push(`Web Search RSS HTTP ${resp.status}`);
-        continue;
-      }
-      publicSearchWorked = true;
-      modeUsed.push("Public Web Search RSS");
-      const xml = await resp.text();
-      const rssItems = parseRssItems(xml);
-      for (const it of rssItems) {
-        if (!it.link || !isGenuineAccommodationSeeker(it.title, it.description)) continue;
-        const combined = `${it.title} ${it.description}`;
-        const phone = extractPublicPhone(combined);
-        const email = extractPublicEmail(combined);
-        const budget = extractBudget(combined);
-        if (maxBudget > 0 && budget > 0 && budget > maxBudget * 1.4) continue;
-        let host = "web";
-        try { host = new URL(it.link).hostname.replace(/^www\./, ""); } catch (_) {}
-        prospects.push({
-          externalRef: it.link,
-          sourceId: "source-google",
-          sourceName: `Google Search / Public Web (${host})`,
-          sourceIcon: "🔍",
-          sourceUrl: it.link,
-          sourceAuthorized: true,
-          discoveryOrigin: "EXTERNAL_AI_DISCOVERY",
-          tenantName: `Public Seeker (${host})`,
-          phone,
-          whatsapp: phone,
-          email,
-          location: locationTerm,
-          sharingPreference: extractSharing(combined) || "",
-          budget,
-          budgetRange: budget > 0 ? `₹${budget.toLocaleString("en-IN")}/mo` : "",
-          bedsRequired: extractBedsRequired(combined),
-          preferredMoveInDate: "",
-          gender: extractGender(combined),
-          profession: "",
-          originalEnquiry: `${it.title}${it.description ? " — " + it.description : ""}`.slice(0, 420),
-          notes: `Public accommodation enquiry found via web search (${host}). ${(phone || email) ? "Public contact found." : "No public phone/email — contact via original Source URL."}`,
-          verificationStatus: (phone || email) ? "CONTACT_VERIFIED" : "UNVERIFIED",
-          discoveredAt: it.pubDate && !isNaN(Date.parse(it.pubDate)) ? new Date(it.pubDate).toISOString() : startedAt
-        });
-      }
-    } catch (err) {
-      errors.push(`Web Search RSS failed: ${err.message}`);
-    }
-  }
-
-  // C. Permitted Public Community Accommodation Enquiries (PullPush public Reddit index)
   const ppQueries = [
     `looking for PG ${shortLoc}`,
     `PG accommodation ${city || shortLoc}`
@@ -248,7 +161,7 @@ async function searchGoogleAndPublicDiscussions({ city, locality, sharing, maxBu
         headers: { "User-Agent": "Mozilla/5.0 (compatible; SrinoosPGAgent/2.0)", "Accept": "application/json" }
       }, 6500);
       if (!resp.ok) {
-        errors.push(`Public Community Index HTTP ${resp.status}`);
+        errors.push(`Public Community Index HTTP ${resp.status} (cloud datacenter IP blocked)`);
         continue;
       }
       publicSearchWorked = true;
@@ -313,22 +226,23 @@ async function searchGoogleAndPublicDiscussions({ city, locality, sharing, maxBu
 
   const contactsAvailable = uniqueProspects.filter(p => p.phone || p.email).length;
   const hasGoogleApi = !!(gKey && gCx);
+  const worked = hasGoogleApi || publicSearchWorked;
 
   return {
     sourceReport: {
       id: "source-google",
       name: "Google Search",
       icon: "🔍",
-      connectionStatus: (hasGoogleApi || publicSearchWorked) ? "CONNECTED" : "DEGRADED",
-      authStatus: hasGoogleApi ? "LIVE_API_CONNECTED" : "PUBLIC_SEARCH_LIVE",
-      searchStatus: (hasGoogleApi || publicSearchWorked) ? "COMPLETED" : "FAILED",
-      lastSuccessfulSearch: (hasGoogleApi || publicSearchWorked) ? startedAt : null,
+      connectionStatus: worked ? "CONNECTED" : "API_KEY_REQUIRED",
+      authStatus: hasGoogleApi ? "LIVE_API_CONNECTED" : (publicSearchWorked ? "PUBLIC_SEARCH_LIVE" : "ACCOUNT_AUTH_REQUIRED"),
+      searchStatus: worked ? "COMPLETED" : "BLOCKED_NEEDS_GOOGLE_API_KEY",
+      lastSuccessfulSearch: worked ? startedAt : null,
       newProspectsDiscovered: uniqueProspects.length,
       contactDetailsAvailable: contactsAvailable,
-      errors,
+      errors: worked ? [] : (errors.length > 0 ? errors : ["Google Custom Search API key not configured."]),
       requirement: hasGoogleApi
-        ? "Connected to Google Custom Search API & public accommodation forums."
-        : "Live public accommodation-seeker discovery active (Web Search RSS + Public Forums). Add GOOGLE_CSE_API_KEY + GOOGLE_CSE_CX in Vercel env vars for direct Google Web Search API coverage."
+        ? "Connected to Google Custom Search JSON API."
+        : "Add GOOGLE_CSE_API_KEY + GOOGLE_CSE_CX (Google Custom Search JSON API) in Vercel Environment Variables for reliable cloud-hosted Google Search discovery."
     },
     prospects: uniqueProspects
   };
