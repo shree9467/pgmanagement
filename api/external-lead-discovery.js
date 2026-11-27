@@ -590,6 +590,7 @@ export default async function handler(req, res) {
     maxBudget = 0,
     audience = "",
     accommodationType = "",
+    maxLeads = 20,
     recentDays = "30",
     selectedSourceIds = null
   } = body || {};
@@ -655,16 +656,19 @@ export default async function handler(req, res) {
     }
   }
 
+  const leadLimit = Math.max(1, Math.min(100, Number(maxLeads) || 20));
+  const limitedProspects = prospects.slice(0, leadLimit);
+
   return res.status(200).json({
     ok: true,
     ranAt: runStartedAt,
-    query: { city, locality, sharing, maxBudget, audience, accommodationType, recentDays },
+    query: { city, locality, sharing, maxBudget, audience, accommodationType, maxLeads: leadLimit, recentDays },
     internalSourcesUsed: false,
     externalSourcesEvaluated: sourceReports.length,
     completedSources: sourceReports.length,
-    totalProspectsDiscovered: prospects.length,
+    totalProspectsDiscovered: limitedProspects.length,
     demandHubs,
     sourceReports,
-    prospects
+    prospects: limitedProspects
   });
 }

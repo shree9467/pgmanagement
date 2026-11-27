@@ -4887,6 +4887,7 @@ function SuperAdminLeadGenConsole() {
   const [agentSharing, setAgentSharing] = b.useState(() => leadData.agentConfig?.sharing || "Double Sharing");
   const [agentMaxRent, setAgentMaxRent] = b.useState(() => leadData.agentConfig?.maxRent || 12500);
   const [agentAccommodationType, setAgentAccommodationType] = b.useState(() => leadData.agentConfig?.accommodationType || "Co-living");
+  const [agentLeadLimit, setAgentLeadLimit] = b.useState(() => leadData.agentConfig?.leadLimit || 20);
   const activeRunLockRef = b.useRef(false);
   const persistDiscoveryRun = async runRecord => {
     try {
@@ -5265,6 +5266,7 @@ function SuperAdminLeadGenConsole() {
                   maxBudget: maxRentVal,
                   audience: agentAudience,
                   accommodationType: agentAccommodationType,
+                  maxLeads: Number(agentLeadLimit) || 20,
                   recentDays: recentDaysFilter === "ALL" ? "30" : recentDaysFilter
                 })
               });
@@ -5365,7 +5367,9 @@ function SuperAdminLeadGenConsole() {
       const dupCountBySource = {};
       const cutoffMs = recentDaysFilter !== "ALL" ? (Date.now() - Number(recentDaysFilter) * 86400000) : 0;
 
+      const maxNewLeads = Math.max(1, Number(agentLeadLimit) || 20);
       for (const cand of discoveredCandidates) {
+        if (addedCount >= maxNewLeads) break;
         if (cutoffMs > 0) {
           const cTs = Date.parse(cand.discoveredAt || "");
           if (!isNaN(cTs) && cTs < cutoffMs) { filteredOutCount++; continue; }
@@ -5449,6 +5453,8 @@ function SuperAdminLeadGenConsole() {
         audience: agentAudience,
         budget: targetBudgetVal,
         sharing: agentSharing,
+        accommodationType: agentAccommodationType,
+        leadLimit: Number(agentLeadLimit) || 20,
         maxRent: maxRentVal,
         status: "READY",
         lastRunAt: nowIso,
@@ -6288,12 +6294,8 @@ function SuperAdminLeadGenConsole() {
       a.jsx("div", {
         className: "flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700/80 overflow-x-auto",
         children: [
-          { id: "agent", label: "🤖 AI Agent Mission Control", badge: "Launch" },
-          { id: "intelligence", label: "📈 Strategic Market Intelligence", badge: "References" },
-          { id: "pipeline", label: "🎯 Discovered Tenant Enquiries", badge: (leadData.leads || []).length },
-          { id: "campaigns", label: "📢 Multi-Channel Marketing Hub", badge: "4 Active" },
-          { id: "matrix", label: "🏢 PG Owner Matching Matrix", badge: ownerAccounts.length },
-          { id: "sources", label: "⚙️ Lead Channels Manager", badge: (leadData.sources || []).length }
+          { id: "agent", label: "🔍 Lead Search & Collection", badge: "8 Sources" },
+          { id: "pipeline", label: "📋 Collected & Forwarded Leads", badge: (leadData.leads || []).length }
         ].map(tab => a.jsxs("button", {
           key: tab.id,
           type: "button",
@@ -6517,11 +6519,11 @@ function SuperAdminLeadGenConsole() {
                     children: [
                       a.jsxs("h3", {
                         className: "text-lg font-black text-slate-900 dark:text-white flex items-center gap-2",
-                        children: [a.jsx(AiRobotIcon, { size: 20, className: "text-purple-600" }), "Configure & Run AI Lead Finder Mission"]
+                        children: [a.jsx(AiRobotIcon, { size: 20, className: "text-purple-600" }), "Custom PG Tenant Lead Search"]
                       }),
                       a.jsx("p", {
                         className: "text-xs text-slate-500 font-medium mt-1",
-                        children: "Enter an address, select target audience, set budget, and run the agent to research demand, study reference platforms, discover leads, and generate multi-channel campaigns."
+                        children: "Enter location, accommodation type, audience, monthly rental budget, and required lead count to collect genuine external PG prospects and forward them to PG Owners."
                       })
                     ]
                   }),
@@ -6571,7 +6573,7 @@ function SuperAdminLeadGenConsole() {
                     ]
                   }),
 
-                  // Input 2: Target Audience
+                  // Input 2: Target Audience (Students / Working Professionals)
                   a.jsxs("div", {
                     className: "space-y-2",
                     children: [
@@ -6581,36 +6583,48 @@ function SuperAdminLeadGenConsole() {
                         onChange: e => setAgentAudience(e.target.value),
                         className: "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-purple-600 cursor-pointer",
                         children: [
-                          a.jsx("option", { value: "Tech Professionals & IT Employees", children: "💼 Tech Professionals & IT Employees" }),
-                          a.jsx("option", { value: "College & University Students", children: "🎓 College & University Students" }),
-                          a.jsx("option", { value: "Corporate Working Women", children: "👩 Corporate Working Women" }),
-                          a.jsx("option", { value: "Interns & Freshers", children: "🚀 Interns & Freshers" }),
-                          a.jsx("option", { value: "Healthcare & Medical Professionals", children: "🏥 Healthcare & Medical Staff" }),
-                          a.jsx("option", { value: "Luxury Co-Living Seekers", children: "✨ Luxury Co-Living Seekers" })
+                          a.jsx("option", { value: "Working Professionals", children: "💼 Working Professionals" }),
+                          a.jsx("option", { value: "Students", children: "🎓 Students" }),
+                          a.jsx("option", { value: "Students & Working Professionals", children: "👥 Students & Working Professionals" })
                         ]
                       }),
-                      a.jsx("p", { className: "text-[10px] text-slate-500 font-medium", children: "AI tailors ad copy, channel selection & tone for this demographic." })
+                      a.jsx("p", { className: "text-[10px] text-slate-500 font-medium", children: "Filters external PG enquiries matching students or working professionals." })
                     ]
                   }),
 
-                  // Input 3: Budget
+                  // Input 3: Boys / Girls Accommodation & Required Number of Leads
                   a.jsxs("div", {
                     className: "space-y-2",
                     children: [
-                      a.jsxs("label", { className: "text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5", children: [a.jsx("span", { children: "💰" }), "3. Monthly Marketing Budget"] }),
-                      a.jsxs("select", {
-                        value: agentBudget,
-                        onChange: e => setAgentBudget(Number(e.target.value)),
-                        className: "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-purple-600 cursor-pointer",
+                      a.jsxs("label", { className: "text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5", children: [a.jsx("span", { children: "🏠" }), "3. Boys/Girls & Lead Count"] }),
+                      a.jsxs("div", {
+                        className: "grid grid-cols-2 gap-2",
                         children: [
-                          a.jsx("option", { value: 5000, children: "₹5,000 / mo (Starter Boost - 15-20 Leads)" }),
-                          a.jsx("option", { value: 10000, children: "₹10,000 / mo (Growth Plan - 30-40 Leads)" }),
-                          a.jsx("option", { value: 15000, children: "₹15,000 / mo (High Velocity - 45-60 Leads)" }),
-                          a.jsx("option", { value: 25000, children: "₹25,000 / mo (Dominance Plan - 80-100 Leads)" }),
-                          a.jsx("option", { value: 50000, children: "₹50,000 / mo (Multi-Property Scale - 150+ Leads)" })
+                          a.jsxs("select", {
+                            value: agentAccommodationType,
+                            onChange: e => setAgentAccommodationType(e.target.value),
+                            className: "px-2.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-purple-600 cursor-pointer",
+                            children: [
+                              a.jsx("option", { value: "Co-living", children: "Both / Co-living" }),
+                              a.jsx("option", { value: "Boys PG", children: "Boys PG" }),
+                              a.jsx("option", { value: "Girls PG", children: "Girls PG" })
+                            ]
+                          }),
+                          a.jsxs("select", {
+                            value: agentLeadLimit,
+                            onChange: e => setAgentLeadLimit(Number(e.target.value)),
+                            title: "Required Number of Leads",
+                            className: "px-2.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-purple-600 cursor-pointer",
+                            children: [
+                              a.jsx("option", { value: 5, children: "5 Leads" }),
+                              a.jsx("option", { value: 10, children: "10 Leads" }),
+                              a.jsx("option", { value: 20, children: "20 Leads" }),
+                              a.jsx("option", { value: 50, children: "50 Leads" })
+                            ]
+                          })
                         ]
                       }),
-                      a.jsxs("p", { className: "text-[10px] text-emerald-600 dark:text-emerald-400 font-bold", children: ["Daily Run Budget: ₹", Math.round(Number(agentBudget) / 30), " / day"] })
+                      a.jsx("p", { className: "text-[10px] text-slate-500 font-medium", children: "Select accommodation gender preference and required number of leads." })
                     ]
                   }),
 
@@ -7359,7 +7373,7 @@ function SuperAdminLeadGenConsole() {
                                 type: "button",
                                 onClick: () => handleAssignOwnerAndBuilding(lead.id, vacancyMatch.recommendedOwnerId, vacancyMatch.recommendedBuildingId),
                                 className: "mt-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-black cursor-pointer border-none",
-                                children: "⚡ Assign Recommended Owner & Building"
+                                children: "📤 Forward to Recommended PG Owner"
                               })
                             ]
                           }) : a.jsx("div", { className: "text-[10px] text-slate-500", children: vacancyMatch.matchReason })
