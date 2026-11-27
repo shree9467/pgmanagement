@@ -4885,116 +4885,285 @@ const ThemeIcon = ({ size = 18, className = "" }) => a.jsxs("svg", {
 
 window.SRINOOS_THEME_PRESETS = [
   {
-    id: "linear-obsidian",
-    name: "Linear Obsidian Dark",
-    tag: "Linear Minimalist",
-    mode: "dark",
-    bgColor: "#080b18",
-    cardColor: "#0f172a",
-    primaryColor: "#6366f1",
-    accentColor: "#818cf8",
-    textColor: "#ffffff",
-    mutedTextColor: "#cbd5e1",
-    navColor: "#0b0f19",
-    borderColor: "#1e293b",
-    borderRadius: "16px",
-    description: "Deep obsidian workspace with luminous indigo glow and ultra-crisp typography."
-  },
-  {
-    id: "vercel-midnight",
-    name: "Vercel Midnight Cyber",
-    tag: "Vercel Geist",
-    mode: "dark",
-    bgColor: "#030712",
-    cardColor: "#0b1120",
-    primaryColor: "#06b6d4",
-    accentColor: "#38bdf8",
-    textColor: "#ffffff",
-    mutedTextColor: "#94a3b8",
-    navColor: "#050811",
-    borderColor: "#162032",
-    borderRadius: "14px",
-    description: "Pitch-black developer terminal aesthetic with electric cyan laser accents."
-  },
-  {
-    id: "stripe-royal-navy",
-    name: "Stripe Royal Navy",
-    tag: "Stripe Finance",
-    mode: "dark",
-    bgColor: "#0a0f1d",
-    cardColor: "#111827",
-    primaryColor: "#3b82f6",
-    accentColor: "#60a5fa",
-    textColor: "#ffffff",
-    mutedTextColor: "#94a3b8",
-    navColor: "#0c1322",
-    borderColor: "#1f2937",
-    borderRadius: "16px",
-    description: "Executive deep sapphire navy with high-trust corporate elegance."
-  },
-  {
-    id: "emerald-sovereign",
-    name: "Emerald Sovereign Dark",
-    tag: "Emerald Luxury",
-    mode: "dark",
-    bgColor: "#04130f",
-    cardColor: "#07231b",
-    primaryColor: "#10b981",
-    accentColor: "#34d399",
-    textColor: "#ffffff",
-    mutedTextColor: "#a7f3d0",
-    navColor: "#051a14",
-    borderColor: "#0f3d30",
-    borderRadius: "16px",
-    description: "Rich forest obsidian paired with vibrant jade-emerald accents."
-  },
-  {
-    id: "sunset-velvet-rose",
-    name: "Sunset Velvet Rose",
-    tag: "Velvet Glow",
-    mode: "dark",
-    bgColor: "#0f0914",
-    cardColor: "#1b1122",
-    primaryColor: "#f43f5e",
-    accentColor: "#fb7185",
-    textColor: "#ffffff",
-    mutedTextColor: "#fbcfe8",
-    navColor: "#140c1a",
-    borderColor: "#2e1b38",
-    borderRadius: "18px",
-    description: "Luxurious amethyst-black background with glowing rose-gold highlights."
-  },
-  {
-    id: "stripe-pristine-light",
-    name: "Stripe Pristine Glass",
-    tag: "Stripe Clean",
+    id: "modern-saas",
+    name: "Modern SaaS",
+    tag: "Modern SaaS",
     mode: "light",
+    supportsModeSwitch: true,
     bgColor: "#f8fafc",
     cardColor: "#ffffff",
+    headerColor: "#ffffff",
     primaryColor: "#4f46e5",
+    secondaryColor: "#7c3aed",
     accentColor: "#6366f1",
     textColor: "#0f172a",
     mutedTextColor: "#475569",
     navColor: "#ffffff",
     borderColor: "#e2e8f0",
-    borderRadius: "16px",
-    description: "Ultra-clean, crisp, high-contrast light theme with rich indigo branding."
+    borderRadius: "14px",
+    shadowStyle: "0 4px 20px -2px rgba(15, 23, 42, 0.06)",
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    description: "Clean modern SaaS workspace with crisp indigo primaries, airy cards, and balanced elevation.",
+    altVariant: {
+      mode: "dark",
+      bgColor: "#0b1120",
+      cardColor: "#111827",
+      headerColor: "#0f172a",
+      navColor: "#090f1d",
+      textColor: "#f8fafc",
+      mutedTextColor: "#94a3b8",
+      borderColor: "#1e293b",
+      shadowStyle: "0 10px 30px -6px rgba(0, 0, 0, 0.45)"
+    }
   },
   {
-    id: "vercel-pure-titanium",
-    name: "Vercel Pure Titanium",
-    tag: "Vercel Mono",
+    id: "premium-minimal",
+    name: "Premium Minimal",
+    tag: "Minimalist",
     mode: "light",
+    supportsModeSwitch: true,
     bgColor: "#ffffff",
-    cardColor: "#f4f4f5",
+    cardColor: "#fafafa",
+    headerColor: "#ffffff",
     primaryColor: "#18181b",
-    accentColor: "#27272a",
+    secondaryColor: "#3f3f46",
+    accentColor: "#52525b",
     textColor: "#09090b",
     mutedTextColor: "#52525b",
     navColor: "#fafafa",
     borderColor: "#e4e4e7",
+    borderRadius: "10px",
+    shadowStyle: "0 1px 3px rgba(0, 0, 0, 0.05)",
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    description: "Architectural monochrome minimalism with razor-sharp borders and distraction-free surfaces.",
+    altVariant: {
+      mode: "dark",
+      bgColor: "#09090b",
+      cardColor: "#121215",
+      headerColor: "#09090b",
+      navColor: "#0c0c0f",
+      primaryColor: "#e4e4e7",
+      secondaryColor: "#a1a1aa",
+      accentColor: "#d4d4d8",
+      textColor: "#fafafa",
+      mutedTextColor: "#a1a1aa",
+      borderColor: "#27272a",
+      shadowStyle: "0 6px 24px rgba(0, 0, 0, 0.5)"
+    }
+  },
+  {
+    id: "professional-business",
+    name: "Professional Business",
+    tag: "Enterprise",
+    mode: "light",
+    supportsModeSwitch: true,
+    bgColor: "#f1f5f9",
+    cardColor: "#ffffff",
+    headerColor: "#0f172a",
+    primaryColor: "#1d4ed8",
+    secondaryColor: "#0f766e",
+    accentColor: "#2563eb",
+    textColor: "#0f172a",
+    mutedTextColor: "#475569",
+    navColor: "#ffffff",
+    borderColor: "#cbd5e1",
     borderRadius: "12px",
-    description: "Pure architectural minimalism with crisp monochrome slate accents."
+    shadowStyle: "0 2px 10px rgba(15, 23, 42, 0.06)",
+    fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
+    description: "High-trust executive corporate palette with strong contrast for financial and operational clarity.",
+    altVariant: {
+      mode: "dark",
+      bgColor: "#0a1120",
+      cardColor: "#111c33",
+      headerColor: "#0d1526",
+      navColor: "#0c1425",
+      primaryColor: "#3b82f6",
+      secondaryColor: "#14b8a6",
+      accentColor: "#60a5fa",
+      textColor: "#f8fafc",
+      mutedTextColor: "#94a3b8",
+      borderColor: "#1e3a5f",
+      shadowStyle: "0 8px 28px rgba(0, 0, 0, 0.45)"
+    }
+  },
+  {
+    id: "stripe-inspired",
+    name: "Stripe-Inspired",
+    tag: "Stripe Design",
+    mode: "light",
+    supportsModeSwitch: true,
+    bgColor: "#f6f9fc",
+    cardColor: "#ffffff",
+    headerColor: "#ffffff",
+    primaryColor: "#635bff",
+    secondaryColor: "#00d4ff",
+    accentColor: "#7a73ff",
+    textColor: "#0a2540",
+    mutedTextColor: "#425466",
+    navColor: "#ffffff",
+    borderColor: "#e3e8ee",
+    borderRadius: "14px",
+    shadowStyle: "0 6px 24px -4px rgba(10, 37, 64, 0.08)",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    description: "Signature Stripe blurple accents paired with crisp slate surfaces and refined fintech typography.",
+    altVariant: {
+      mode: "dark",
+      bgColor: "#0a192f",
+      cardColor: "#112240",
+      headerColor: "#0d1b33",
+      navColor: "#091529",
+      primaryColor: "#7a73ff",
+      secondaryColor: "#00d4ff",
+      accentColor: "#9b95ff",
+      textColor: "#f8fafc",
+      mutedTextColor: "#94a3b8",
+      borderColor: "#1e3a5f",
+      shadowStyle: "0 10px 30px rgba(0, 0, 0, 0.45)"
+    }
+  },
+  {
+    id: "linear-inspired",
+    name: "Linear-Inspired",
+    tag: "Linear Dark",
+    mode: "dark",
+    supportsModeSwitch: true,
+    bgColor: "#080b18",
+    cardColor: "#0f172a",
+    headerColor: "#0b0f19",
+    primaryColor: "#6366f1",
+    secondaryColor: "#8b5cf6",
+    accentColor: "#818cf8",
+    textColor: "#ffffff",
+    mutedTextColor: "#cbd5e1",
+    navColor: "#0b0f19",
+    borderColor: "#1e293b",
+    borderRadius: "14px",
+    shadowStyle: "0 12px 32px -8px rgba(0, 0, 0, 0.55)",
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    description: "Deep obsidian workspace with luminous indigo accents, subtle 1px borders, and ultra-crisp hierarchy.",
+    altVariant: {
+      mode: "light",
+      bgColor: "#f8f9fc",
+      cardColor: "#ffffff",
+      headerColor: "#ffffff",
+      navColor: "#f4f5f8",
+      textColor: "#111827",
+      mutedTextColor: "#4b5563",
+      borderColor: "#e5e7eb",
+      shadowStyle: "0 4px 16px rgba(17, 24, 39, 0.06)"
+    }
+  },
+  {
+    id: "notion-inspired",
+    name: "Notion-Inspired",
+    tag: "Notion Editorial",
+    mode: "light",
+    supportsModeSwitch: true,
+    bgColor: "#fbfbfa",
+    cardColor: "#ffffff",
+    headerColor: "#fbfbfa",
+    primaryColor: "#2f3437",
+    secondaryColor: "#0b6e99",
+    accentColor: "#2383e2",
+    textColor: "#37352f",
+    mutedTextColor: "#6b6a65",
+    navColor: "#f7f6f3",
+    borderColor: "#e9e9e7",
+    borderRadius: "10px",
+    shadowStyle: "0 1px 4px rgba(15, 15, 15, 0.05)",
+    fontFamily: "ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    description: "Warm paper surfaces, calm stone sidebars, and clean document-first editorial readability.",
+    altVariant: {
+      mode: "dark",
+      bgColor: "#191919",
+      cardColor: "#202020",
+      headerColor: "#191919",
+      navColor: "#1f1f1f",
+      primaryColor: "#2383e2",
+      secondaryColor: "#529cca",
+      accentColor: "#4dabf7",
+      textColor: "#ebeced",
+      mutedTextColor: "#9b9a97",
+      borderColor: "#2f2f2f",
+      shadowStyle: "0 6px 20px rgba(0, 0, 0, 0.45)"
+    }
+  },
+  {
+    id: "modern-dashboard",
+    name: "Modern Dashboard",
+    tag: "Analytics Pro",
+    mode: "light",
+    supportsModeSwitch: true,
+    bgColor: "#f0fdf9",
+    cardColor: "#ffffff",
+    headerColor: "#ffffff",
+    primaryColor: "#0d9488",
+    secondaryColor: "#0284c7",
+    accentColor: "#14b8a6",
+    textColor: "#0f172a",
+    mutedTextColor: "#475569",
+    navColor: "#ffffff",
+    borderColor: "#ccfbf1",
+    borderRadius: "16px",
+    shadowStyle: "0 4px 18px -2px rgba(13, 148, 136, 0.08)",
+    fontFamily: "'Inter', system-ui, sans-serif",
+    description: "Vibrant teal-and-sky operational dashboard optimized for KPI cards, occupancy metrics, and tables.",
+    altVariant: {
+      mode: "dark",
+      bgColor: "#041311",
+      cardColor: "#08221e",
+      headerColor: "#061a17",
+      navColor: "#051714",
+      primaryColor: "#14b8a6",
+      secondaryColor: "#38bdf8",
+      accentColor: "#2dd4bf",
+      textColor: "#f0fdfa",
+      mutedTextColor: "#99f6e4",
+      borderColor: "#115e59",
+      shadowStyle: "0 10px 28px rgba(0, 0, 0, 0.5)"
+    }
+  },
+  {
+    id: "elegant-light",
+    name: "Elegant Light",
+    tag: "Daylight Clarity",
+    mode: "light",
+    supportsModeSwitch: false,
+    bgColor: "#f9fafb",
+    cardColor: "#ffffff",
+    headerColor: "#ffffff",
+    primaryColor: "#2563eb",
+    secondaryColor: "#4f46e5",
+    accentColor: "#3b82f6",
+    textColor: "#111827",
+    mutedTextColor: "#4b5563",
+    navColor: "#ffffff",
+    borderColor: "#e5e7eb",
+    borderRadius: "16px",
+    shadowStyle: "0 4px 16px -2px rgba(17, 24, 39, 0.05)",
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    description: "Bright, airy, accessible daylight interface with sapphire accents and effortless long-session readability."
+  },
+  {
+    id: "premium-dark",
+    name: "Premium Dark",
+    tag: "Midnight Luxury",
+    mode: "dark",
+    supportsModeSwitch: false,
+    bgColor: "#030712",
+    cardColor: "#0b1120",
+    headerColor: "#050914",
+    primaryColor: "#06b6d4",
+    secondaryColor: "#6366f1",
+    accentColor: "#38bdf8",
+    textColor: "#f8fafc",
+    mutedTextColor: "#94a3b8",
+    navColor: "#050811",
+    borderColor: "#1e293b",
+    borderRadius: "16px",
+    shadowStyle: "0 14px 36px -8px rgba(0, 0, 0, 0.65)",
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    description: "Pitch-midnight luxury dark theme with luminous cyan-and-indigo accents and deep layered cards."
   }
 ];
 
@@ -5016,7 +5185,20 @@ window.getGlobalThemeConfig = () => {
     }
   } catch(_) {}
 
-  return window.SRINOOS_THEME_PRESETS[0];
+  return window.SRINOOS_THEME_PRESETS[4]; // Linear-Inspired default
+};
+
+window.getPreviousThemeConfig = () => {
+  try {
+    const cur = window.getGlobalThemeConfig();
+    if (cur?.previousTheme && cur.previousTheme.primaryColor) return cur.previousTheme;
+    const localPrev = localStorage.getItem("srinoos_previous_theme_config");
+    if (localPrev) {
+      const parsed = JSON.parse(localPrev);
+      if (parsed && parsed.primaryColor) return parsed;
+    }
+  } catch(_) {}
+  return null;
 };
 
 window.applyGlobalThemeToDOM = (cfg) => {
@@ -5031,65 +5213,100 @@ window.applyGlobalThemeToDOM = (cfg) => {
 
   const bgColor = cfg.bgColor || (isDark ? "#080b18" : "#f8fafc");
   const cardColor = cfg.cardColor || (isDark ? "#0f172a" : "#ffffff");
+  const headerColor = cfg.headerColor || cfg.navColor || (isDark ? "#0b0f19" : "#ffffff");
   const primaryColor = cfg.primaryColor || "#6366f1";
-  const accentColor = cfg.accentColor || "#818cf8";
+  const secondaryColor = cfg.secondaryColor || cfg.accentColor || "#818cf8";
+  const accentColor = cfg.accentColor || secondaryColor;
   const textColor = cfg.textColor || (isDark ? "#ffffff" : "#0f172a");
   const mutedTextColor = cfg.mutedTextColor || (isDark ? "#cbd5e1" : "#475569");
   const navColor = cfg.navColor || (isDark ? "#0b0f19" : "#ffffff");
   const borderColor = cfg.borderColor || (isDark ? "#1e293b" : "#e2e8f0");
+  const borderRadius = cfg.borderRadius || "14px";
+  const shadowStyle = cfg.shadowStyle || (isDark ? "0 10px 30px rgba(0,0,0,0.45)" : "0 4px 16px rgba(15,23,42,0.06)");
+  const fontFamily = cfg.fontFamily || "'Inter', system-ui, -apple-system, sans-serif";
 
   doc.style.setProperty("--theme-bg", bgColor);
-  doc.style.setProperty("--theme-card-bg", cardColor);
+  doc.style.setProperty("--theme-card", cardColor);
+  doc.style.setProperty("--theme-header", headerColor);
   doc.style.setProperty("--theme-primary", primaryColor);
+  doc.style.setProperty("--theme-secondary", secondaryColor);
   doc.style.setProperty("--theme-accent", accentColor);
   doc.style.setProperty("--theme-text", textColor);
-  doc.style.setProperty("--theme-text-muted", mutedTextColor);
-  doc.style.setProperty("--theme-nav-bg", navColor);
+  doc.style.setProperty("--theme-muted", mutedTextColor);
+  doc.style.setProperty("--theme-nav", navColor);
   doc.style.setProperty("--theme-border", borderColor);
+  doc.style.setProperty("--theme-radius", borderRadius);
+  doc.style.setProperty("--theme-shadow", shadowStyle);
+  doc.style.setProperty("--theme-font", fontFamily);
+  doc.style.backgroundColor = bgColor;
+  doc.style.color = textColor;
+  if (document.body) {
+    document.body.style.backgroundColor = bgColor;
+    document.body.style.color = textColor;
+    document.body.style.fontFamily = fontFamily;
+  }
 
-  let styleEl = document.getElementById("srinoos-dynamic-global-theme");
+  let styleEl = document.getElementById("srinoos-dynamic-theme-styles");
   if (!styleEl) {
     styleEl = document.createElement("style");
-    styleEl.id = "srinoos-dynamic-global-theme";
+    styleEl.id = "srinoos-dynamic-theme-styles";
     document.head.appendChild(styleEl);
   }
 
-  styleEl.innerHTML = `
-    :root {
-      --theme-bg: ${bgColor} !important;
-      --theme-card-bg: ${cardColor} !important;
-      --theme-primary: ${primaryColor} !important;
-      --theme-accent: ${accentColor} !important;
-      --theme-text: ${textColor} !important;
-      --theme-text-muted: ${mutedTextColor} !important;
-      --theme-nav-bg: ${navColor} !important;
-      --theme-border: ${borderColor} !important;
-    }
-    body, html, #root {
+  styleEl.textContent = `
+    html, body, #root {
       background-color: ${bgColor} !important;
       color: ${textColor} !important;
+      font-family: ${fontFamily} !important;
     }
-    .min-h-screen {
+
+    /* Background surfaces across Super Admin, PG Owner Hub, Tenant Panel & Auth screens */
+    .bg-slate-50, .bg-slate-50\\/50, .bg-gray-50, .dark\\:bg-slate-950, .dark\\:bg-slate-950\\/60, .bg-slate-950 {
       background-color: ${bgColor} !important;
     }
-    .bg-white, .bg-slate-50, .bg-slate-100\\/70, .bg-slate-100,
-    .dark\\:bg-slate-900, .dark\\:bg-slate-950, .bg-slate-900, .bg-slate-950 {
+    .bg-white, .dark\\:bg-slate-900, .dark\\:bg-slate-900\\/95, .dark\\:bg-slate-900\\/80, .bg-slate-900 {
       background-color: ${cardColor} !important;
+    }
+    aside, nav {
+      background-color: ${navColor} !important;
       border-color: ${borderColor} !important;
-      color: ${textColor} !important;
     }
-    .border-slate-200, .border-slate-100, .border-slate-800, .border-slate-700, .border-white\\/10 {
+    header {
+      background-color: ${headerColor} !important;
       border-color: ${borderColor} !important;
     }
-    .app-theme-button-primary,
-    button.bg-indigo-600,
-    button[class*="bg-indigo-600"] {
-      background-color: ${primaryColor} !important;
-      color: #ffffff !important;
-      border-color: ${primaryColor} !important;
+
+    /* Borders & corner radius */
+    .border-slate-200, .border-slate-100, .border-gray-200, .dark\\:border-slate-800, .dark\\:border-slate-700 {
+      border-color: ${borderColor} !important;
     }
-    input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
-    textarea, select {
+    .rounded-3xl, .rounded-2xl {
+      border-radius: ${borderRadius} !important;
+    }
+    .shadow-sm, .shadow-md {
+      box-shadow: ${shadowStyle} !important;
+    }
+
+    /* Primary Brand Buttons & Interactive Accents */
+    .app-theme-button-primary, .bg-indigo-600, .bg-purple-600 {
+      background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor}) !important;
+      color: ${primaryColor === "#e4e4e7" ? "#09090b" : "#ffffff"} !important;
+    }
+    .text-indigo-600, .text-purple-600, .dark\\:text-indigo-400, .dark\\:text-purple-400 {
+      color: ${accentColor} !important;
+    }
+
+    /* Tables & data displays */
+    table thead, thead tr {
+      background-color: ${isDark ? bgColor : navColor} !important;
+      border-color: ${borderColor} !important;
+    }
+    table tbody tr {
+      border-color: ${borderColor} !important;
+    }
+
+    /* Inputs, selects, dropdowns & modals */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="color"]), textarea, select {
       background-color: ${isDark ? cardColor : "#ffffff"} !important;
       color: ${textColor} !important;
       border-color: ${borderColor} !important;
@@ -5103,74 +5320,72 @@ window.applyGlobalThemeToDOM = (cfg) => {
       color: ${textColor} !important;
     }
 
-    /* UNIVERSAL HIGH-CONTRAST READABILITY & VISIBILITY STANDARDIZATION */
+    /* High-contrast readability across all panels */
     ${isDark ? `
       h1, h2, h3, h4, h5, h6, .text-slate-900, .text-slate-800, .dark\\:text-white, .dark\\:text-slate-100 {
-        color: #ffffff !important;
+        color: ${textColor} !important;
       }
       .text-slate-400, .text-gray-400, .text-zinc-400, .text-slate-450, .text-slate-550, .text-slate-500, .text-gray-500 {
-        color: #cbd5e1 !important;
+        color: ${mutedTextColor} !important;
       }
       .text-slate-300, .text-gray-300, .text-zinc-300, .dark\\:text-slate-300, .dark\\:text-slate-400 {
         color: #e2e8f0 !important;
       }
       .text-slate-600, .text-slate-700 {
-        color: #94a3b8 !important;
+        color: ${mutedTextColor} !important;
       }
-      th {
-        color: #ffffff !important;
-        font-weight: 800 !important;
-      }
-      td, label {
-        color: #e2e8f0 !important;
-      }
-      ::placeholder {
-        color: #94a3b8 !important;
-        opacity: 1 !important;
-      }
+      th { color: ${textColor} !important; font-weight: 800 !important; }
+      td, label { color: #e2e8f0 !important; }
+      ::placeholder { color: ${mutedTextColor} !important; opacity: 0.85 !important; }
     ` : `
       h1, h2, h3, h4, h5, h6, .text-slate-900, .text-slate-800, .dark\\:text-white {
-        color: #0f172a !important;
+        color: ${textColor} !important;
       }
-      .text-slate-400, .text-gray-400, .text-zinc-400, .text-slate-450 {
-        color: #475569 !important;
+      .text-slate-400, .text-gray-400, .text-zinc-400, .text-slate-450, .text-slate-500, .text-gray-500, .text-slate-550 {
+        color: ${mutedTextColor} !important;
       }
-      .text-slate-500, .text-gray-500, .text-zinc-500, .text-slate-550 {
-        color: #334155 !important;
+      .text-slate-300, .text-gray-300, .text-zinc-300, .text-slate-200 {
+        color: ${mutedTextColor} !important;
       }
-      .text-slate-300, .text-gray-300, .text-zinc-300 {
-        color: #475569 !important;
-      }
-      .text-slate-200, .text-gray-200 {
-        color: #64748b !important;
-      }
-      th {
-        color: #0f172a !important;
-        font-weight: 800 !important;
-      }
-      td {
-        color: #1e293b !important;
-      }
-      label {
-        color: #1e293b !important;
-        font-weight: 600 !important;
-      }
-      ::placeholder {
-        color: #64748b !important;
-        opacity: 1 !important;
-      }
+      th { color: ${textColor} !important; font-weight: 800 !important; }
+      td, label { color: ${textColor} !important; }
+      ::placeholder { color: ${mutedTextColor} !important; opacity: 0.85 !important; }
     `}
+
+    /* Keep Live Preview Modal strictly isolated from global overrides */
+    [data-theme-preview-sandbox="true"], [data-theme-preview-sandbox="true"] * {
+      all: revert-layer;
+    }
   `;
 };
 
 window.saveGlobalThemeConfig = async (themeConfig) => {
-  const jsonStr = JSON.stringify(themeConfig);
+  // Enforce Super Admin-only authorization for global theme changes
+  const curUser = Ee?.getState?.()?.user;
+  if (curUser && curUser.role && curUser.role !== "SUPER_ADMIN") {
+    throw new Error("Only Super Admin is authorized to change the global application theme.");
+  }
+
+  const currentLive = window.getGlobalThemeConfig();
+  const cleanPrev = currentLive && currentLive.id !== themeConfig.id
+    ? { ...currentLive, previousTheme: undefined }
+    : (currentLive?.previousTheme || null);
+
+  const payloadToSave = {
+    ...themeConfig,
+    previousTheme: cleanPrev,
+    appliedAt: new Date().toISOString(),
+    appliedBy: curUser?.email || curUser?.name || "Super Admin"
+  };
+
+  const jsonStr = JSON.stringify(payloadToSave);
   try {
     localStorage.setItem("srinoos_global_theme_config", jsonStr);
+    if (cleanPrev) localStorage.setItem("srinoos_previous_theme_config", JSON.stringify(cleanPrev));
   } catch(_) {}
 
-  window.applyGlobalThemeToDOM(themeConfig);
-  window.dispatchEvent(new CustomEvent("srinoos_theme_updated", { detail: themeConfig }));
+  window.applyGlobalThemeToDOM(payloadToSave);
+  window.dispatchEvent(new CustomEvent("srinoos_theme_updated", { detail: payloadToSave }));
 
   try {
     const regN = {
@@ -5191,7 +5406,7 @@ window.saveGlobalThemeConfig = async (themeConfig) => {
   } catch(err) {
     console.warn("Supabase global theme sync error:", err);
   }
-  return themeConfig;
+  return payloadToSave;
 };
 
 // Initial theme apply on startup
@@ -5200,764 +5415,716 @@ try {
 } catch(_) {}
 
 function SuperAdminThemeManagementConsole() {
+  const { user } = Ee();
+  const isSuperAdmin = !user?.role || user.role === "SUPER_ADMIN";
+
   const [activeTheme, setActiveTheme] = b.useState(() => window.getGlobalThemeConfig());
-  const [previewConfig, setPreviewConfig] = b.useState(() => window.getGlobalThemeConfig());
-  const [activeFilter, setActiveFilter] = b.useState("ALL"); // "ALL", "DARK", "LIGHT", "CUSTOM"
-  const [previewRole, setPreviewRole] = b.useState("OWNER"); // "OWNER", "SUPER_ADMIN", "TENANT"
+  const [previousTheme, setPreviousTheme] = b.useState(() => window.getPreviousThemeConfig());
+  const [activeFilter, setActiveFilter] = b.useState("ALL"); // "ALL", "LIGHT", "DARK"
+  const [previewModalTheme, setPreviewModalTheme] = b.useState(null); // Isolated preview only — NEVER mutates live DOM!
+  const [previewVariantMode, setPreviewVariantMode] = b.useState("default"); // "default" or "alt"
+  const [previewScreen, setPreviewScreen] = b.useState("SUPER_ADMIN"); // LOGIN, SUPER_ADMIN, OWNER, TENANT, FINANCE, TENANTS, REPORTS
+  const [confirmApplyTheme, setConfirmApplyTheme] = b.useState(null);
   const [isSaving, setIsSaving] = b.useState(!1);
 
   b.useEffect(() => {
     const handleUpdate = ev => {
       if (ev?.detail?.primaryColor) {
         setActiveTheme(ev.detail);
+        setPreviousTheme(ev.detail.previousTheme || window.getPreviousThemeConfig());
       }
     };
     window.addEventListener("srinoos_theme_updated", handleUpdate);
     return () => window.removeEventListener("srinoos_theme_updated", handleUpdate);
   }, []);
 
-  const selectPreset = (preset) => {
-    const updated = { ...preset, updatedAt: new Date().toISOString() };
-    setPreviewConfig(updated);
-    window.applyGlobalThemeToDOM(updated);
+  const resolvePreviewTokens = (theme, variantKey) => {
+    if (!theme) return null;
+    if (variantKey === "alt" && theme.altVariant) {
+      return {
+        ...theme,
+        ...theme.altVariant,
+        id: theme.id + "-" + (theme.altVariant.mode || "alt"),
+        name: theme.name + " (" + (theme.altVariant.mode === "dark" ? "Dark" : "Light") + ")"
+      };
+    }
+    return theme;
   };
 
-  const handleCustomColorChange = (key, val) => {
-    const updated = {
-      ...previewConfig,
-      id: "custom-" + Date.now(),
-      name: "Custom SaaS Theme",
-      tag: "Custom Palette",
-      [key]: val,
-      updatedAt: new Date().toISOString()
-    };
-    setPreviewConfig(updated);
-    window.applyGlobalThemeToDOM(updated);
+  const openIsolatedPreview = theme => {
+    setPreviewVariantMode("default");
+    setPreviewScreen("SUPER_ADMIN");
+    setPreviewModalTheme(theme);
   };
 
-  const handleApplyGlobally = async () => {
+  const executeApplyGlobalTheme = async themeToApply => {
+    if (!isSuperAdmin) {
+      z.error("Only Super Admin can change the global application theme.");
+      return;
+    }
+    if (!themeToApply) return;
     setIsSaving(!0);
-    const loadId = z.loading("Saving and broadcasting global theme across all portals...");
+    const loadId = z.loading("Applying " + themeToApply.name + " across all panels & syncing to Supabase...");
     try {
-      await window.saveGlobalThemeConfig(previewConfig);
-      setActiveTheme(previewConfig);
+      const saved = await window.saveGlobalThemeConfig(themeToApply);
+      setActiveTheme(saved);
+      setPreviousTheme(saved.previousTheme || window.getPreviousThemeConfig());
+      setConfirmApplyTheme(null);
+      setPreviewModalTheme(null);
       z.dismiss(loadId);
-      z.success("🎉 Global theme applied & permanently synchronized across all user portals and devices!");
-    } catch(err) {
+      z.success("Theme '" + saved.name + "' is now live across Super Admin, PG Owner Hub, Tenant Panel & Login!");
+    } catch (err) {
       z.dismiss(loadId);
-      z.error("Failed to save theme: " + err.message);
+      z.error("Failed to apply theme: " + (err?.message || "Unknown error"));
     } finally {
       setIsSaving(!1);
     }
   };
 
-  const handleResetDefault = async () => {
-    const defaultTheme = window.SRINOOS_THEME_PRESETS[0];
-    setPreviewConfig(defaultTheme);
-    window.applyGlobalThemeToDOM(defaultTheme);
-    await window.saveGlobalThemeConfig(defaultTheme);
-    setActiveTheme(defaultTheme);
-    z.success("↺ Restored default Linear Obsidian Dark theme globally!");
-  };
-
   const filteredPresets = b.useMemo(() => {
-    if (activeFilter === "DARK") return window.SRINOOS_THEME_PRESETS.filter(p => p.mode === "dark");
-    if (activeFilter === "LIGHT") return window.SRINOOS_THEME_PRESETS.filter(p => p.mode === "light");
-    return window.SRINOOS_THEME_PRESETS;
+    const all = window.SRINOOS_THEME_PRESETS || [];
+    if (activeFilter === "LIGHT") return all.filter(p => p.mode === "light");
+    if (activeFilter === "DARK") return all.filter(p => p.mode === "dark");
+    return all;
   }, [activeFilter]);
 
+  const defaultTheme = (window.SRINOOS_THEME_PRESETS || [])[4] || (window.SRINOOS_THEME_PRESETS || [])[0];
+  const pv = resolvePreviewTokens(previewModalTheme, previewVariantMode);
+
+  // Isolated realistic screen preview renderer (uses inline styles only — zero side effects on live DOM!)
+  const renderPreviewScreen = (tokens, screen) => {
+    if (!tokens) return null;
+    const isLightBtn = tokens.primaryColor === "#e4e4e7";
+    const btnText = isLightBtn ? "#09090b" : "#ffffff";
+    const cardSt = {
+      backgroundColor: tokens.cardColor,
+      border: "1px solid " + tokens.borderColor,
+      borderRadius: tokens.borderRadius || "14px",
+      boxShadow: tokens.shadowStyle || "none",
+      color: tokens.textColor
+    };
+    const mutedSt = { color: tokens.mutedTextColor };
+    const primaryBtnSt = {
+      background: "linear-gradient(135deg, " + tokens.primaryColor + ", " + (tokens.secondaryColor || tokens.accentColor || tokens.primaryColor) + ")",
+      color: btnText,
+      borderRadius: "10px",
+      border: "none"
+    };
+    const inputSt = {
+      backgroundColor: tokens.mode === "dark" ? tokens.bgColor : "#ffffff",
+      color: tokens.textColor,
+      border: "1px solid " + tokens.borderColor,
+      borderRadius: "10px"
+    };
+
+    if (screen === "LOGIN") {
+      return a.jsx("div", {
+        style: { backgroundColor: tokens.bgColor, color: tokens.textColor, minHeight: "420px", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", fontFamily: tokens.fontFamily },
+        children: a.jsxs("div", {
+          style: { ...cardSt, width: "100%", maxWidth: "380px", padding: "28px" },
+          children: [
+            a.jsxs("div", {
+              style: { marginBottom: "18px" },
+              children: [
+                a.jsx("span", { style: { fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", color: tokens.accentColor || tokens.primaryColor }, children: "Srinoos Coliving OS" }),
+                a.jsx("h3", { style: { fontSize: "20px", fontWeight: 900, margin: "6px 0 4px", color: tokens.textColor }, children: "Sign in to your account" }),
+                a.jsx("p", { style: { fontSize: "12px", margin: 0, ...mutedSt }, children: "Access Super Admin, PG Owner Hub, or Resident Panel" })
+              ]
+            }),
+            a.jsxs("div", {
+              style: { display: "grid", gap: "12px" },
+              children: [
+                a.jsxs("div", {
+                  children: [
+                    a.jsx("div", { style: { fontSize: "11px", fontWeight: 700, marginBottom: "4px", color: tokens.textColor }, children: "Email Address" }),
+                    a.jsx("div", { style: { ...inputSt, padding: "10px 12px", fontSize: "12px" }, children: "admin@srinooscoliving.com" })
+                  ]
+                }),
+                a.jsxs("div", {
+                  children: [
+                    a.jsx("div", { style: { fontSize: "11px", fontWeight: 700, marginBottom: "4px", color: tokens.textColor }, children: "Password" }),
+                    a.jsx("div", { style: { ...inputSt, padding: "10px 12px", fontSize: "12px" }, children: "••••••••••••" })
+                  ]
+                }),
+                a.jsx("div", { style: { ...primaryBtnSt, padding: "11px", textAlign: "center", fontSize: "12px", fontWeight: 800, marginTop: "4px" }, children: "Sign In Securely →" })
+              ]
+            })
+          ]
+        })
+      });
+    }
+
+    const screenConfig = {
+      SUPER_ADMIN: {
+        sidebar: ["Overview", "User Accounts", "Tenants Audit", "Guest Onboarding", "Support Requests", "Theme Management"],
+        activeNav: "Overview",
+        title: "Super Admin Dashboard",
+        subtitle: "Platform-wide occupancy, subscriptions & operations",
+        kpis: [
+          { label: "Active PG Owners", val: "18", sub: "+3 this month" },
+          { label: "Total Residents", val: "412", sub: "92% occupancy" },
+          { label: "Monthly Revenue", val: "₹38.4L", sub: "+14.2% MoM" },
+          { label: "Open Support", val: "2", sub: "Avg SLA 18m" }
+        ],
+        tableCols: ["PG Owner", "Buildings", "Occupancy", "Plan", "Status"],
+        tableRows: [
+          ["Ramesh Luxury Stays", "3 Buildings", "94%", "Scale Grow", "Active"],
+          ["Suresh Prime Coliving", "2 Buildings", "89%", "Enterprise", "Active"],
+          ["Lakshmi Ladies PG", "1 Building", "96%", "Starter", "Active"]
+        ]
+      },
+      OWNER: {
+        sidebar: ["Overview", "Rooms & Beds", "Tenants", "Finance", "Food & Dining", "Complaints"],
+        activeNav: "Overview",
+        title: "PG Owner Hub",
+        subtitle: "Live bed occupancy, rent collection & building operations",
+        kpis: [
+          { label: "Total Beds", val: "120", sub: "112 occupied" },
+          { label: "Vacant Beds", val: "8", sub: "Ready to fill" },
+          { label: "Rent Collected", val: "₹9.6L", sub: "94% collected" },
+          { label: "Pending Dues", val: "₹54,000", sub: "6 tenants" }
+        ],
+        tableCols: ["Building", "Rooms", "Available Beds", "Monthly Collection", "Status"],
+        tableRows: [
+          ["Koramangala Executive", "24 Rooms", "3 Free", "₹4.8L", "Healthy"],
+          ["HSR Elite Wing", "18 Rooms", "5 Free", "₹3.2L", "Healthy"],
+          ["Indiranagar Ladies PG", "15 Rooms", "0 Free", "₹1.6L", "Full"]
+        ]
+      },
+      TENANT: {
+        sidebar: ["My Room", "Rent & Invoices", "Food Menu", "Meal Planner", "Notices", "Complaints"],
+        activeNav: "My Room",
+        title: "Resident Panel",
+        subtitle: "Room 204 • Double Sharing • Koramangala Executive",
+        kpis: [
+          { label: "Monthly Rent", val: "₹9,500", sub: "Paid for Nov" },
+          { label: "Today's Menu", val: "3 Meals", sub: "South & North" },
+          { label: "Unread Notices", val: "2", sub: "Building updates" },
+          { label: "KYC Status", val: "Verified", sub: "Aadhaar + PAN" }
+        ],
+        tableCols: ["Invoice Month", "Amount", "Due Date", "Mode", "Status"],
+        tableRows: [
+          ["November 2026", "₹9,500", "05 Nov 2026", "UPI", "Paid"],
+          ["October 2026", "₹9,500", "05 Oct 2026", "UPI", "Paid"],
+          ["Security Deposit", "₹15,000", "01 Sep 2026", "Bank", "Held"]
+        ]
+      },
+      FINANCE: {
+        sidebar: ["Overview", "Invoices", "Expenses", "P&L Summary", "Dues", "Tax Export"],
+        activeNav: "Invoices",
+        title: "Finance & Rent Ledger",
+        subtitle: "Automated rent invoicing, UPI receipts & expense tracking",
+        kpis: [
+          { label: "Total Billed", val: "₹10.14L", sub: "112 invoices" },
+          { label: "Collected", val: "₹9.60L", sub: "94.7% rate" },
+          { label: "Expenses", val: "₹2.85L", sub: "Power, food, staff" },
+          { label: "Net Surplus", val: "₹6.75L", sub: "66.5% margin" }
+        ],
+        tableCols: ["Receipt #", "Tenant", "Category", "Amount", "Status"],
+        tableRows: [
+          ["INV-2026-114", "Arjun Rao", "Monthly Rent", "₹9,500", "Paid"],
+          ["INV-2026-115", "Sneha Nair", "Monthly Rent", "₹11,000", "Paid"],
+          ["EXP-2026-042", "BESCOM Power", "Electricity", "₹34,200", "Logged"]
+        ]
+      },
+      TENANTS: {
+        sidebar: ["All Tenants", "Check-Ins", "KYC Vault", "Notice Period", "Shifting History"],
+        activeNav: "All Tenants",
+        title: "Tenants Directory & KYC",
+        subtitle: "Verified residents, room allocations & digital documents",
+        kpis: [
+          { label: "Active Tenants", val: "112", sub: "Across 3 buildings" },
+          { label: "KYC Verified", val: "109", sub: "97.3% complete" },
+          { label: "New This Month", val: "11", sub: "Digital onboarding" },
+          { label: "Notice Period", val: "4", sub: "Next 30 days" }
+        ],
+        tableCols: ["Tenant Name", "Building & Room", "Phone", "Rent", "KYC"],
+        tableRows: [
+          ["Arjun Rao", "Koramangala • R-204", "+91 98765 43210", "₹9,500", "Verified"],
+          ["Priya Menon", "Indiranagar • R-108", "+91 98450 22119", "₹11,500", "Verified"],
+          ["Karthik Verma", "HSR Wing • R-302", "+91 99001 77432", "₹8,500", "Pending"]
+        ]
+      },
+      REPORTS: {
+        sidebar: ["Occupancy Report", "Revenue Analytics", "Meal Wastage", "Audit Logs", "Export CSV"],
+        activeNav: "Revenue Analytics",
+        title: "Reports & Analytics",
+        subtitle: "Occupancy trends, collection velocity & meal wastage savings",
+        kpis: [
+          { label: "Avg Occupancy", val: "93.4%", sub: "+4.1% YoY" },
+          { label: "On-Time Pay", val: "91.8%", sub: "Before 5th" },
+          { label: "Meals Saved", val: "318", sub: "Via skip planner" },
+          { label: "Retention", val: "8.4 mo", sub: "Avg stay duration" }
+        ],
+        tableCols: ["Metric", "Last Month", "This Month", "Change", "Health"],
+        tableRows: [
+          ["Bed Occupancy", "89.2%", "93.4%", "+4.2%", "Optimal"],
+          ["Rent Collection", "₹9.1L", "₹9.6L", "+5.5%", "Strong"],
+          ["Food Wastage", "11.4%", "4.8%", "-6.6%", "Improved"]
+        ]
+      }
+    };
+
+    const sc = screenConfig[screen] || screenConfig.SUPER_ADMIN;
+    return a.jsxs("div", {
+      style: { display: "grid", gridTemplateColumns: "185px 1fr", minHeight: "430px", backgroundColor: tokens.bgColor, color: tokens.textColor, fontFamily: tokens.fontFamily },
+      children: [
+        // Sidebar Preview
+        a.jsxs("div", {
+          style: { backgroundColor: tokens.navColor, borderRight: "1px solid " + tokens.borderColor, padding: "16px 12px", display: "flex", flexDirection: "column", gap: "6px" },
+          children: [
+            a.jsxs("div", {
+              style: { padding: "6px 8px 12px", borderBottom: "1px solid " + tokens.borderColor, marginBottom: "6px" },
+              children: [
+                a.jsx("div", { style: { fontSize: "13px", fontWeight: 900, color: tokens.textColor }, children: "Srinoos PG" }),
+                a.jsx("div", { style: { fontSize: "9px", fontWeight: 800, textTransform: "uppercase", color: tokens.accentColor || tokens.primaryColor }, children: tokens.name })
+              ]
+            }),
+            sc.sidebar.map(item => a.jsx("div", {
+              key: item,
+              style: item === sc.activeNav
+                ? { ...primaryBtnSt, padding: "8px 10px", fontSize: "11px", fontWeight: 800 }
+                : { padding: "8px 10px", fontSize: "11px", fontWeight: 600, color: tokens.mutedTextColor, borderRadius: "8px" },
+              children: item
+            }))
+          ]
+        }),
+        // Main Content Preview
+        a.jsxs("div", {
+          style: { display: "flex", flexDirection: "column", minWidth: 0 },
+          children: [
+            // Header Preview
+            a.jsxs("div", {
+              style: { backgroundColor: tokens.headerColor || tokens.cardColor, borderBottom: "1px solid " + tokens.borderColor, padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" },
+              children: [
+                a.jsxs("div", {
+                  children: [
+                    a.jsx("div", { style: { fontSize: "15px", fontWeight: 900, color: (tokens.headerColor === "#0f172a" ? "#ffffff" : tokens.textColor) }, children: sc.title }),
+                    a.jsx("div", { style: { fontSize: "11px", color: (tokens.headerColor === "#0f172a" ? "#cbd5e1" : tokens.mutedTextColor) }, children: sc.subtitle })
+                  ]
+                }),
+                a.jsx("div", { style: { ...primaryBtnSt, padding: "7px 14px", fontSize: "11px", fontWeight: 800, whiteSpace: "nowrap" }, children: "+ Quick Action" })
+              ]
+            }),
+            // KPI Row + Table Preview
+            a.jsxs("div", {
+              style: { padding: "18px 20px", display: "flex", flexDirection: "column", gap: "16px" },
+              children: [
+                a.jsx("div", {
+                  style: { display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "10px" },
+                  children: sc.kpis.map(k => a.jsxs("div", {
+                    key: k.label,
+                    style: { ...cardSt, padding: "12px" },
+                    children: [
+                      a.jsx("div", { style: { fontSize: "9px", fontWeight: 800, textTransform: "uppercase", ...mutedSt }, children: k.label }),
+                      a.jsx("div", { style: { fontSize: "18px", fontWeight: 900, margin: "4px 0 2px", color: tokens.textColor }, children: k.val }),
+                      a.jsx("div", { style: { fontSize: "10px", fontWeight: 700, color: tokens.accentColor || tokens.primaryColor }, children: k.sub })
+                    ]
+                  }))
+                }),
+                a.jsxs("div", {
+                  style: { ...cardSt, overflow: "hidden" },
+                  children: [
+                    a.jsx("div", {
+                      style: { padding: "10px 14px", borderBottom: "1px solid " + tokens.borderColor, fontSize: "11px", fontWeight: 800, color: tokens.textColor, display: "flex", justifyContent: "space-between", alignItems: "center" },
+                      children: [
+                        a.jsx("span", { children: "Live Data Table Preview" }),
+                        a.jsx("span", { style: { fontSize: "10px", padding: "3px 8px", borderRadius: "6px", border: "1px solid " + tokens.borderColor, ...mutedSt }, children: "Search & Filter" })
+                      ]
+                    }),
+                    a.jsxs("table", {
+                      style: { width: "100%", borderCollapse: "collapse", fontSize: "11px" },
+                      children: [
+                        a.jsx("thead", {
+                          children: a.jsx("tr", {
+                            style: { backgroundColor: tokens.mode === "dark" ? tokens.bgColor : tokens.navColor, borderBottom: "1px solid " + tokens.borderColor },
+                            children: sc.tableCols.map(col => a.jsx("th", { key: col, style: { padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 800, color: tokens.mutedTextColor }, children: col }))
+                          })
+                        }),
+                        a.jsx("tbody", {
+                          children: sc.tableRows.map((row, ri) => a.jsx("tr", {
+                            key: ri,
+                            style: { borderBottom: ri < sc.tableRows.length - 1 ? "1px solid " + tokens.borderColor : "none" },
+                            children: row.map((cell, ci) => a.jsx("td", {
+                              key: ci,
+                              style: { padding: "9px 12px", fontWeight: ci === 0 ? 700 : 500, color: ci === row.length - 1 ? (tokens.accentColor || tokens.primaryColor) : tokens.textColor },
+                              children: cell
+                            }))
+                          }))
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    });
+  };
+
   return a.jsxs("div", {
-    className: "space-y-8 animate-in fade-in duration-300 font-sans pb-16 text-left",
+    className: "space-y-6 animate-in fade-in duration-300 font-sans pb-16 text-left",
     children: [
-      // Top Header Bar inspired by Linear & Vercel
+      // Header & Controls Bar
       a.jsxs("div", {
-        className: "flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-6",
+        className: "flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5",
         children: [
           a.jsxs("div", {
             className: "space-y-1.5",
             children: [
               a.jsxs("div", {
-                className: "flex items-center gap-2",
+                className: "flex flex-wrap items-center gap-2",
                 children: [
-                  a.jsx("span", {
-                    className: "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-purple-500/10 text-purple-400 border border-purple-500/20",
-                    children: "SaaS Design System"
-                  }),
-                  a.jsx("span", {
-                    className: "px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1",
-                    children: [a.jsx("span", { className: "w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" }), "Active Live: " + (activeTheme.name || "Obsidian")]
+                  a.jsx("span", { className: "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-indigo-500/10 text-indigo-500 border border-indigo-500/20", children: "Super Admin Exclusive" }),
+                  a.jsxs("span", {
+                    className: "px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5",
+                    children: [a.jsx("span", { className: "w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" }), "Active Live Theme: ", activeTheme?.name || "Linear-Inspired"]
                   })
                 ]
               }),
-              a.jsx("h2", {
+              a.jsxs("h2", {
                 className: "text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5",
                 children: [
-                  a.jsx("span", { className: "p-2 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30", children: a.jsx(ThemeIcon, { size: 22 }) }),
+                  a.jsx("span", { className: "p-2 rounded-2xl bg-indigo-600 text-white shadow-md", children: a.jsx(ThemeIcon, { size: 22 }) }),
                   "Global Theme Management"
                 ]
               }),
               a.jsx("p", {
-                className: "text-xs font-medium text-slate-400 max-w-2xl leading-relaxed",
-                children: "Select, preview, and customize the universal design system. Changes synchronize globally across Super Admin, PG Owner Hub, Resident Portal, and Login screens."
+                className: "text-xs text-slate-500 dark:text-slate-400 max-w-2xl",
+                children: "Browse 9 professionally crafted full-project theme templates. Preview any screen safely without affecting live users, then apply globally across Super Admin, PG Owner Hub, Tenant Panel & Login."
               })
             ]
           }),
-
-          // Action Buttons
           a.jsxs("div", {
-            className: "flex flex-wrap items-center gap-2.5 shrink-0",
+            className: "flex flex-wrap items-center gap-2",
             children: [
-              a.jsxs("button", {
+              previousTheme && a.jsx("button", {
                 type: "button",
-                onClick: handleResetDefault,
-                className: "px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm",
-                children: [a.jsx("span", { children: "↺" }), "Reset Default"]
+                disabled: isSaving || !isSuperAdmin,
+                onClick: () => setConfirmApplyTheme({ ...previousTheme, _actionLabel: "Restore Previous Theme" }),
+                className: "px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black cursor-pointer",
+                children: "↩ Restore Previous (" + previousTheme.name + ")"
               }),
-              a.jsxs("button", {
+              a.jsx("button", {
                 type: "button",
-                onClick: () => { window.applyGlobalThemeToDOM(previewConfig); z.success("👁️ Live preview active in current browser view!"); },
-                className: "px-4 py-2.5 rounded-xl border border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 hover:text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5",
-                children: [a.jsx("span", { children: "👁️" }), "Preview Live"]
-              }),
-              a.jsxs("button", {
-                type: "button",
-                disabled: isSaving,
-                onClick: handleApplyGlobally,
-                className: "px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white text-xs font-black shadow-lg shadow-indigo-600/25 transition-all cursor-pointer flex items-center gap-2 transform active:scale-95 disabled:opacity-50",
-                children: [
-                  a.jsx("span", { children: "✓" }),
-                  isSaving ? "Saving & Syncing..." : "Apply Theme Globally"
-                ]
+                disabled: isSaving || !isSuperAdmin,
+                onClick: () => setConfirmApplyTheme({ ...defaultTheme, _actionLabel: "Reset to Default Theme" }),
+                className: "px-3.5 py-2 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black cursor-pointer",
+                children: "↺ Default Theme"
               })
             ]
           })
         ]
       }),
 
-      // Navigation filter tabs inspired by Stripe & Linear
+      !isSuperAdmin && a.jsx("div", {
+        className: "p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs font-bold text-amber-800 dark:text-amber-300",
+        children: "🔒 Global Theme Management is restricted to Super Admin accounts. Your workspace automatically inherits the active platform theme."
+      }),
+
+      // Filter Pills
       a.jsxs("div", {
-        className: "flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-2",
+        className: "flex flex-wrap items-center justify-between gap-3",
         children: [
-          a.jsxs("div", {
-            className: "flex items-center gap-1 bg-slate-900/90 p-1 rounded-2xl border border-slate-800",
+          a.jsx("div", {
+            className: "flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700",
             children: [
-              { id: "ALL", label: "All Curated Themes" },
-              { id: "DARK", label: "🌙 Dark Mode" },
-              { id: "LIGHT", label: "☀️ Light Mode" },
-              { id: "CUSTOM", label: "🎨 Custom Palette Editor" }
+              { id: "ALL", label: "All Templates (9)" },
+              { id: "LIGHT", label: "☀️ Light Themes" },
+              { id: "DARK", label: "🌙 Dark Themes" }
             ].map(tab => a.jsx("button", {
               key: tab.id,
               type: "button",
               onClick: () => setActiveFilter(tab.id),
-              className: "px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer " + (activeFilter === tab.id ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30" : "text-slate-400 hover:text-white hover:bg-slate-800/50"),
+              className: Be("px-3.5 py-1.5 rounded-lg text-xs font-black cursor-pointer border-none transition-all", activeFilter === tab.id ? "bg-indigo-600 text-white shadow-sm" : "bg-transparent text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"),
               children: tab.label
             }))
           }),
-
-          a.jsxs("div", {
-            className: "flex items-center gap-2 text-xs font-bold text-slate-400",
-            children: [
-              a.jsx("span", { className: "text-slate-500 uppercase tracking-widest text-[10px]", children: "Current Palette:" }),
-              a.jsx("div", { className: "w-4 h-4 rounded-full border border-white/20 shadow-xs", style: { backgroundColor: previewConfig.primaryColor } }),
-              a.jsx("span", { className: "text-white font-extrabold", children: previewConfig.name })
-            ]
+          a.jsx("span", {
+            className: "text-[11px] font-bold text-slate-500",
+            children: "Previewing never alters the live application until you confirm Apply Theme."
           })
         ]
       }),
 
-      // Main Grid: Left Controls (Presets or Custom) & Right Live Preview
-      a.jsxs("div", {
-        className: "grid grid-cols-1 lg:grid-cols-12 gap-8 items-start",
-        children: [
-          // Left Column (7 cols): Presets and/or Custom Palette Editor
-          a.jsxs("div", {
-            className: "lg:col-span-7 space-y-6",
+      // 9 Ready-Made Full-Project Theme Templates Grid
+      a.jsx("div", {
+        className: "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5",
+        children: filteredPresets.map(preset => {
+          const isActive = activeTheme?.id === preset.id || (activeTheme?.id && activeTheme.id.startsWith(preset.id + "-"));
+          return a.jsxs("div", {
+            key: preset.id,
+            className: Be("bg-white dark:bg-slate-900 border rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between transition-all", isActive ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-slate-200 dark:border-slate-800 hover:border-indigo-400"),
             children: [
-              // Presets View (when activeFilter !== 'CUSTOM')
-              activeFilter !== "CUSTOM" && a.jsxs("div", {
-                className: "space-y-4",
-                children: [
-                  a.jsxs("div", {
-                    className: "flex items-center justify-between",
-                    children: [
-                      a.jsx("h3", { className: "text-sm font-black text-white uppercase tracking-wider", children: "Ready-Made Design Themes" }),
-                      a.jsx("span", { className: "text-xs text-slate-400 font-medium", children: "Click any theme card to preview live" })
-                    ]
-                  }),
-
-                  a.jsx("div", {
-                    className: "grid grid-cols-1 sm:grid-cols-2 gap-4",
-                    children: filteredPresets.map(preset => {
-                      const isSelected = previewConfig.id === preset.id;
-                      const isLive = activeTheme.id === preset.id;
-
-                      return a.jsxs("div", {
-                        key: preset.id,
-                        onClick: () => selectPreset(preset),
-                        className: "p-4 rounded-3xl border transition-all cursor-pointer relative overflow-hidden group hover:scale-[1.01] " + (isSelected ? "border-indigo-500 bg-slate-900/95 shadow-xl shadow-indigo-500/10 ring-2 ring-indigo-500/40" : "border-slate-800/80 bg-slate-900/60 hover:border-slate-700 hover:bg-slate-900"),
-                        children: [
-                          // Mini Visual Mockup inside each card
-                          a.jsxs("div", {
-                            className: "h-28 rounded-2xl p-2.5 mb-3 flex flex-col justify-between border relative overflow-hidden shadow-inner",
-                            style: { backgroundColor: preset.bgColor, borderColor: preset.borderColor },
-                            children: [
-                              a.jsxs("div", {
-                                className: "flex items-center justify-between pb-1.5 border-b",
-                                style: { borderColor: preset.borderColor },
-                                children: [
-                                  a.jsxs("div", { className: "flex items-center gap-1.5", children: [
-                                    a.jsx("div", { className: "w-2.5 h-2.5 rounded-full", style: { backgroundColor: preset.primaryColor } }),
-                                    a.jsx("span", { className: "text-[9px] font-black", style: { color: preset.textColor }, children: "PG OS" })
-                                  ]}),
-                                  a.jsx("div", { className: "px-1.5 py-0.5 rounded text-[7px] font-black uppercase", style: { backgroundColor: preset.primaryColor + "30", color: preset.accentColor }, children: preset.mode })
-                                ]
-                              }),
-                              a.jsxs("div", {
-                                className: "grid grid-cols-3 gap-1 my-auto",
-                                children: [
-                                  a.jsxs("div", { className: "p-1 rounded-lg border", style: { backgroundColor: preset.cardColor, borderColor: preset.borderColor }, children: [
-                                    a.jsx("div", { className: "text-[7px] opacity-70", style: { color: preset.mutedTextColor }, children: "Revenue" }),
-                                    a.jsx("div", { className: "text-[9px] font-black", style: { color: preset.textColor }, children: "₹4.8L" })
-                                  ]}),
-                                  a.jsxs("div", { className: "p-1 rounded-lg border", style: { backgroundColor: preset.cardColor, borderColor: preset.borderColor }, children: [
-                                    a.jsx("div", { className: "text-[7px] opacity-70", style: { color: preset.mutedTextColor }, children: "Beds" }),
-                                    a.jsx("div", { className: "text-[9px] font-black", style: { color: preset.accentColor }, children: "94%" })
-                                  ]}),
-                                  a.jsxs("div", { className: "p-1 rounded-lg border", style: { backgroundColor: preset.cardColor, borderColor: preset.borderColor }, children: [
-                                    a.jsx("div", { className: "text-[7px] opacity-70", style: { color: preset.mutedTextColor }, children: "Status" }),
-                                    a.jsx("div", { className: "text-[8px] font-black", style: { color: "#10b981" }, children: "Active" })
-                                  ]})
-                                ]
-                              }),
-                              a.jsxs("div", {
-                                className: "flex items-center justify-between pt-1",
-                                children: [
-                                  a.jsx("div", { className: "h-3.5 px-2 rounded-md text-[7px] font-black flex items-center text-white", style: { backgroundColor: preset.primaryColor }, children: "Primary Action" }),
-                                  a.jsx("div", { className: "text-[7px] font-semibold", style: { color: preset.mutedTextColor }, children: "v2.5" })
-                                ]
-                              })
-                            ]
-                          }),
-
-                          // Card info
-                          a.jsxs("div", {
-                            className: "flex items-center justify-between mb-1.5",
-                            children: [
-                              a.jsx("h4", { className: "font-black text-xs text-white group-hover:text-indigo-400 transition-colors", children: preset.name }),
-                              a.jsx("span", { className: "text-[9px] px-2 py-0.5 rounded-full font-extrabold bg-slate-800 text-slate-300 border border-slate-700", children: preset.tag })
-                            ]
-                          }),
-
-                          a.jsx("p", { className: "text-[11px] text-slate-400 font-medium mb-3 line-clamp-2 leading-relaxed", children: preset.description }),
-
-                          // Palette dots
-                          a.jsxs("div", {
-                            className: "flex items-center justify-between pt-2.5 border-t border-slate-800/80",
-                            children: [
-                              a.jsxs("div", {
-                                className: "flex items-center gap-1.5",
-                                children: [
-                                  a.jsx("div", { title: "Background", className: "w-3.5 h-3.5 rounded-full border border-white/20 shadow-xs", style: { backgroundColor: preset.bgColor } }),
-                                  a.jsx("div", { title: "Card Surface", className: "w-3.5 h-3.5 rounded-full border border-white/20 shadow-xs", style: { backgroundColor: preset.cardColor } }),
-                                  a.jsx("div", { title: "Primary Brand", className: "w-3.5 h-3.5 rounded-full border border-white/20 shadow-xs", style: { backgroundColor: preset.primaryColor } }),
-                                  a.jsx("div", { title: "Accent", className: "w-3.5 h-3.5 rounded-full border border-white/20 shadow-xs", style: { backgroundColor: preset.accentColor } }),
-                                  a.jsx("div", { title: "Text", className: "w-3.5 h-3.5 rounded-full border border-white/20 shadow-xs", style: { backgroundColor: preset.textColor } })
-                                ]
-                              }),
-
-                              isLive ? a.jsx("span", { className: "text-[10px] font-black text-emerald-400 flex items-center gap-1", children: "✓ LIVE THEME" }) :
-                              isSelected ? a.jsx("span", { className: "text-[10px] font-black text-indigo-400", children: "Previewing..." }) :
-                              a.jsx("span", { className: "text-[10px] font-bold text-slate-500 group-hover:text-slate-300", children: "Click to select" })
-                            ]
-                          })
-                        ]
-                      });
-                    })
-                  })
-                ]
-              }),
-
-              // Custom Color Palette Editor
+              // Miniature Isolated Visual Theme Swatch Preview
               a.jsxs("div", {
-                className: "bg-slate-900/80 rounded-3xl p-6 border border-slate-800 space-y-5",
+                "data-theme-preview-sandbox": "true",
+                style: { backgroundColor: preset.bgColor, padding: "14px", borderBottom: "1px solid " + preset.borderColor, fontFamily: preset.fontFamily },
                 children: [
                   a.jsxs("div", {
-                    className: "flex items-center justify-between border-b border-slate-800 pb-3",
+                    style: { display: "grid", gridTemplateColumns: "54px 1fr", gap: "8px", height: "110px", borderRadius: "10px", overflow: "hidden", border: "1px solid " + preset.borderColor, backgroundColor: preset.bgColor },
                     children: [
+                      // Mini Sidebar
                       a.jsxs("div", {
+                        style: { backgroundColor: preset.navColor, borderRight: "1px solid " + preset.borderColor, padding: "8px 6px", display: "flex", flexDirection: "column", gap: "5px" },
                         children: [
-                          a.jsx("h3", { className: "text-sm font-black text-white uppercase tracking-wider flex items-center gap-2", children: [a.jsx("span", { children: "🎨" }), "Custom Palette & Surface Editor"] }),
-                          a.jsx("p", { className: "text-[11px] text-slate-400 font-medium", children: "Fine-tune individual hex colors to align with your proprietary brand identity." })
+                          a.jsx("div", { style: { height: "8px", width: "80%", borderRadius: "4px", backgroundColor: preset.primaryColor } }),
+                          a.jsx("div", { style: { height: "6px", width: "90%", borderRadius: "3px", backgroundColor: preset.borderColor } }),
+                          a.jsx("div", { style: { height: "6px", width: "75%", borderRadius: "3px", backgroundColor: preset.borderColor } }),
+                          a.jsx("div", { style: { height: "6px", width: "65%", borderRadius: "3px", backgroundColor: preset.borderColor } })
                         ]
                       }),
+                      // Mini Main Content
                       a.jsxs("div", {
-                        className: "flex items-center gap-1.5",
-                        children: [
-                          a.jsx("button", {
-                            type: "button",
-                            onClick: () => handleCustomColorChange("mode", previewConfig.mode === "dark" ? "light" : "dark"),
-                            className: "px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 cursor-pointer transition-all",
-                            children: previewConfig.mode === "dark" ? "🌙 Dark Base" : "☀️ Light Base"
-                          })
-                        ]
-                      })
-                    ]
-                  }),
-
-                  a.jsxs("div", {
-                    className: "grid grid-cols-1 sm:grid-cols-2 gap-4",
-                    children: [
-                      // Background Color
-                      a.jsxs("div", {
-                        className: "p-3 bg-slate-950/70 rounded-2xl border border-slate-800/80 space-y-1.5",
-                        children: [
-                          a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase", children: "Canvas Background" }),
-                          a.jsxs("div", {
-                            className: "flex items-center gap-2",
-                            children: [
-                              a.jsx("input", {
-                                type: "color",
-                                value: previewConfig.bgColor || "#080b18",
-                                onChange: e => handleCustomColorChange("bgColor", e.target.value),
-                                className: "w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"
-                              }),
-                              a.jsx("input", {
-                                type: "text",
-                                value: previewConfig.bgColor || "#080b18",
-                                onChange: e => handleCustomColorChange("bgColor", e.target.value),
-                                className: "w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-white outline-none"
-                              })
-                            ]
-                          })
-                        ]
-                      }),
-
-                      // Card Surface Color
-                      a.jsxs("div", {
-                        className: "p-3 bg-slate-950/70 rounded-2xl border border-slate-800/80 space-y-1.5",
-                        children: [
-                          a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase", children: "Card Surface / Panels" }),
-                          a.jsxs("div", {
-                            className: "flex items-center gap-2",
-                            children: [
-                              a.jsx("input", {
-                                type: "color",
-                                value: previewConfig.cardColor || "#0f172a",
-                                onChange: e => handleCustomColorChange("cardColor", e.target.value),
-                                className: "w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"
-                              }),
-                              a.jsx("input", {
-                                type: "text",
-                                value: previewConfig.cardColor || "#0f172a",
-                                onChange: e => handleCustomColorChange("cardColor", e.target.value),
-                                className: "w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-white outline-none"
-                              })
-                            ]
-                          })
-                        ]
-                      }),
-
-                      // Primary Brand Color
-                      a.jsxs("div", {
-                        className: "p-3 bg-slate-950/70 rounded-2xl border border-slate-800/80 space-y-1.5",
-                        children: [
-                          a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase", children: "Primary Brand / Button" }),
-                          a.jsxs("div", {
-                            className: "flex items-center gap-2",
-                            children: [
-                              a.jsx("input", {
-                                type: "color",
-                                value: previewConfig.primaryColor || "#6366f1",
-                                onChange: e => handleCustomColorChange("primaryColor", e.target.value),
-                                className: "w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"
-                              }),
-                              a.jsx("input", {
-                                type: "text",
-                                value: previewConfig.primaryColor || "#6366f1",
-                                onChange: e => handleCustomColorChange("primaryColor", e.target.value),
-                                className: "w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-white outline-none"
-                              })
-                            ]
-                          })
-                        ]
-                      }),
-
-                      // Accent Highlight Color
-                      a.jsxs("div", {
-                        className: "p-3 bg-slate-950/70 rounded-2xl border border-slate-800/80 space-y-1.5",
-                        children: [
-                          a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase", children: "Accent Highlight" }),
-                          a.jsxs("div", {
-                            className: "flex items-center gap-2",
-                            children: [
-                              a.jsx("input", {
-                                type: "color",
-                                value: previewConfig.accentColor || "#818cf8",
-                                onChange: e => handleCustomColorChange("accentColor", e.target.value),
-                                className: "w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"
-                              }),
-                              a.jsx("input", {
-                                type: "text",
-                                value: previewConfig.accentColor || "#818cf8",
-                                onChange: e => handleCustomColorChange("accentColor", e.target.value),
-                                className: "w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-white outline-none"
-                              })
-                            ]
-                          })
-                        ]
-                      }),
-
-                      // Primary Text Color
-                      a.jsxs("div", {
-                        className: "p-3 bg-slate-950/70 rounded-2xl border border-slate-800/80 space-y-1.5",
-                        children: [
-                          a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase", children: "Primary Headings / Text" }),
-                          a.jsxs("div", {
-                            className: "flex items-center gap-2",
-                            children: [
-                              a.jsx("input", {
-                                type: "color",
-                                value: previewConfig.textColor || "#ffffff",
-                                onChange: e => handleCustomColorChange("textColor", e.target.value),
-                                className: "w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"
-                              }),
-                              a.jsx("input", {
-                                type: "text",
-                                value: previewConfig.textColor || "#ffffff",
-                                onChange: e => handleCustomColorChange("textColor", e.target.value),
-                                className: "w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-white outline-none"
-                              })
-                            ]
-                          })
-                        ]
-                      }),
-
-                      // Muted Text Color
-                      a.jsxs("div", {
-                        className: "p-3 bg-slate-950/70 rounded-2xl border border-slate-800/80 space-y-1.5",
-                        children: [
-                          a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase", children: "Muted Subtitles / Captions" }),
-                          a.jsxs("div", {
-                            className: "flex items-center gap-2",
-                            children: [
-                              a.jsx("input", {
-                                type: "color",
-                                value: previewConfig.mutedTextColor || "#cbd5e1",
-                                onChange: e => handleCustomColorChange("mutedTextColor", e.target.value),
-                                className: "w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"
-                              }),
-                              a.jsx("input", {
-                                type: "text",
-                                value: previewConfig.mutedTextColor || "#cbd5e1",
-                                onChange: e => handleCustomColorChange("mutedTextColor", e.target.value),
-                                className: "w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-white outline-none"
-                              })
-                            ]
-                          })
-                        ]
-                      }),
-
-                      // Navigation Bar Color
-                      a.jsxs("div", {
-                        className: "p-3 bg-slate-950/70 rounded-2xl border border-slate-800/80 space-y-1.5",
-                        children: [
-                          a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase", children: "Sidebar / Nav Surface" }),
-                          a.jsxs("div", {
-                            className: "flex items-center gap-2",
-                            children: [
-                              a.jsx("input", {
-                                type: "color",
-                                value: previewConfig.navColor || "#0b0f19",
-                                onChange: e => handleCustomColorChange("navColor", e.target.value),
-                                className: "w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"
-                              }),
-                              a.jsx("input", {
-                                type: "text",
-                                value: previewConfig.navColor || "#0b0f19",
-                                onChange: e => handleCustomColorChange("navColor", e.target.value),
-                                className: "w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-white outline-none"
-                              })
-                            ]
-                          })
-                        ]
-                      }),
-
-                      // Border / Divider Color
-                      a.jsxs("div", {
-                        className: "p-3 bg-slate-950/70 rounded-2xl border border-slate-800/80 space-y-1.5",
-                        children: [
-                          a.jsx("label", { className: "block text-[10px] font-bold text-slate-400 uppercase", children: "Border & Dividers" }),
-                          a.jsxs("div", {
-                            className: "flex items-center gap-2",
-                            children: [
-                              a.jsx("input", {
-                                type: "color",
-                                value: previewConfig.borderColor || "#1e293b",
-                                onChange: e => handleCustomColorChange("borderColor", e.target.value),
-                                className: "w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"
-                              }),
-                              a.jsx("input", {
-                                type: "text",
-                                value: previewConfig.borderColor || "#1e293b",
-                                onChange: e => handleCustomColorChange("borderColor", e.target.value),
-                                className: "w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono font-bold text-white outline-none"
-                              })
-                            ]
-                          })
-                        ]
-                      })
-                    ]
-                  })
-                ]
-              })
-            ]
-          }),
-
-          // Right Column (5 cols): Live Interactive Website Preview (Sticky inspired by Vercel Sandbox)
-          a.jsxs("div", {
-            className: "lg:col-span-5 sticky top-20 space-y-4",
-            children: [
-              a.jsxs("div", {
-                className: "flex items-center justify-between",
-                children: [
-                  a.jsxs("div", {
-                    className: "flex items-center gap-2",
-                    children: [
-                      a.jsx("span", { className: "w-2 h-2 rounded-full bg-emerald-400 animate-ping" }),
-                      a.jsx("h3", { className: "text-sm font-black text-white uppercase tracking-wider", children: "Real-Time Website Preview" })
-                    ]
-                  }),
-
-                  // Preview Context Role Selector
-                  a.jsxs("div", {
-                    className: "flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[10px] font-bold",
-                    children: [
-                      { id: "OWNER", label: "Owner Hub" },
-                      { id: "SUPER_ADMIN", label: "Super Admin" },
-                      { id: "TENANT", label: "Resident" }
-                    ].map(role => a.jsx("button", {
-                      key: role.id,
-                      type: "button",
-                      onClick: () => setPreviewRole(role.id),
-                      className: "px-2 py-1 rounded-lg cursor-pointer transition-all " + (previewRole === role.id ? "bg-indigo-600 text-white font-black" : "text-slate-400 hover:text-white"),
-                      children: role.label
-                    }))
-                  })
-                ]
-              }),
-
-              // Interactive Browser Window Mockup
-              a.jsxs("div", {
-                className: "rounded-3xl border shadow-2xl overflow-hidden transition-all duration-300 font-sans",
-                style: {
-                  backgroundColor: previewConfig.bgColor,
-                  borderColor: previewConfig.borderColor,
-                  boxShadow: "0 25px 50px -12px " + previewConfig.primaryColor + "20"
-                },
-                children: [
-                  // macOS Chrome Window Header
-                  a.jsxs("div", {
-                    className: "px-4 py-2.5 border-b flex items-center justify-between",
-                    style: { backgroundColor: previewConfig.navColor, borderColor: previewConfig.borderColor },
-                    children: [
-                      a.jsxs("div", {
-                        className: "flex items-center gap-1.5",
-                        children: [
-                          a.jsx("div", { className: "w-2.5 h-2.5 rounded-full bg-rose-500/80" }),
-                          a.jsx("div", { className: "w-2.5 h-2.5 rounded-full bg-amber-500/80" }),
-                          a.jsx("div", { className: "w-2.5 h-2.5 rounded-full bg-emerald-500/80" })
-                        ]
-                      }),
-                      a.jsx("div", {
-                        className: "px-3 py-1 rounded-lg text-[10px] font-mono font-medium truncate max-w-[190px] border opacity-80",
-                        style: { backgroundColor: previewConfig.cardColor, borderColor: previewConfig.borderColor, color: previewConfig.mutedTextColor },
-                        children: "app.srinoos.com/" + (previewRole === "OWNER" ? "owner-hub" : previewRole === "SUPER_ADMIN" ? "super-admin" : "tenant-portal")
-                      }),
-                      a.jsx("span", {
-                        className: "text-[9px] font-black px-1.5 py-0.5 rounded uppercase",
-                        style: { backgroundColor: previewConfig.primaryColor + "25", color: previewConfig.accentColor },
-                        children: "Live CSS"
-                      })
-                    ]
-                  }),
-
-                  // Mock Window Body
-                  a.jsxs("div", {
-                    className: "p-4 space-y-4 text-left",
-                    children: [
-                      // Mini Navigation Bar
-                      a.jsxs("div", {
-                        className: "p-3 rounded-2xl border flex items-center justify-between shadow-xs",
-                        style: { backgroundColor: previewConfig.cardColor, borderColor: previewConfig.borderColor },
+                        style: { padding: "8px", display: "flex", flexDirection: "column", gap: "6px" },
                         children: [
                           a.jsxs("div", {
-                            className: "flex items-center gap-2",
+                            style: { display: "flex", justifyContent: "space-between", alignItems: "center" },
                             children: [
-                              a.jsx("div", {
-                                className: "w-6 h-6 rounded-lg flex items-center justify-center text-white text-[10px] font-black shadow-sm",
-                                style: { backgroundColor: previewConfig.primaryColor },
-                                children: "S"
-                              }),
-                              a.jsxs("div", {
-                                children: [
-                                  a.jsx("h5", { className: "text-xs font-black leading-none", style: { color: previewConfig.textColor }, children: previewRole === "OWNER" ? "Shrinivas Luxury PG" : previewRole === "SUPER_ADMIN" ? "Super Admin Console" : "Resident Portal" }),
-                                  a.jsx("span", { className: "text-[9px] font-medium leading-none", style: { color: previewConfig.mutedTextColor }, children: "Bangalore Node • Active" })
-                                ]
-                              })
+                              a.jsx("div", { style: { height: "7px", width: "45%", borderRadius: "3px", backgroundColor: preset.textColor, opacity: 0.85 } }),
+                              a.jsx("div", { style: { height: "14px", width: "42px", borderRadius: "5px", background: "linear-gradient(135deg, " + preset.primaryColor + ", " + (preset.secondaryColor || preset.accentColor) + ")" } })
                             ]
                           }),
                           a.jsx("div", {
-                            className: "px-2.5 py-1 rounded-xl text-[10px] font-bold text-white shadow-xs cursor-default",
-                            style: { backgroundColor: previewConfig.primaryColor },
-                            children: "+ Quick Action"
-                          })
-                        ]
-                      }),
-
-                      // Metric Cards Row
-                      a.jsxs("div", {
-                        className: "grid grid-cols-3 gap-2.5",
-                        children: [
-                          a.jsxs("div", {
-                            className: "p-3 rounded-2xl border space-y-1",
-                            style: { backgroundColor: previewConfig.cardColor, borderColor: previewConfig.borderColor },
-                            children: [
-                              a.jsx("span", { className: "text-[8px] font-bold uppercase tracking-wider block", style: { color: previewConfig.mutedTextColor }, children: "Monthly Rent" }),
-                              a.jsx("h4", { className: "text-sm font-black tracking-tight", style: { color: previewConfig.textColor }, children: "₹4,85,000" }),
-                              a.jsx("span", { className: "text-[8px] font-extrabold text-emerald-400 block", children: "+14.2% MoM" })
-                            ]
+                            style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "5px" },
+                            children: [0, 1, 2].map(idx => a.jsxs("div", {
+                              key: idx,
+                              style: { backgroundColor: preset.cardColor, border: "1px solid " + preset.borderColor, borderRadius: "6px", padding: "6px" },
+                              children: [
+                                a.jsx("div", { style: { height: "4px", width: "60%", borderRadius: "2px", backgroundColor: preset.mutedTextColor, opacity: 0.5, marginBottom: "4px" } }),
+                                a.jsx("div", { style: { height: "7px", width: "80%", borderRadius: "3px", backgroundColor: idx === 0 ? preset.primaryColor : preset.textColor, opacity: 0.9 } })
+                              ]
+                            }))
                           }),
-                          a.jsxs("div", {
-                            className: "p-3 rounded-2xl border space-y-1",
-                            style: { backgroundColor: previewConfig.cardColor, borderColor: previewConfig.borderColor },
+                          a.jsx("div", {
+                            style: { flex: 1, backgroundColor: preset.cardColor, border: "1px solid " + preset.borderColor, borderRadius: "6px", padding: "6px", display: "flex", flexDirection: "column", gap: "4px" },
                             children: [
-                              a.jsx("span", { className: "text-[8px] font-bold uppercase tracking-wider block", style: { color: previewConfig.mutedTextColor }, children: "Occupancy" }),
-                              a.jsx("h4", { className: "text-sm font-black tracking-tight", style: { color: previewConfig.accentColor }, children: "94.8%" }),
-                              a.jsx("span", { className: "text-[8px] font-extrabold block", style: { color: previewConfig.mutedTextColor }, children: "48/52 Beds Filled" })
-                            ]
-                          }),
-                          a.jsxs("div", {
-                            className: "p-3 rounded-2xl border space-y-1",
-                            style: { backgroundColor: previewConfig.cardColor, borderColor: previewConfig.borderColor },
-                            children: [
-                              a.jsx("span", { className: "text-[8px] font-bold uppercase tracking-wider block", style: { color: previewConfig.mutedTextColor }, children: "New Leads" }),
-                              a.jsx("h4", { className: "text-sm font-black tracking-tight text-white", children: "18 Leads" }),
-                              a.jsx("span", { className: "text-[8px] font-extrabold text-amber-400 block", children: "4 Visits Today" })
+                              a.jsx("div", { style: { height: "5px", width: "100%", borderRadius: "2px", backgroundColor: preset.borderColor } }),
+                              a.jsx("div", { style: { height: "5px", width: "85%", borderRadius: "2px", backgroundColor: preset.borderColor, opacity: 0.7 } })
                             ]
                           })
                         ]
+                      })
+                    ]
+                  }),
+                  // Color Palette Swatches
+                  a.jsxs("div", {
+                    style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px" },
+                    children: [
+                      a.jsx("div", {
+                        style: { display: "flex", gap: "5px" },
+                        children: [preset.bgColor, preset.cardColor, preset.primaryColor, preset.secondaryColor || preset.accentColor, preset.textColor].map((col, ci) => a.jsx("span", {
+                          key: ci,
+                          title: col,
+                          style: { width: "16px", height: "16px", borderRadius: "999px", backgroundColor: col, border: "1px solid rgba(128,128,128,0.35)", display: "inline-block" }
+                        }))
                       }),
-
-                      // Sample Interactive Content Card
-                      a.jsxs("div", {
-                        className: "p-4 rounded-2xl border space-y-3",
-                        style: { backgroundColor: previewConfig.cardColor, borderColor: previewConfig.borderColor },
-                        children: [
-                          a.jsxs("div", {
-                            className: "flex items-center justify-between pb-2 border-b",
-                            style: { borderColor: previewConfig.borderColor },
-                            children: [
-                              a.jsxs("div", {
-                                children: [
-                                  a.jsx("h6", { className: "text-xs font-black", style: { color: previewConfig.textColor }, children: "Room 102 • First Floor Executive" }),
-                                  a.jsx("p", { className: "text-[9px] font-medium", style: { color: previewConfig.mutedTextColor }, children: "Double Sharing AC • High-speed Wi-Fi Included" })
-                                ]
-                              }),
-                              a.jsx("span", {
-                                className: "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
-                                children: "1 Bed Available"
-                              })
-                            ]
-                          }),
-
-                          // Sample Table Row / Beds
-                          a.jsxs("div", {
-                            className: "flex items-center justify-between text-xs",
-                            children: [
-                              a.jsxs("div", {
-                                className: "flex items-center gap-2",
-                                children: [
-                                  a.jsx("div", { className: "w-2 h-2 rounded-full", style: { backgroundColor: previewConfig.primaryColor } }),
-                                  a.jsx("span", { className: "text-[11px] font-bold", style: { color: previewConfig.textColor }, children: "Bed A: Rahul Verma" })
-                                ]
-                              }),
-                              a.jsx("span", { className: "text-[10px] font-mono font-bold", style: { color: previewConfig.accentColor }, children: "₹11,000 / mo" })
-                            ]
-                          }),
-
-                          // Sample Form Input Preview
-                          a.jsxs("div", {
-                            className: "grid grid-cols-2 gap-2 pt-1",
-                            children: [
-                              a.jsx("input", {
-                                type: "text",
-                                readOnly: !0,
-                                value: "Rahul Verma (Infosys)",
-                                className: "w-full px-2.5 py-1.5 rounded-xl text-[10px] font-semibold border outline-none",
-                                style: {
-                                  backgroundColor: previewConfig.bgColor,
-                                  borderColor: previewConfig.borderColor,
-                                  color: previewConfig.textColor
-                                }
-                              }),
-                              a.jsx("button", {
-                                type: "button",
-                                className: "w-full py-1.5 rounded-xl text-[10px] font-extrabold text-white transition-all shadow-sm",
-                                style: { backgroundColor: previewConfig.primaryColor },
-                                children: "✓ Collect Rent"
-                              })
-                            ]
-                          })
-                        ]
-                      }),
-
-                      // Information Footer inside Preview
-                      a.jsxs("div", {
-                        className: "p-3 rounded-2xl border text-center space-y-1",
-                        style: { backgroundColor: previewConfig.bgColor, borderColor: previewConfig.borderColor },
-                        children: [
-                          a.jsx("span", { className: "text-[9px] font-bold block", style: { color: previewConfig.mutedTextColor }, children: "SaaS Design Sync: Real-Time CSS Custom Properties Active" }),
-                          a.jsx("div", { className: "flex items-center justify-center gap-1.5 pt-1", children: [
-                            a.jsx("span", { className: "w-1.5 h-1.5 rounded-full", style: { backgroundColor: previewConfig.primaryColor } }),
-                            a.jsx("span", { className: "text-[9px] font-black", style: { color: previewConfig.textColor }, children: previewConfig.name })
-                          ]})
-                        ]
+                      a.jsx("span", {
+                        style: { fontSize: "9px", fontWeight: 800, textTransform: "uppercase", padding: "2px 8px", borderRadius: "999px", backgroundColor: preset.cardColor, color: preset.textColor, border: "1px solid " + preset.borderColor },
+                        children: preset.supportsModeSwitch ? (preset.mode === "dark" ? "🌙 Dark + Light" : "☀️ Light + Dark") : (preset.mode === "dark" ? "🌙 Dark" : "☀️ Light")
                       })
                     ]
                   })
                 ]
               }),
 
-              // Theme Details Info Card
+              // Card Info & Action Buttons
               a.jsxs("div", {
-                className: "p-4 bg-slate-900/60 rounded-2xl border border-slate-800 text-xs space-y-2",
+                className: "p-5 space-y-4 flex-1 flex flex-col justify-between",
                 children: [
                   a.jsxs("div", {
-                    className: "flex items-center justify-between",
+                    className: "space-y-1.5",
                     children: [
-                      a.jsx("span", { className: "font-bold text-slate-300", children: "Theme Mode" }),
-                      a.jsx("span", { className: "font-black text-white uppercase px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px]", children: previewConfig.mode })
+                      a.jsxs("div", {
+                        className: "flex items-center justify-between gap-2",
+                        children: [
+                          a.jsx("h3", { className: "font-black text-base text-slate-900 dark:text-white", children: preset.name }),
+                          isActive
+                            ? a.jsx("span", { className: "px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800", children: "✓ Active Live" })
+                            : a.jsx("span", { className: "px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300", children: preset.tag })
+                        ]
+                      }),
+                      a.jsx("p", { className: "text-xs text-slate-500 dark:text-slate-400 leading-relaxed", children: preset.description }),
+                      a.jsxs("div", {
+                        className: "flex flex-wrap gap-2 pt-1 text-[10px] font-bold text-slate-400",
+                        children: [
+                          a.jsxs("span", { children: ["Radius: ", preset.borderRadius] }),
+                          a.jsx("span", { children: "•" }),
+                          a.jsxs("span", { children: ["Primary: ", preset.primaryColor] })
+                        ]
+                      })
                     ]
                   }),
                   a.jsxs("div", {
-                    className: "flex items-center justify-between",
+                    className: "grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800",
                     children: [
-                      a.jsx("span", { className: "font-bold text-slate-300", children: "Brand Accent" }),
-                      a.jsx("span", { className: "font-mono font-bold text-indigo-400 text-[11px]", children: previewConfig.primaryColor })
-                    ]
-                  }),
-                  a.jsxs("div", {
-                    className: "flex items-center justify-between",
-                    children: [
-                      a.jsx("span", { className: "font-bold text-slate-300", children: "Permanent Cloud Sync" }),
-                      a.jsx("span", { className: "font-bold text-emerald-400 text-[10px]", children: "Supabase DB notices" })
+                      a.jsx("button", {
+                        type: "button",
+                        onClick: () => openIsolatedPreview(preset),
+                        className: "px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-xl text-xs font-black cursor-pointer border-none transition-all",
+                        children: "👁️ Preview"
+                      }),
+                      a.jsx("button", {
+                        type: "button",
+                        disabled: isSaving || !isSuperAdmin,
+                        onClick: () => setConfirmApplyTheme(preset),
+                        className: Be("px-3.5 py-2.5 rounded-xl text-xs font-black cursor-pointer border-none transition-all", isActive ? "bg-emerald-600 text-white" : "bg-indigo-600 hover:bg-indigo-700 text-white"),
+                        children: isActive ? "✓ Active" : "Apply Theme"
+                      })
                     ]
                   })
                 ]
               })
             ]
-          })
-        ]
+          });
+        })
+      }),
+
+      // FULL-SCREEN ISOLATED LIVE THEME PREVIEW MODAL (Never changes live app theme!)
+      previewModalTheme && pv && a.jsx("div", {
+        className: "fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6",
+        onClick: () => setPreviewModalTheme(null),
+        children: a.jsxs("div", {
+          className: "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl w-full max-w-5xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col",
+          onClick: ev => ev.stopPropagation(),
+          children: [
+            // Preview Modal Top Toolbar
+            a.jsxs("div", {
+              className: "px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950",
+              children: [
+                a.jsxs("div", {
+                  children: [
+                    a.jsxs("div", {
+                      className: "flex items-center gap-2",
+                      children: [
+                        a.jsx("span", { className: "px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300", children: "Isolated Live Preview — Live App Unchanged" }),
+                        a.jsx("h3", { className: "font-black text-base text-slate-900 dark:text-white", children: pv.name })
+                      ]
+                    }),
+                    a.jsx("p", { className: "text-[11px] text-slate-500 mt-0.5", children: "Inspect all key screens below before applying this theme globally." })
+                  ]
+                }),
+                a.jsxs("div", {
+                  className: "flex flex-wrap items-center gap-2",
+                  children: [
+                    previewModalTheme.supportsModeSwitch && previewModalTheme.altVariant && a.jsxs("div", {
+                      className: "flex items-center gap-1 p-1 bg-slate-200/70 dark:bg-slate-800 rounded-xl",
+                      children: [
+                        a.jsx("button", {
+                          type: "button",
+                          onClick: () => setPreviewVariantMode("default"),
+                          className: Be("px-2.5 py-1 rounded-lg text-[11px] font-black cursor-pointer border-none", previewVariantMode === "default" ? "bg-indigo-600 text-white" : "bg-transparent text-slate-600 dark:text-slate-300"),
+                          children: previewModalTheme.mode === "dark" ? "🌙 Dark" : "☀️ Light"
+                        }),
+                        a.jsx("button", {
+                          type: "button",
+                          onClick: () => setPreviewVariantMode("alt"),
+                          className: Be("px-2.5 py-1 rounded-lg text-[11px] font-black cursor-pointer border-none", previewVariantMode === "alt" ? "bg-indigo-600 text-white" : "bg-transparent text-slate-600 dark:text-slate-300"),
+                          children: previewModalTheme.altVariant.mode === "dark" ? "🌙 Dark" : "☀️ Light"
+                        })
+                      ]
+                    }),
+                    isSuperAdmin && a.jsx("button", {
+                      type: "button",
+                      onClick: () => setConfirmApplyTheme(pv),
+                      className: "px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black cursor-pointer border-none",
+                      children: "✓ Apply This Theme Globally"
+                    }),
+                    a.jsx("button", {
+                      type: "button",
+                      onClick: () => setPreviewModalTheme(null),
+                      className: "px-3 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-black cursor-pointer border-none",
+                      children: "✕ Close"
+                    })
+                  ]
+                })
+              ]
+            }),
+
+            // 7-Page Screen Switcher Bar
+            a.jsx("div", {
+              className: "px-5 py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5 overflow-x-auto bg-white dark:bg-slate-900",
+              children: [
+                { id: "LOGIN", label: "🔐 Login" },
+                { id: "SUPER_ADMIN", label: "🛡️ Super Admin" },
+                { id: "OWNER", label: "🏢 PG Owner Hub" },
+                { id: "TENANT", label: "🏠 Tenant Panel" },
+                { id: "FINANCE", label: "💰 Finance" },
+                { id: "TENANTS", label: "👥 Tenants" },
+                { id: "REPORTS", label: "📊 Reports" }
+              ].map(sc => a.jsx("button", {
+                key: sc.id,
+                type: "button",
+                onClick: () => setPreviewScreen(sc.id),
+                className: Be("px-3 py-1.5 rounded-lg text-xs font-black whitespace-nowrap cursor-pointer border-none transition-all", previewScreen === sc.id ? "bg-indigo-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900"),
+                children: sc.label
+              }))
+            }),
+
+            // Isolated Realistic Application Preview Canvas
+            a.jsx("div", {
+              "data-theme-preview-sandbox": "true",
+              className: "flex-1 overflow-auto",
+              children: renderPreviewScreen(pv, previewScreen)
+            })
+          ]
+        })
+      }),
+
+      // APPLY THEME CONFIRMATION MODAL
+      confirmApplyTheme && a.jsx("div", {
+        className: "fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4",
+        onClick: () => !isSaving && setConfirmApplyTheme(null),
+        children: a.jsxs("div", {
+          className: "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-left",
+          onClick: ev => ev.stopPropagation(),
+          children: [
+            a.jsxs("div", {
+              className: "space-y-1",
+              children: [
+                a.jsx("span", { className: "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300", children: confirmApplyTheme._actionLabel || "Confirm Global Theme Change" }),
+                a.jsxs("h3", { className: "text-lg font-black text-slate-900 dark:text-white pt-1", children: ["Apply \"", confirmApplyTheme.name, "\" across the entire SaaS?"] }),
+                a.jsx("p", { className: "text-xs text-slate-500 dark:text-slate-400 leading-relaxed", children: "This will immediately update Super Admin Console, PG Owner Hub, Tenant Panel, Login & Registration screens across all devices and save permanently to Supabase. Your current theme will be saved so you can restore it anytime." })
+              ]
+            }),
+            a.jsxs("div", {
+              className: "p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs",
+              children: [
+                a.jsxs("div", {
+                  children: [
+                    a.jsx("div", { className: "font-black text-slate-900 dark:text-white", children: confirmApplyTheme.name }),
+                    a.jsxs("div", { className: "text-[11px] text-slate-500", children: ["Mode: ", confirmApplyTheme.mode === "dark" ? "Dark" : "Light", " • Radius: ", confirmApplyTheme.borderRadius || "14px"] })
+                  ]
+                }),
+                a.jsx("div", {
+                  className: "flex gap-1.5",
+                  children: [confirmApplyTheme.bgColor, confirmApplyTheme.cardColor, confirmApplyTheme.primaryColor].map((c, idx) => a.jsx("span", { key: idx, style: { width: "18px", height: "18px", borderRadius: "999px", backgroundColor: c, border: "1px solid rgba(128,128,128,0.4)" } }))
+                })
+              ]
+            }),
+            a.jsxs("div", {
+              className: "flex items-center justify-end gap-2 pt-2",
+              children: [
+                a.jsx("button", {
+                  type: "button",
+                  disabled: isSaving,
+                  onClick: () => setConfirmApplyTheme(null),
+                  className: "px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-black cursor-pointer border-none",
+                  children: "Cancel"
+                }),
+                a.jsx("button", {
+                  type: "button",
+                  disabled: isSaving,
+                  onClick: () => executeApplyGlobalTheme(confirmApplyTheme),
+                  className: "px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black cursor-pointer border-none shadow-md",
+                  children: isSaving ? "Applying..." : "Confirm & Apply Globally"
+                })
+              ]
+            })
+          ]
+        })
       })
     ]
   });
