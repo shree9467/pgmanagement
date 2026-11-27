@@ -83,7 +83,7 @@ ${S}`}class Rn extends Error{constructor({message:t,code:r,cause:n,name:s}){var 
 
 
 ${s}
-/${t}/${o}`,d=n.replace(/-----BEGIN PRIVATE KEY-----/,"").replace(/-----END PRIVATE KEY-----/,"").replace(/\s/g,""),f=atob(d),h=af(f),m=await window.crypto.subtle.importKey("pkcs8",h,{name:"RSASSA-PKCS1-v1_5",hash:{name:"SHA-256"}},!1,["sign"]),g=await window.crypto.subtle.sign("RSASSA-PKCS1-v1_5",m,af(c));let x="";const y=new Uint8Array(g);for(let k=0;k<y.byteLength;k++)x+=String.fromCharCode(y[k]);const w=btoa(x);return`https://storage.googleapis.com/${t}/${o}?GoogleAccessId=${encodeURIComponent(r)}&Expires=${s}&Signature=${encodeURIComponent(w)}`},EP={},I$=EP?.VITE_SUPABASE_URL||"https://fswlweejdyhrywvzhzvw.supabase.co",M$=EP?.VITE_SUPABASE_ANON_KEY||"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzd2x3ZWVqZHlocnl3dnpoenZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MzM0NDAsImV4cCI6MjA5NTIwOTQ0MH0.2jpjjySEfYi5qPZKLeGKVBQzlj60rwI7bKxF5aGYrTI",we=O$(I$,M$),Hs=async(e,t)=>D$(e,t),L$=[{day:"Monday",breakfast:"Idli, Sambar, Coconut Chutney",lunch:"Rice, Dal, Veg Curry, Curd",dinner:"Chapati, Paneer Masala, Dal, Rice"},{day:"Tuesday",breakfast:"Poha, Sev, Lemon Tea",lunch:"Jeera Rice, Chana Masala, Raita",dinner:"Chapati, Aloo Gobi Dry, Dal, Rice"},{day:"Wednesday",breakfast:"Aloo Paratha, Butter, Curd",lunch:"Rice, Sambhar, Papad, Curry",dinner:"Chapati, Chicken Masala / Egg Curry, Rice"}];function sA(e,t){let pName=e.plan_name,cMeta=e.customMeta||null;if(typeof pName==="object"&&pName!==null){if(pName.isCustom){cMeta=pName;pName=JSON.stringify(pName);}else if(pName.name){pName=pName.name;}}if(!pName&&e.email){try{const cp=localStorage.getItem("saas_plan_license_"+e.email.toLowerCase().trim());if(cp)pName=cp;}catch(_){}}if(!pName&&e.id){try{const cp=localStorage.getItem("saas_plan_license_"+e.id);if(cp)pName=cp;}catch(_){}}if(!pName)pName="Starter Node";if(!cMeta&&typeof pName==="string"&&pName.startsWith("{")){try{cMeta=JSON.parse(pName)}catch(_){}}if(cMeta&&cMeta.isCustom){return{...e,plan_name:typeof pName==="string"?pName:JSON.stringify(cMeta),customMeta:cMeta,maxBuildings:cMeta.maxBuildings||5,maxUsers:cMeta.maxUsers||100};}const pLower=String(pName).toLowerCase().trim();let n=1,s=30;if(pLower.includes("enterprise")){n=999;s=99999;}else if(pLower.includes("scale")){n=3;s=999;}else{const r=(t||[]).find(o=>o.name===pName);if(r){n=r.maxBuildings||1;s=r.maxUsers??30;}}return{...e,plan_name:pName,maxBuildings:n,maxUsers:s};}function CP(e){const bList=(Ee.getState().rawBuildings||[]).filter(b=>b.ownerId===e||b.owner_id===e||b.owner===e);return bList.map(b=>b.name||b.id).filter(Boolean)}async function iA(e){const t=new TextEncoder().encode(e),r=await crypto.subtle.digest("SHA-256",t);return Array.from(new Uint8Array(r)).map(s=>s.toString(16).padStart(2,"0")).join("")}const oA=["relational-layout-data","buildings-data","whitelabel-customizations-data","losses-data","shifting-history-data","activity-logs-data","weekly-dining-menu-data","account-limits-data","tenants-data","documents-data","onboarding-apps-data","invoices-data","subscription-payments-data","admin-payment-settings-data","sla-ticket-","guest-reg-","sa-broadcast-","automation-rules-data","automation-logs-data","saas-","owner-support-","reg-status-registry-data","meal-skips-data-","dining-menu-broadcast-","manager-accounts-registry-data","lead-web-enquiry-"],E0=[{id:"owner-1786516458271",name:"dukes",email:"dukes@gmail.com",password:"tenat123",role:"OWNER",status:"ACTIVE"},{id:"acc1",name:"Super Admin Root",email:"admin@srinoos.com",password:"admin@Srinoos#9467",role:"SUPER_ADMIN",status:"ACTIVE"},{id:"acc2",name:"Shrinivas",email:"shree@gmail.com",password:"owner@shreehub#2026",role:"OWNER",status:"ACTIVE"},{id:"acc3",name:"Rahul Verma",email:"resident@RahulVerma#55",password:"tenant@rahul#2026",role:"TENANT",status:"ACTIVE"},{id:"acc4",name:"PG Manager Rajesh",email:"manager@gmail.com",password:"manager@rajesh#2026",role:"MANAGER",status:"ACTIVE",ownerId:"acc-1795442411871",assignedBuildings:[],plan_name:"dashboard,tenants,rooms,financials"}];function Gh(e,t){let r=e?e.split("?metadata=")[0]:"";if(r&&r.length>20000&&r.startsWith("data:image/")){r="https://api.dicebear.com/7.x/adventurer/svg?seed=avatar";}try{const n=btoa(encodeURIComponent(JSON.stringify(t)));return r?`${r}?metadata=${n}`:`?metadata=${n}`}catch(n){return console.error("Failed to encode metadata to base64:",n),r||""}}function lA(e){if(!e)return{avatar:"",metadata:{}};const t=e.split("?metadata="),r=t[0];let n={};if(t[1])try{let b=decodeURIComponent(t[1]).trim(),w=atob(b);try{n=JSON.parse(decodeURIComponent(w))}catch(_){n=JSON.parse(w)}}catch(s){console.error("Failed to decode metadata from base64:",s)}return{avatar:r,metadata:n}}window.lA=lA;window.getTenantPrivateDocs = (tenant, localDocs) => {
+/${t}/${o}`,d=n.replace(/-----BEGIN PRIVATE KEY-----/,"").replace(/-----END PRIVATE KEY-----/,"").replace(/\s/g,""),f=atob(d),h=af(f),m=await window.crypto.subtle.importKey("pkcs8",h,{name:"RSASSA-PKCS1-v1_5",hash:{name:"SHA-256"}},!1,["sign"]),g=await window.crypto.subtle.sign("RSASSA-PKCS1-v1_5",m,af(c));let x="";const y=new Uint8Array(g);for(let k=0;k<y.byteLength;k++)x+=String.fromCharCode(y[k]);const w=btoa(x);return`https://storage.googleapis.com/${t}/${o}?GoogleAccessId=${encodeURIComponent(r)}&Expires=${s}&Signature=${encodeURIComponent(w)}`},EP={},I$=EP?.VITE_SUPABASE_URL||"https://fswlweejdyhrywvzhzvw.supabase.co",M$=EP?.VITE_SUPABASE_ANON_KEY||"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzd2x3ZWVqZHlocnl3dnpoenZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MzM0NDAsImV4cCI6MjA5NTIwOTQ0MH0.2jpjjySEfYi5qPZKLeGKVBQzlj60rwI7bKxF5aGYrTI",we=O$(I$,M$),Hs=async(e,t)=>D$(e,t),L$=[{day:"Monday",breakfast:"Idli, Sambar, Coconut Chutney",lunch:"Rice, Dal, Veg Curry, Curd",dinner:"Chapati, Paneer Masala, Dal, Rice"},{day:"Tuesday",breakfast:"Poha, Sev, Lemon Tea",lunch:"Jeera Rice, Chana Masala, Raita",dinner:"Chapati, Aloo Gobi Dry, Dal, Rice"},{day:"Wednesday",breakfast:"Aloo Paratha, Butter, Curd",lunch:"Rice, Sambhar, Papad, Curry",dinner:"Chapati, Chicken Masala / Egg Curry, Rice"}];function sA(e,t){let pName=e.plan_name,cMeta=e.customMeta||null;if(typeof pName==="object"&&pName!==null){if(pName.isCustom){cMeta=pName;pName=JSON.stringify(pName);}else if(pName.name){pName=pName.name;}}if(!pName&&e.email){try{const cp=localStorage.getItem("saas_plan_license_"+e.email.toLowerCase().trim());if(cp)pName=cp;}catch(_){}}if(!pName&&e.id){try{const cp=localStorage.getItem("saas_plan_license_"+e.id);if(cp)pName=cp;}catch(_){}}if(!pName)pName="Starter Node";if(!cMeta&&typeof pName==="string"&&pName.startsWith("{")){try{cMeta=JSON.parse(pName)}catch(_){}}if(cMeta&&cMeta.isCustom){return{...e,plan_name:typeof pName==="string"?pName:JSON.stringify(cMeta),customMeta:cMeta,maxBuildings:cMeta.maxBuildings||5,maxUsers:cMeta.maxUsers||100};}const pLower=String(pName).toLowerCase().trim();let n=1,s=30;if(pLower.includes("enterprise")){n=999;s=99999;}else if(pLower.includes("scale")){n=3;s=999;}else{const r=(t||[]).find(o=>o.name===pName);if(r){n=r.maxBuildings||1;s=r.maxUsers??30;}}return{...e,plan_name:pName,maxBuildings:n,maxUsers:s};}function CP(e){const bList=(Ee.getState().rawBuildings||[]).filter(b=>b.ownerId===e||b.owner_id===e||b.owner===e);return bList.map(b=>b.name||b.id).filter(Boolean)}async function iA(e){const t=new TextEncoder().encode(e),r=await crypto.subtle.digest("SHA-256",t);return Array.from(new Uint8Array(r)).map(s=>s.toString(16).padStart(2,"0")).join("")}const oA=["relational-layout-data","buildings-data","whitelabel-customizations-data","losses-data","shifting-history-data","activity-logs-data","weekly-dining-menu-data","account-limits-data","tenants-data","documents-data","onboarding-apps-data","invoices-data","subscription-payments-data","admin-payment-settings-data","sla-ticket-","guest-reg-","sa-broadcast-","automation-rules-data","automation-logs-data","saas-","owner-support-","reg-status-registry-data","meal-skips-data-","dining-menu-broadcast-","manager-accounts-registry-data","lead-web-enquiry-","discovery-runs-data","external-discovery-history-data"],E0=[{id:"owner-1786516458271",name:"dukes",email:"dukes@gmail.com",password:"tenat123",role:"OWNER",status:"ACTIVE"},{id:"acc1",name:"Super Admin Root",email:"admin@srinoos.com",password:"admin@Srinoos#9467",role:"SUPER_ADMIN",status:"ACTIVE"},{id:"acc2",name:"Shrinivas",email:"shree@gmail.com",password:"owner@shreehub#2026",role:"OWNER",status:"ACTIVE"},{id:"acc3",name:"Rahul Verma",email:"resident@RahulVerma#55",password:"tenant@rahul#2026",role:"TENANT",status:"ACTIVE"},{id:"acc4",name:"PG Manager Rajesh",email:"manager@gmail.com",password:"manager@rajesh#2026",role:"MANAGER",status:"ACTIVE",ownerId:"acc-1795442411871",assignedBuildings:[],plan_name:"dashboard,tenants,rooms,financials"}];function Gh(e,t){let r=e?e.split("?metadata=")[0]:"";if(r&&r.length>20000&&r.startsWith("data:image/")){r="https://api.dicebear.com/7.x/adventurer/svg?seed=avatar";}try{const n=btoa(encodeURIComponent(JSON.stringify(t)));return r?`${r}?metadata=${n}`:`?metadata=${n}`}catch(n){return console.error("Failed to encode metadata to base64:",n),r||""}}function lA(e){if(!e)return{avatar:"",metadata:{}};const t=e.split("?metadata="),r=t[0];let n={};if(t[1])try{let b=decodeURIComponent(t[1]).trim(),w=atob(b);try{n=JSON.parse(decodeURIComponent(w))}catch(_){n=JSON.parse(w)}}catch(s){console.error("Failed to decode metadata from base64:",s)}return{avatar:r,metadata:n}}window.lA=lA;window.getTenantPrivateDocs = (tenant, localDocs) => {
   if (!tenant) return [];
   const st = (typeof window !== "undefined" && window.store?.getState) ? window.store.getState() : {};
   const allD = Array.from(new Map([...(localDocs || []), ...(st.rawDocuments || []), ...(st.documents || [])].map(item => [item.id || item.name, item])).values());
@@ -4339,6 +4339,7 @@ window.LeadFinderEngine = (() => {
   const VERIFICATION_STATUSES = [
     { id: "NEW", label: "New Lead", badge: "bg-sky-50 text-sky-700 border-sky-200" },
     { id: "UNVERIFIED", label: "Unverified", badge: "bg-slate-100 text-slate-600 border-slate-200" },
+    { id: "UNVERIFIED_OPPORTUNITY", label: "Unverified Opportunity", badge: "bg-slate-100 text-slate-700 border-slate-300" },
     { id: "CONTACT_VERIFIED", label: "Contact Verified", badge: "bg-indigo-50 text-indigo-700 border-indigo-200" },
     { id: "GENUINE_ENQUIRY", label: "Genuine Enquiry", badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
     { id: "INTERESTED", label: "Interested", badge: "bg-teal-50 text-teal-700 border-teal-200" },
@@ -4391,6 +4392,7 @@ window.LeadFinderEngine = (() => {
   };
 
   const mapLegacyVerificationStatus = lead => {
+    if (lead?.verification_status === "unverified_opportunity") return "UNVERIFIED_OPPORTUNITY";
     if (lead?.verificationStatus && VERIFICATION_STATUSES.some(v => v.id === lead.verificationStatus)) {
       return lead.verificationStatus;
     }
@@ -4408,7 +4410,19 @@ window.LeadFinderEngine = (() => {
     return lead?.status === "NEW" ? "NEW" : "UNVERIFIED";
   };
 
-  const findDuplicateLead = (candidate, existingLeads) => {
+  const computeContentHash = item => {
+    const u = normalizeText(item?.sourceUrl || item?.source_url || item?.externalRef || "").replace(/\/+$/, "");
+    const t = normalizeText(item?.originalEnquiry || item?.notes || "").slice(0, 200);
+    const str = u + "|" + t;
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return "ch-" + (h >>> 0).toString(16);
+  };
+
+  const findDuplicateLead = (candidate, existingLeads, historyRecords) => {
     const list = Array.isArray(existingLeads) ? existingLeads : [];
     const cPhone = normalizePhone(candidate?.phone || candidate?.whatsapp);
     const cWa = normalizePhone(candidate?.whatsapp || candidate?.phone);
@@ -4447,6 +4461,25 @@ window.LeadFinderEngine = (() => {
         if ((cLoc && eLoc && cLoc === eLoc) || (cEnq && eEnq && (cEnq === eEnq || (cEnq.length > 20 && eEnq.includes(cEnq.slice(0, 20)))))) {
           return { isDuplicate: true, matchType: "NAME_CONTEXT_MATCH", matchedLead: ex, reason: "Matched same person name + location/enquiry context" };
         }
+      }
+      const cExtId = normalizeText(candidate?.external_lead_id || candidate?.externalRef);
+      const eExtId = normalizeText(ex.external_lead_id || ex.externalRef);
+      if (cExtId && eExtId && cExtId === eExtId) {
+        return { isDuplicate: true, matchType: "EXTERNAL_ID_MATCH", matchedLead: ex, reason: "Matched external_lead_id (" + cExtId + ")" };
+      }
+      const cHash = candidate?.contentHash || computeContentHash(candidate);
+      const eHash = ex.contentHash || computeContentHash(ex);
+      if (cHash && eHash && cHash === eHash && (cUrl || cEnq.length >= 20)) {
+        return { isDuplicate: true, matchType: "CONTENT_HASH_MATCH", matchedLead: ex, reason: "Matched normalized source URL + content hash" };
+      }
+    }
+    const histList = Array.isArray(historyRecords) ? historyRecords : [];
+    const cHash2 = candidate?.contentHash || computeContentHash(candidate);
+    const cExtId2 = normalizeText(candidate?.external_lead_id || candidate?.externalRef);
+    for (const h of histList) {
+      if (!h) continue;
+      if ((cPhone && h.normalized_phone === cPhone) || (cEmail && h.normalized_email === cEmail) || (cExtId2 && normalizeText(h.external_lead_id) === cExtId2) || (cHash2 && h.content_hash === cHash2)) {
+        return { isDuplicate: true, matchType: "HISTORY_MATCH", matchedLead: null, matchedHistory: h, reason: "Already recorded in external_discovery_history" };
       }
     }
     return { isDuplicate: false, matchType: "UNIQUE", matchedLead: null, reason: "No existing duplicate found" };
@@ -4615,6 +4648,20 @@ window.LeadFinderEngine = (() => {
         reasons.push("Within budget (₹" + bestRent.toLocaleString("en-IN") + "/mo)");
       } else if (leadBudget > 0 && bestRent > 0) {
         reasons.push("Starting ₹" + bestRent.toLocaleString("en-IN") + "/mo");
+      }
+      const leadGender = normalizeText(lead?.gender || lead?.accommodationType || "");
+      const bGender = normalizeText(bld.gender || bld.category || bld.type || bld.name || "");
+      if (leadGender && bGender) {
+        if (/\b(female|girls?|ladies|women)\b/.test(leadGender) && /\b(female|girls?|ladies|women)\b/.test(bGender)) {
+          matchScore += 15;
+          reasons.push("Girls/Ladies PG match");
+        } else if (/\b(male|boys?|gents?|men)\b/.test(leadGender) && /\b(male|boys?|gents?|men)\b/.test(bGender)) {
+          matchScore += 15;
+          reasons.push("Boys/Gents PG match");
+        } else if (leadGender.includes("co-living") || leadGender.includes("coliving")) {
+          matchScore += 10;
+          reasons.push("Co-living compatible");
+        }
       }
       if (leadOwnerId && bld.ownerId === leadOwnerId) {
         matchScore += 10;
@@ -4805,6 +4852,7 @@ window.LeadFinderEngine = (() => {
     mapLegacyVerificationStatus,
     findDuplicateLead,
     mergeDuplicateLead,
+    computeContentHash,
     computeEvidenceScore,
     matchLeadToVacantBuilding,
     buildPersonalizedFollowUp,
@@ -4838,6 +4886,23 @@ function SuperAdminLeadGenConsole() {
   const [agentBudget, setAgentBudget] = b.useState(() => leadData.agentConfig?.budget || 15000);
   const [agentSharing, setAgentSharing] = b.useState(() => leadData.agentConfig?.sharing || "Double Sharing");
   const [agentMaxRent, setAgentMaxRent] = b.useState(() => leadData.agentConfig?.maxRent || 12500);
+  const [agentAccommodationType, setAgentAccommodationType] = b.useState(() => leadData.agentConfig?.accommodationType || "Co-living");
+  const activeRunLockRef = b.useRef(false);
+  const persistDiscoveryRun = async runRecord => {
+    try {
+      const prevRuns = Array.isArray(leadData.agentConfig?.discoveryRuns) ? leadData.agentConfig.discoveryRuns : [];
+      const nextRuns = [runRecord, ...prevRuns.filter(r => r.id !== runRecord.id)].slice(0, 20);
+      await Promise.resolve(we.from("notices").upsert({
+        id: "discovery-runs-data",
+        title: "External Discovery Runs Log",
+        date: new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date()),
+        content: JSON.stringify({ runs: nextRuns, updatedAt: new Date().toISOString() }),
+        priority: "Normal",
+        author: "AI Discovery Agent",
+        category: "System"
+      })).catch(() => {});
+    } catch (_) {}
+  };
 
   // Simulation / Execution State
   const [isAgentRunning, setIsAgentRunning] = b.useState(!1);
@@ -4882,7 +4947,9 @@ function SuperAdminLeadGenConsole() {
   const cachedCandsRef = b.useRef([]);
 
   const stopAiLeadFinderAgent = () => {
+    activeRunLockRef.current = false;
     agentRunIdRef.current += 1;
+    persistDiscoveryRun({ id: "run-stopped-" + Date.now(), status: "stopped", updated_at: new Date().toISOString() });
     setIsAgentRunning(!1);
     setMissionMonitor(prev => ({ ...prev, status: "PAUSED", failureReason: "Paused by Super Admin — click Resume to continue without repeating completed tasks." }));
     z.info("Lead discovery paused. Click Resume to continue or Restart to run fresh without duplicates.");
@@ -5007,7 +5074,13 @@ function SuperAdminLeadGenConsole() {
 
   // Run AI Tenant Lead Finder & Marketing Agent
   const runAiLeadFinderAgent = async (opts) => {
-    if (isAgentRunning) return;
+    if (isAgentRunning || activeRunLockRef.current) {
+      z.info("Discovery run already in progress — prevented overlapping duplicate run.");
+      return;
+    }
+    activeRunLockRef.current = true;
+    const activeRunDbId = "run-" + Date.now();
+    persistDiscoveryRun({ id: activeRunDbId, status: "running", total_enabled_sources: 8, completed_sources: 0, progress_pct: 10, started_at: new Date().toISOString() });
     const isResume = !!(opts && opts.resume);
     if (!isResume) {
       completedTasksRef.current = new Set();
@@ -5179,6 +5252,7 @@ function SuperAdminLeadGenConsole() {
                   sharing: agentSharing,
                   maxBudget: maxRentVal,
                   audience: agentAudience,
+                  accommodationType: agentAccommodationType,
                   recentDays: recentDaysFilter === "ALL" ? "30" : recentDaysFilter
                 })
               });
@@ -5228,7 +5302,11 @@ function SuperAdminLeadGenConsole() {
               originalEnquiry: String(p.originalEnquiry || "").trim(),
               notes: String(p.notes || "Externally discovered accommodation enquiry.").trim(),
               status: "NEW",
-              verificationStatus: (hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED",
+              external_lead_id: p.external_lead_id || p.externalRef || "",
+              contentHash: p.contentHash || eng.computeContentHash(p),
+              accommodationType: p.accommodationType || agentAccommodationType || "PG Accommodation",
+              verificationStatus: (hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED_OPPORTUNITY",
+              verification_status: (hasValidPhone || hasValidEmail) ? "contact_verified" : "unverified_opportunity",
               discoveredAt: p.discoveredAt || nowIso,
               lastCheckedAt: nowIso,
               createdAt: nowIso,
@@ -5384,6 +5462,16 @@ function SuperAdminLeadGenConsole() {
 
       completedTasksRef.current.add("dedup");
       completedTasksRef.current.add("save");
+      persistDiscoveryRun({
+        id: activeRunDbId,
+        status: "completed",
+        total_enabled_sources: eng.PLATFORM_CATALOG.length,
+        completed_sources: enrichedReports.length,
+        progress_pct: 100,
+        new_prospects_count: addedCount,
+        duplicate_count: duplicatesMergedCount,
+        completed_at: nowIso
+      });
       const unverifiedCount = updatedLeads.filter(l => eng.mapLegacyVerificationStatus(l) === "UNVERIFIED").length;
       const connectedLiveCount = enrichedReports.filter(s => s.connectionStatus === "CONNECTED" || s.connectionStatus === "CONNECTED_RESEARCH_ONLY").length;
       const failedCount = enrichedReports.filter(s => s.searchStatus === "FAILED" || s.connectionStatus === "ERROR").length;
@@ -5433,6 +5521,7 @@ function SuperAdminLeadGenConsole() {
         z.error("Lead discovery error: " + errMsg);
       }
     } finally {
+      activeRunLockRef.current = false;
       if (agentRunIdRef.current === myRunId) {
         setIsAgentRunning(!1);
       }
@@ -6301,6 +6390,41 @@ function SuperAdminLeadGenConsole() {
                   a.jsxs("div", { className: "p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40", children: [a.jsx("p", { className: "text-[9px] font-black uppercase text-indigo-600 dark:text-indigo-400", children: "Matched to Vacancies" }), a.jsx("p", { className: "text-lg font-black text-indigo-700 dark:text-indigo-300 mt-0.5", children: dashboardMetrics.leadsMatchedWithVacantBuildings })] }),
                   a.jsxs("div", { className: "p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800", children: [a.jsx("p", { className: "text-[9px] font-black uppercase text-slate-400", children: "Conversion Rate" }), a.jsxs("p", { className: "text-lg font-black text-slate-900 dark:text-white mt-0.5", children: [dashboardMetrics.totalGenuineEnquiries > 0 ? Math.round((dashboardMetrics.convertedCount / dashboardMetrics.totalGenuineEnquiries) * 100) : 0, "%"] })] })
                 ]
+              }),
+              a.jsx("div", {
+                className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3",
+                children: dashboardMetrics.perSourceBreakdown.map(sr => a.jsxs("div", {
+                  className: "p-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2",
+                  children: [
+                    a.jsxs("div", {
+                      className: "flex items-center justify-between gap-2",
+                      children: [
+                        a.jsxs("span", { className: "font-black text-xs text-slate-900 dark:text-white", children: [sr.icon, " ", sr.name] }),
+                        a.jsx("span", {
+                          className: Be("px-2 py-0.5 rounded-full text-[9px] font-black uppercase border", sr.connectionStatus === "CONNECTED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : sr.connectionStatus === "CONNECTED_RESEARCH_ONLY" || sr.connectionStatus === "RESEARCH_ONLY" ? "bg-sky-50 text-sky-700 border-sky-200" : sr.connectionStatus === "ERROR" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200"),
+                          children: String(sr.connectionStatus || "NOT_CONNECTED").replace(/_/g, " ")
+                        })
+                      ]
+                    }),
+                    a.jsxs("div", {
+                      className: "grid grid-cols-3 gap-1.5 text-center text-[10px]",
+                      children: [
+                        a.jsxs("div", { className: "p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800", children: [a.jsx("div", { className: "text-[8px] font-bold uppercase text-slate-400", children: "New" }), a.jsx("div", { className: "font-black text-emerald-600 dark:text-emerald-400", children: sr.newProspectsDiscovered })] }),
+                        a.jsxs("div", { className: "p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800", children: [a.jsx("div", { className: "text-[8px] font-bold uppercase text-slate-400", children: "Dups" }), a.jsx("div", { className: "font-black text-amber-600 dark:text-amber-400", children: sr.duplicatesDetected })] }),
+                        a.jsxs("div", { className: "p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800", children: [a.jsx("div", { className: "text-[8px] font-bold uppercase text-slate-400", children: "Contacts" }), a.jsx("div", { className: "font-black text-indigo-600 dark:text-indigo-400", children: sr.contactDetailsAvailable })] })
+                      ]
+                    }),
+                    a.jsxs("div", {
+                      className: "text-[10px] text-slate-500 dark:text-slate-400 space-y-0.5",
+                      children: [
+                        a.jsxs("div", { children: ["Auth: ", a.jsx("strong", { className: "text-slate-700 dark:text-slate-200", children: String(sr.authStatus || "").replace(/_/g, " ") })] }),
+                        a.jsxs("div", { children: ["Search: ", a.jsx("strong", { className: "text-slate-700 dark:text-slate-200", children: String(sr.searchStatus || "NOT_RUN_YET").replace(/_/g, " ") })] }),
+                        sr.errors && sr.errors.length > 0 && a.jsx("div", { className: "text-rose-600 dark:text-rose-400 font-bold line-clamp-2", children: "⚠ " + sr.errors[0] }),
+                        a.jsx("div", { className: "text-[9px] text-slate-400 line-clamp-2", children: sr.requirement })
+                      ]
+                    })
+                  ]
+                }, "card-" + sr.id))
               }),
               a.jsx("div", {
                 className: "overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800",
