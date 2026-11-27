@@ -4350,15 +4350,14 @@ window.LeadFinderEngine = (() => {
   ];
 
   const PLATFORM_CATALOG = [
-    { id: "source-direct", name: "Direct Website & Guest Boarding Enquiries", icon: "🌐", authStatus: "LIVE_AUTHORIZED", canCollectLeads: true, requirement: "Live & connected directly to Srinooscoliving Website Enquiry Form, Guest Boarding & Onboarding database." },
-    { id: "source-magicbricks", name: "Magicbricks", icon: "🏢", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires Magicbricks Commercial Partner Lead API / Webhook key or authorized partner CSV import." },
-    { id: "source-99acres", name: "99acres", icon: "🏠", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires 99acres Business Partner Lead API / authorized CRM webhook credentials." },
-    { id: "source-housing", name: "Housing.com", icon: "🏘️", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires Housing.com Commercial Partner API / authorized lead sync integration." },
-    { id: "source-justdial", name: "Justdial", icon: "📞", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires Justdial Paid Lead API / Webhook authorization for verified buyer enquiries." },
-    { id: "source-facebook", name: "Facebook Lead Ads", icon: "📘", authStatus: "ACCOUNT_AUTH_REQUIRED", canCollectLeads: false, requirement: "Requires Meta Graph API Page Access Token & Leadgen Webhook authorization." },
-    { id: "source-instagram", name: "Instagram Lead Ads", icon: "📸", authStatus: "ACCOUNT_AUTH_REQUIRED", canCollectLeads: false, requirement: "Requires Instagram Business Account linked to Meta Lead Ads Webhook." },
-    { id: "source-google", name: "Google Search / Ads Lead Forms", icon: "🔍", authStatus: "ACCOUNT_AUTH_REQUIRED", canCollectLeads: false, requirement: "Requires Google Ads Lead Form Extension Webhook key. Public search results are not direct tenant enquiries." },
-    { id: "source-google-maps", name: "Google Maps & Business Directories", icon: "🗺️", authStatus: "MARKET_RESEARCH_ONLY", canCollectLeads: false, requirement: "Market & competitor property research only — NEVER classified as genuine tenant enquiries." }
+    { id: "source-google", name: "Google Search", icon: "🔍", authStatus: "PUBLIC_SEARCH_LIVE", canCollectLeads: true, requirement: "Live public accommodation-seeker discovery active. Add GOOGLE_CSE_API_KEY + GOOGLE_CSE_CX for full Google Web Search API coverage." },
+    { id: "source-google-maps", name: "Google Maps", icon: "🗺️", authStatus: "MARKET_RESEARCH_ONLY", canCollectLeads: false, requirement: "Market & demand-area research only (colleges, IT parks, localities). Business listings are NEVER classified as tenant enquiries." },
+    { id: "source-magicbricks", name: "Magicbricks", icon: "🏢", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires Magicbricks Commercial Partner Lead API / CRM Webhook credentials (MAGICBRICKS_PARTNER_API_KEY). Owner ads are never treated as tenant enquiries." },
+    { id: "source-99acres", name: "99acres", icon: "🏠", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires 99acres Business Partner Lead API / CRM Webhook credentials (NINETY_NINE_ACRES_API_KEY). Owner ads are never treated as tenant enquiries." },
+    { id: "source-housing", name: "Housing.com", icon: "🏘️", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires Housing.com Commercial Partner Lead API credentials (HOUSING_PARTNER_API_KEY). Owner ads are never treated as tenant enquiries." },
+    { id: "source-facebook", name: "Facebook", icon: "📘", authStatus: "ACCOUNT_AUTH_REQUIRED", canCollectLeads: false, requirement: "Requires Meta Graph API Page Access Token & Facebook Lead Ads Form ID (META_PAGE_ACCESS_TOKEN, FACEBOOK_LEADGEN_FORM_ID). Private profiles/DMs are never accessed." },
+    { id: "source-instagram", name: "Instagram", icon: "📸", authStatus: "ACCOUNT_AUTH_REQUIRED", canCollectLeads: false, requirement: "Requires Instagram Business Account linked to Meta Lead Ads Form ID (META_PAGE_ACCESS_TOKEN, INSTAGRAM_LEADGEN_FORM_ID)." },
+    { id: "source-justdial", name: "Justdial", icon: "📞", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires Justdial Paid Lead API / Webhook authorization (JUSTDIAL_API_KEY). Business directory listings are never treated as tenant enquiries." }
   ];
 
   const normalizePhone = raw => {
@@ -4723,8 +4722,7 @@ window.LeadFinderEngine = (() => {
         leadsMatchedWithVacantBuildings++;
       }
 
-      const sKey = sourceMap.has(lead.sourceId) ? lead.sourceId : "source-direct";
-      const sRow = sourceMap.get(sKey);
+      const sRow = sourceMap.has(lead.sourceId) ? sourceMap.get(lead.sourceId) : null;
       if (sRow) {
         sRow.total++;
         if (["CONTACT_VERIFIED", "GENUINE_ENQUIRY", "INTERESTED", "FOLLOW_UP_REQUIRED", "CONVERTED"].includes(vStat)) sRow.verified++;
@@ -4732,10 +4730,28 @@ window.LeadFinderEngine = (() => {
       }
     });
 
-    const perSourceBreakdown = Array.from(sourceMap.values()).map(s => ({
-      ...s,
-      conversionRate: s.total > 0 ? Math.round((s.converted / s.total) * 100) : 0
-    }));
+    const reportById = new Map();
+    (Array.isArray(lastRunSummary?.sourceReports) ? lastRunSummary.sourceReports : []).forEach(r => {
+      if (r?.id) reportById.set(r.id, r);
+    });
+    const perSourceBreakdown = Array.from(sourceMap.values()).map(s => {
+      const rep = reportById.get(s.id) || null;
+      return {
+        ...s,
+        connectionStatus: rep?.connectionStatus || (s.canCollectLeads ? "READY" : (s.authStatus === "MARKET_RESEARCH_ONLY" ? "RESEARCH_ONLY" : "NOT_CONNECTED")),
+        authStatus: rep?.authStatus || s.authStatus,
+        searchStatus: rep?.searchStatus || "NOT_RUN_YET",
+        lastSuccessfulSearch: rep?.lastSuccessfulSearch || null,
+        newProspectsDiscovered: rep?.newProspectsDiscovered ?? 0,
+        duplicatesDetected: rep?.duplicatesDetected ?? 0,
+        contactDetailsAvailable: rep?.contactDetailsAvailable ?? 0,
+        errors: Array.isArray(rep?.errors) ? rep.errors : [],
+        requirement: rep?.requirement || s.requirement,
+        conversionRate: s.total > 0 ? Math.round((s.converted / s.total) * 100) : 0
+      };
+    });
+    const externalDiscoveredCount = list.filter(l => l && (l.discoveryOrigin === "EXTERNAL_AI_DISCOVERY" || l.externalDiscovered === true)).length;
+    const existingProjectLeadsCount = Math.max(0, list.length - externalDiscoveredCount);
 
     const bList = Array.isArray(buildings) ? buildings : [];
     const rList = Array.isArray(roomsRelational) ? roomsRelational : [];
@@ -4758,6 +4774,8 @@ window.LeadFinderEngine = (() => {
 
     return {
       totalGenuineEnquiries: genuineLeadsCount,
+      externalDiscoveredCount,
+      existingProjectLeadsCount,
       newLeadsToday,
       perSourceBreakdown,
       verifiedCount,
@@ -4838,6 +4856,7 @@ function SuperAdminLeadGenConsole() {
   const [moveInFilter, setMoveInFilter] = b.useState("");
   const [recentDaysFilter, setRecentDaysFilter] = b.useState("ALL");
   const [onlyNewLeads, setOnlyNewLeads] = b.useState(!0);
+  const [originFilter, setOriginFilter] = b.useState("ALL"); // "ALL", "EXTERNAL", "PROJECT"
   const agentRunIdRef = b.useRef(0);
   const [agentError, setAgentError] = b.useState("");
   const [missionMonitor, setMissionMonitor] = b.useState(() => {
@@ -5136,64 +5155,85 @@ function SuperAdminLeadGenConsole() {
         discoveredCandidates.push(...cachedCandsRef.current);
       }
 
-      // Stage 2: Query Direct Website / Guest Boarding (skipped if already completed before Pause/Resume!)
+      // Stage 2: Independently research the 8 EXTERNAL platforms via /api/external-lead-discovery
+      // IMPORTANT: NEVER reads Direct Website Enquiries, Guest Boarding, onboarding_apps, or existing project leads as discovery sources!
       setAgentStep(2);
       setAgentProgress(40);
-      setAgentStatusText(completedTasksRef.current.has("guest_reg") ? "Step 2/5: Guest Boarding already completed (skipping repeat)..." : "Step 2/5: Scanning authorized Direct Website & Guest Boarding enquiries...");
+      setAgentStatusText(completedTasksRef.current.has("external_api") ? "Step 2/4: External 8-platform search already completed (resuming)..." : "Step 2/4: Independently researching 8 external platforms (Google Search, Maps, Magicbricks, 99acres, Housing, Facebook, Instagram, Justdial)...");
 
-      if (!completedTasksRef.current.has("guest_reg")) try {
-        const regRows = await withTimeoutRetry(
-          "Direct Guest Boarding",
-          () => window.fetchGuestRegsSafe ? window.fetchGuestRegsSafe(!1) : [],
-          6500,
-          1
-        );
-        if (isCancelled()) return;
-        const statusMap = window.getGuestRegStatusMap ? window.getGuestRegStatusMap(Ee.getState().allDbNotices) : {};
-        (regRows || []).forEach(nt => {
-          if (!nt || !nt.content) return;
-          try {
-            const p = typeof nt.content === "string" ? JSON.parse(nt.content) : nt.content;
-            if (!p || p.type !== "GUEST_REGISTRATION_APP") return;
-            const stOv = statusMap[nt.id] || {};
-            const effStatus = stOv.status || p.status || "PENDING_SUPER_ADMIN";
-            if (effStatus === "REJECTED") return;
-            const bldLoc = stOv.building || p.building || p.buildingId || "";
-            const hasValidPhone = !!eng.normalizePhone(p.phone);
+      let externalApiResult = null;
+      if (!completedTasksRef.current.has("external_api")) {
+        try {
+          const addrParts = String(agentAddress || "").split(",").map(s => s.trim()).filter(Boolean);
+          const localityParam = addrParts[0] || agentAddress || "Koramangala";
+          const cityParam = addrParts.length > 1 ? addrParts[addrParts.length - 1] : (isBangalore ? "Bangalore" : isPune ? "Pune" : isHyd ? "Hyderabad" : isGurgaon ? "Gurgaon" : "");
+          externalApiResult = await withTimeoutRetry(
+            "External 8-Platform Discovery API",
+            async () => {
+              const resp = await fetch("/api/external-lead-discovery", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  city: cityParam,
+                  locality: localityParam,
+                  sharing: agentSharing,
+                  maxBudget: maxRentVal,
+                  audience: agentAudience,
+                  recentDays: recentDaysFilter === "ALL" ? "30" : recentDaysFilter
+                })
+              });
+              const txt = await resp.text();
+              let json = null;
+              try { json = JSON.parse(txt); } catch (_) {}
+              if (!resp.ok || !json || !json.ok) {
+                throw new Error(json?.error || ("External discovery API HTTP " + resp.status));
+              }
+              return json;
+            },
+            15000,
+            1
+          );
+          if (isCancelled()) return;
+
+          const extProspects = Array.isArray(externalApiResult?.prospects) ? externalApiResult.prospects : [];
+          extProspects.forEach((p, idx) => {
+            if (!p || !p.originalEnquiry) return;
+            const hasValidPhone = !!eng.normalizePhone(p.phone || p.whatsapp);
             const hasValidEmail = !!eng.normalizeEmail(p.email);
-            const vStat = effStatus === "APPROVED"
-              ? "CONVERTED"
-              : (hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED";
             const cand = {
-              id: "lead-real-" + nt.id,
-              externalRef: nt.id,
-              ownerId: stOv.ownerId || p.ownerId || defaultOwner,
-              ownerName: stOv.ownerName || p.ownerName || defaultOwnerName,
-              sourceId: "source-direct",
-              sourceName: p.source === "SAAS_GUEST_BOARDING" ? "Direct Website (Guest Boarding)" : "Direct Website (Owner Invite Link)",
-              sourceIcon: "🌐",
-              sourceUrl: window.location.origin + "/?ref=" + encodeURIComponent(nt.id),
-              sourceAuthorized: true,
-              tenantName: (p.name || "").trim(),
-              phone: (p.phone || "").trim(),
-              whatsapp: (p.phone || "").trim(),
-              email: (p.email || "").trim(),
-              location: bldLoc,
+              id: "lead-ext-" + Date.now() + "-" + idx + "-" + Math.random().toString(36).slice(2, 5),
+              externalRef: p.externalRef || p.sourceUrl || "",
+              ownerId: "",
+              ownerName: "Unassigned",
+              sourceId: p.sourceId || "source-google",
+              sourceName: p.sourceName || "Google Search",
+              sourceIcon: p.sourceIcon || "🔍",
+              sourceUrl: p.sourceUrl || "",
+              sourceAuthorized: !!p.sourceAuthorized,
+              discoveryOrigin: "EXTERNAL_AI_DISCOVERY",
+              externalDiscovered: true,
+              tenantName: String(p.tenantName || "External Seeker").trim(),
+              phone: String(p.phone || "").trim(),
+              whatsapp: String(p.whatsapp || p.phone || "").trim(),
+              email: String(p.email || "").trim(),
+              location: String(p.location || agentAddress || "").trim(),
               sharingPreference: p.sharingPreference || "",
-              budgetRange: p.roomPreference ? (p.roomPreference + " • " + (p.sharingPreference || "Sharing")) : "",
-              budget: 0,
-              preferredMoveInDate: p.joinDate || "",
-              profession: (p.companyCollege || "").trim(),
-              gender: "",
-              foodPreference: p.foodPreference || "",
-              originalEnquiry: "Submitted Guest Boarding form for " + (p.roomPreference || "PG") + " (" + (p.sharingPreference || "Sharing") + ", " + (p.foodPreference || "Food") + ")" + (bldLoc ? " at " + bldLoc : "") + ".",
-              notes: "Verified live Guest Boarding submission (" + nt.id + ")." + (p.addressCurrent ? " Address: " + p.addressCurrent : ""),
-              status: effStatus === "APPROVED" ? "CONVERTED" : "NEW",
-              verificationStatus: vStat,
-              discoveredAt: p.submittedAt || nowIso,
+              budgetRange: p.budgetRange || (p.budget > 0 ? ("₹" + Number(p.budget).toLocaleString("en-IN") + "/mo") : ""),
+              budget: Number(p.budget) || 0,
+              bedsRequired: Number(p.bedsRequired) || 1,
+              preferredMoveInDate: p.preferredMoveInDate || "",
+              profession: String(p.profession || "").trim(),
+              gender: p.gender || "",
+              foodPreference: "",
+              originalEnquiry: String(p.originalEnquiry || "").trim(),
+              notes: String(p.notes || "Externally discovered accommodation enquiry.").trim(),
+              status: "NEW",
+              verificationStatus: (hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED",
+              discoveredAt: p.discoveredAt || nowIso,
               lastCheckedAt: nowIso,
-              createdAt: p.submittedAt || nowIso,
+              createdAt: nowIso,
               updatedAt: nowIso,
+              followUps: [],
               convertedTenantId: null
             };
             const ev = eng.computeEvidenceScore(cand);
@@ -5201,154 +5241,38 @@ function SuperAdminLeadGenConsole() {
             cand.scoreBreakdown = ev.reasons;
             discoveredCandidates.push(cand);
             cachedCandsRef.current.push(cand);
-          } catch (_) {}
-        });
-        // Also scan Direct Website Accommodation Enquiry form submissions (lead-web-enquiry-*)
-        try {
-          const webEnqRes = await withTimeoutRetry(
-            "Direct Website Enquiry Form",
-            () => we.from("notices").select("id,title,content,date").like("id", "lead-web-enquiry-%").limit(200),
-            6000,
-            1
-          );
-          if (!isCancelled()) {
-            (webEnqRes?.data || []).forEach(nt => {
-              if (!nt || !nt.content) return;
-              try {
-                const p = typeof nt.content === "string" ? JSON.parse(nt.content) : nt.content;
-                if (!p || !p.name) return;
-                const hasValidPhone = !!eng.normalizePhone(p.phone);
-                const hasValidEmail = !!eng.normalizeEmail(p.email);
-                const cand = {
-                  id: "lead-web-" + nt.id,
-                  externalRef: nt.id,
-                  ownerId: "",
-                  ownerName: "Unassigned",
-                  sourceId: "source-direct",
-                  sourceName: "Direct Website Enquiry Form",
-                  sourceIcon: "🌐",
-                  sourceUrl: p.sourceUrl || (window.location.origin + "/?web_enquiry=" + encodeURIComponent(nt.id)),
-                  sourceAuthorized: true,
-                  tenantName: String(p.name || "").trim(),
-                  phone: String(p.phone || "").trim(),
-                  whatsapp: String(p.phone || "").trim(),
-                  email: String(p.email || "").trim(),
-                  location: String(p.location || "").trim(),
-                  sharingPreference: p.sharingPreference || "",
-                  budgetRange: p.budget ? ("₹" + Number(p.budget).toLocaleString("en-IN") + "/mo • " + (p.sharingPreference || "Sharing")) : (p.sharingPreference || ""),
-                  budget: Number(p.budget) || 0,
-                  preferredMoveInDate: p.moveInDate || "",
-                  profession: "",
-                  gender: "",
-                  foodPreference: "",
-                  originalEnquiry: (p.notes || ("Direct website enquiry for " + (p.sharingPreference || "PG room") + (p.location ? " in " + p.location : ""))).trim(),
-                  notes: "Submitted via Srinooscoliving Website Enquiry Form (" + nt.id + ").",
-                  status: "NEW",
-                  verificationStatus: (hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED",
-                  discoveredAt: p.submittedAt || nowIso,
-                  lastCheckedAt: nowIso,
-                  createdAt: p.submittedAt || nowIso,
-                  updatedAt: nowIso,
-                  followUps: [],
-                  convertedTenantId: null
-                };
-                const ev = eng.computeEvidenceScore(cand);
-                cand.intentScore = ev.score;
-                cand.scoreBreakdown = ev.reasons;
-                discoveredCandidates.push(cand);
-                cachedCandsRef.current.push(cand);
-              } catch (_) {}
-            });
+          });
+
+          if (Array.isArray(externalApiResult?.demandHubs) && externalApiResult.demandHubs.length > 0) {
+            research.nearbyHubs = [...new Set([...externalApiResult.demandHubs, ...research.nearbyHubs])].slice(0, 8);
           }
-        } catch (webErr) {
-          if (webErr?.message === "CANCELLED") return;
-          sourceWarnings.push("Direct Website Enquiry Form: " + (webErr?.message || "temporarily unavailable"));
+
+          (externalApiResult?.sourceReports || []).forEach(sr => {
+            if (sr.searchStatus === "COMPLETED" || sr.searchStatus === "MARKET_RESEARCH_COMPLETED") sourcesOk++;
+            else if (sr.errors && sr.errors.length > 0 && sr.authStatus !== "PARTNER_API_REQUIRED" && sr.authStatus !== "ACCOUNT_AUTH_REQUIRED") {
+              sourceWarnings.push(sr.name + ": " + sr.errors[0]);
+            }
+          });
+          completedTasksRef.current.add("external_api");
+        } catch (err) {
+          if (err?.message === "CANCELLED") return;
+          console.error("External 8-Platform Discovery API error:", err);
+          sourceWarnings.push("External Discovery API: " + (err?.message || "request failed"));
         }
-        completedTasksRef.current.add("guest_reg");
-        sourcesOk++;
-      } catch (err) {
-        if (err?.message === "CANCELLED") return;
-        console.warn("Guest Boarding source skipped due to timeout/error:", err);
-        sourceWarnings.push("Direct Guest Boarding: " + (err?.message || "temporarily unavailable"));
       }
 
       if (isCancelled()) return;
 
-      // Stage 3: Query Supabase onboarding_apps (skipped if already completed before Pause/Resume!)
+      // Stage 3: Strict Duplicate Prevention against existing Leads List (existing leads are NEVER emitted as discoveries!)
       setAgentStep(3);
-      setAgentProgress(65);
-      setAgentStatusText(completedTasksRef.current.has("onboarding") ? "Step 3/5: Website Onboarding already completed (skipping repeat)..." : "Step 3/5: Checking live website onboarding enquiries...");
-
-      if (!completedTasksRef.current.has("onboarding")) try {
-        const obRes = await withTimeoutRetry(
-          "Website Onboarding",
-          () => we.from("onboarding_apps").select("*").limit(200),
-          6000,
-          1
-        );
-        if (isCancelled()) return;
-        const obRows = obRes?.data || [];
-        obRows.forEach(ob => {
-          if (!ob || !ob.name) return;
-          const hasValidPhone = !!eng.normalizePhone(ob.phone);
-          const hasValidEmail = !!eng.normalizeEmail(ob.email);
-          const cand = {
-            id: "lead-ob-" + ob.id,
-            externalRef: String(ob.id),
-            ownerId: ob.owner_id || defaultOwner,
-            ownerName: defaultOwnerName,
-            sourceId: "source-direct",
-            sourceName: "Direct Website Onboarding",
-            sourceIcon: "🌐",
-            sourceUrl: window.location.origin + "/?onboarding=" + encodeURIComponent(ob.id),
-            sourceAuthorized: true,
-            tenantName: String(ob.name || "").trim(),
-            phone: String(ob.phone || "").trim(),
-            whatsapp: String(ob.phone || "").trim(),
-            email: String(ob.email || "").trim(),
-            location: String(ob.building || "").trim(),
-            sharingPreference: ob.sharing_preference || "",
-            budgetRange: ob.room_preference ? (ob.room_preference + " • " + (ob.sharing_preference || "")) : "",
-            budget: 0,
-            preferredMoveInDate: "",
-            profession: String(ob.company_college || "").trim(),
-            gender: "",
-            foodPreference: ob.food_preference || "",
-            originalEnquiry: "Direct onboarding application: " + (ob.room_preference || "PG") + " / " + (ob.sharing_preference || "Sharing"),
-            notes: "Live onboarding_apps record (" + ob.id + ").",
-            status: ob.status === "APPROVED" ? "CONVERTED" : "NEW",
-            verificationStatus: ob.status === "APPROVED" ? "CONVERTED" : ((hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED"),
-            discoveredAt: ob.created_at || nowIso,
-            lastCheckedAt: nowIso,
-            createdAt: ob.created_at || nowIso,
-            updatedAt: nowIso,
-            convertedTenantId: null
-          };
-          const ev = eng.computeEvidenceScore(cand);
-          cand.intentScore = ev.score;
-          cand.scoreBreakdown = ev.reasons;
-          discoveredCandidates.push(cand);
-          cachedCandsRef.current.push(cand);
-        });
-        completedTasksRef.current.add("onboarding");
-        sourcesOk++;
-      } catch (err) {
-        if (err?.message === "CANCELLED") return;
-        console.warn("Onboarding apps source skipped due to timeout/error:", err);
-        sourceWarnings.push("Website Onboarding: " + (err?.message || "temporarily unavailable"));
-      }
-
-      if (isCancelled()) return;
-
-      // Stage 4: Strict deduplication, merging & evidence-based scoring
-      setAgentStep(4);
-      setAgentProgress(85);
-      setAgentStatusText("Step 4/5: Running duplicate detection, verification & evidence scoring...");
+      setAgentProgress(75);
+      setAgentStatusText("Step 3/4: Comparing external discoveries against existing Leads List for duplicate prevention...");
 
       let updatedLeads = [...(leadData.leads || [])];
       let addedCount = 0;
       let duplicatesMergedCount = 0;
       let filteredOutCount = 0;
+      const dupCountBySource = {};
       const cutoffMs = recentDaysFilter !== "ALL" ? (Date.now() - Number(recentDaysFilter) * 86400000) : 0;
 
       for (const cand of discoveredCandidates) {
@@ -5359,13 +5283,14 @@ function SuperAdminLeadGenConsole() {
         const dup = eng.findDuplicateLead(cand, updatedLeads);
         if (dup.isDuplicate && dup.matchedLead) {
           duplicatesMergedCount++;
+          dupCountBySource[cand.sourceId] = (dupCountBySource[cand.sourceId] || 0) + 1;
           const merged = eng.mergeDuplicateLead(dup.matchedLead, cand, dup);
           const ev = eng.computeEvidenceScore(merged);
           merged.intentScore = ev.score;
           merged.scoreBreakdown = ev.reasons;
           updatedLeads = updatedLeads.map(l => l.id === dup.matchedLead.id ? merged : l);
         } else {
-          cand.duplicateCheckResult = "UNIQUE (Verified New)";
+          cand.duplicateCheckResult = "UNIQUE (New External Discovery)";
           cand.sourceReferences = [{
             sourceId: cand.sourceId,
             sourceName: cand.sourceName,
@@ -5380,20 +5305,53 @@ function SuperAdminLeadGenConsole() {
 
       if (isCancelled()) return;
 
-      // Stage 5: Persist to Supabase (8s timeout + 1 retry) — ONLY set 100% AFTER save completes!
-      setAgentStep(5);
-      setAgentProgress(92);
-      setAgentStatusText("Step 5/5: Saving deduplicated leads & campaigns to Supabase...");
+      // Stage 4: Persist new external discoveries & separate externalDiscoveryHistory to Supabase
+      setAgentStep(4);
+      setAgentProgress(90);
+      setAgentStatusText("Step 4/4: Saving qualified external discoveries & source verification report to Supabase...");
+
+      const enrichedReports = (externalApiResult?.sourceReports || eng.PLATFORM_CATALOG.map(p => ({
+        id: p.id,
+        name: p.name,
+        icon: p.icon,
+        connectionStatus: p.canCollectLeads ? "DEGRADED" : "NOT_CONNECTED",
+        authStatus: p.authStatus,
+        searchStatus: "SKIPPED",
+        lastSuccessfulSearch: null,
+        newProspectsDiscovered: 0,
+        contactDetailsAvailable: 0,
+        errors: sourceWarnings.length > 0 ? [sourceWarnings[0]] : [],
+        requirement: p.requirement
+      }))).map(sr => ({
+        ...sr,
+        duplicatesDetected: dupCountBySource[sr.id] || 0
+      }));
 
       const lastRunSummary = {
         ranAt: nowIso,
         queryLocation: agentAddress,
+        internalSourcesUsed: false,
         addedCount,
         duplicatesMergedCount,
         filteredOutCount,
         sourceWarnings,
-        authorizedSourcesChecked: ["Direct Website Enquiries & Guest Boarding"],
-        unavailableSources: eng.PLATFORM_CATALOG.filter(p => !p.canCollectLeads).map(p => ({ name: p.name, status: p.authStatus, requirement: p.requirement }))
+        sourceReports: enrichedReports,
+        authorizedSourcesChecked: enrichedReports.filter(s => s.searchStatus === "COMPLETED" || s.searchStatus === "MARKET_RESEARCH_COMPLETED").map(s => s.name),
+        unavailableSources: enrichedReports.filter(s => s.authStatus === "PARTNER_API_REQUIRED" || s.authStatus === "ACCOUNT_AUTH_REQUIRED").map(s => ({ name: s.name, status: s.authStatus, requirement: s.requirement }))
+      };
+
+      const prevHistory = Array.isArray(leadData.agentConfig?.externalDiscoveryHistory) ? leadData.agentConfig.externalDiscoveryHistory : [];
+      const historyEntry = {
+        id: "ext-run-" + Date.now(),
+        ranAt: nowIso,
+        queryLocation: agentAddress,
+        sharing: agentSharing,
+        maxRent: maxRentVal,
+        addedCount,
+        duplicatesMergedCount,
+        sourcesEvaluated: enrichedReports.length,
+        liveSourcesSucceeded: sourcesOk,
+        warnings: sourceWarnings
       };
 
       const updatedConfig = {
@@ -5404,7 +5362,8 @@ function SuperAdminLeadGenConsole() {
         maxRent: maxRentVal,
         status: "READY",
         lastRunAt: nowIso,
-        lastRunSummary
+        lastRunSummary,
+        externalDiscoveryHistory: [historyEntry, ...prevHistory].slice(0, 25)
       };
 
       await withTimeoutRetry(
@@ -5414,6 +5373,7 @@ function SuperAdminLeadGenConsole() {
           ownerPermissions: leadData.ownerPermissions,
           leads: updatedLeads,
           agentConfig: updatedConfig,
+          marketResearch: research,
           campaigns: campaignGen
         }),
         8000,
@@ -5425,13 +5385,16 @@ function SuperAdminLeadGenConsole() {
       completedTasksRef.current.add("dedup");
       completedTasksRef.current.add("save");
       const unverifiedCount = updatedLeads.filter(l => eng.mapLegacyVerificationStatus(l) === "UNVERIFIED").length;
+      const connectedLiveCount = enrichedReports.filter(s => s.connectionStatus === "CONNECTED" || s.connectionStatus === "CONNECTED_RESEARCH_ONLY").length;
+      const failedCount = enrichedReports.filter(s => s.searchStatus === "FAILED" || s.connectionStatus === "ERROR").length;
+
       setMissionMonitor({
         status: sourceWarnings.length > 0 ? "COMPLETED_WITH_WARNINGS" : "COMPLETED",
         totalSources: eng.PLATFORM_CATALOG.length,
-        connectedSources: eng.PLATFORM_CATALOG.filter(p => p.canCollectLeads).length,
-        sourcesProcessed: sourcesOk || 1,
-        sourcesFailed: sourceWarnings.length,
-        totalTasks: 5,
+        connectedSources: connectedLiveCount,
+        sourcesProcessed: sourcesOk,
+        sourcesFailed: failedCount,
+        totalTasks: 4,
         completedTasks: Array.from(completedTasksRef.current),
         failedTasks: sourceWarnings,
         newlyDiscovered: addedCount,
@@ -5442,17 +5405,17 @@ function SuperAdminLeadGenConsole() {
         lastRunAt: nowIso
       });
       setAgentProgress(100);
-      setAgentStatusText("Completed! " + addedCount + " new enquiry(s) added, " + duplicatesMergedCount + " duplicate(s) skipped/merged.");
+      setAgentStatusText("External discovery completed! " + addedCount + " new external prospect(s) saved, " + duplicatesMergedCount + " duplicate(s) prevented.");
       await new Promise(r => setTimeout(r, 250));
       if (isCancelled()) return;
 
       if (addedCount > 0) {
-        z.success("Discovery complete: " + addedCount + " genuine new enquiry(s) added, " + duplicatesMergedCount + " duplicate(s) skipped/merged.");
+        z.success("External discovery complete: " + addedCount + " new external prospect(s) added (" + duplicatesMergedCount + " duplicate(s) prevented).");
       } else {
-        z.success("Discovery complete: 0 new uncollected enquiries (" + duplicatesMergedCount + " already collected & deduplicated).");
+        z.success("External discovery complete: 0 new uncollected external prospects (" + duplicatesMergedCount + " duplicate(s) already in Leads List).");
       }
       if (sourceWarnings.length > 0) {
-        z.info("Note: " + sourceWarnings.join("; "));
+        z.info("External source note: " + sourceWarnings.join("; "));
       }
       setActiveSubTab("pipeline");
     } catch (err) {
@@ -6074,6 +6037,9 @@ function SuperAdminLeadGenConsole() {
     if (statusFilter !== "ALL" && lead.status !== statusFilter) return !1;
     const vStat = eng.mapLegacyVerificationStatus(lead);
     if (verificationFilter !== "ALL" && vStat !== verificationFilter) return !1;
+    const isExtLead = lead.discoveryOrigin === "EXTERNAL_AI_DISCOVERY" || lead.externalDiscovered === true;
+    if (originFilter === "EXTERNAL" && !isExtLead) return !1;
+    if (originFilter === "PROJECT" && isExtLead) return !1;
     if (sourceFilter !== "ALL" && lead.sourceId !== sourceFilter) return !1;
     if (ownerFilter !== "ALL" && lead.ownerId !== ownerFilter) return !1;
     if (sharingFilter !== "ALL" && !(lead.sharingPreference || "").toLowerCase().includes(sharingFilter.toLowerCase())) return !1;
@@ -6345,13 +6311,15 @@ function SuperAdminLeadGenConsole() {
                       className: "bg-slate-50 dark:bg-slate-950/60 text-[10px] font-black uppercase text-slate-500",
                       children: a.jsxs("tr", {
                         children: [
-                          a.jsx("th", { className: "px-3 py-2.5", children: "Lead Source (9 Platforms)" }),
-                          a.jsx("th", { className: "px-3 py-2.5", children: "Integration Status" }),
-                          a.jsx("th", { className: "px-3 py-2.5 text-center", children: "Leads" }),
-                          a.jsx("th", { className: "px-3 py-2.5 text-center", children: "Verified" }),
-                          a.jsx("th", { className: "px-3 py-2.5 text-center", children: "Converted" }),
-                          a.jsx("th", { className: "px-3 py-2.5 text-center", children: "Conv %" }),
-                          a.jsx("th", { className: "px-3 py-2.5", children: "Access / API Requirement" })
+                          a.jsx("th", { className: "px-3 py-2.5", children: "External Platform (8)" }),
+                          a.jsx("th", { className: "px-3 py-2.5", children: "Connection" }),
+                          a.jsx("th", { className: "px-3 py-2.5", children: "Authorization" }),
+                          a.jsx("th", { className: "px-3 py-2.5", children: "Search Status" }),
+                          a.jsx("th", { className: "px-3 py-2.5", children: "Last Search" }),
+                          a.jsx("th", { className: "px-3 py-2.5 text-center", children: "New" }),
+                          a.jsx("th", { className: "px-3 py-2.5 text-center", children: "Dups" }),
+                          a.jsx("th", { className: "px-3 py-2.5 text-center", children: "Contacts" }),
+                          a.jsx("th", { className: "px-3 py-2.5", children: "Errors / API Requirements" })
                         ]
                       })
                     }),
@@ -6364,15 +6332,35 @@ function SuperAdminLeadGenConsole() {
                           a.jsx("td", {
                             className: "px-3 py-2 whitespace-nowrap",
                             children: a.jsx("span", {
-                              className: Be("px-2 py-0.5 rounded-full text-[9px] font-black uppercase border", sr.canCollectLeads ? "bg-emerald-50 text-emerald-700 border-emerald-200" : sr.authStatus === "MARKET_RESEARCH_ONLY" ? "bg-slate-100 text-slate-600 border-slate-200" : "bg-amber-50 text-amber-700 border-amber-200"),
-                              children: sr.authStatus.replace(/_/g, " ")
+                              className: Be("px-2 py-0.5 rounded-full text-[9px] font-black uppercase border", sr.connectionStatus === "CONNECTED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : sr.connectionStatus === "CONNECTED_RESEARCH_ONLY" || sr.connectionStatus === "RESEARCH_ONLY" ? "bg-sky-50 text-sky-700 border-sky-200" : sr.connectionStatus === "ERROR" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200"),
+                              children: String(sr.connectionStatus || "NOT_CONNECTED").replace(/_/g, " ")
                             })
                           }),
-                          a.jsx("td", { className: "px-3 py-2 text-center font-black text-slate-800 dark:text-slate-100", children: sr.total }),
-                          a.jsx("td", { className: "px-3 py-2 text-center font-bold text-indigo-600 dark:text-indigo-400", children: sr.verified }),
-                          a.jsx("td", { className: "px-3 py-2 text-center font-bold text-emerald-600 dark:text-emerald-400", children: sr.converted }),
-                          a.jsxs("td", { className: "px-3 py-2 text-center font-bold text-slate-700 dark:text-slate-300", children: [sr.conversionRate, "%"] }),
-                          a.jsx("td", { className: "px-3 py-2 text-[11px] text-slate-500 dark:text-slate-400 max-w-xs", children: sr.requirement })
+                          a.jsx("td", {
+                            className: "px-3 py-2 whitespace-nowrap",
+                            children: a.jsx("span", {
+                              className: "text-[10px] font-bold text-slate-700 dark:text-slate-300",
+                              children: String(sr.authStatus || "").replace(/_/g, " ")
+                            })
+                          }),
+                          a.jsx("td", {
+                            className: "px-3 py-2 whitespace-nowrap text-[10px] font-bold text-slate-600 dark:text-slate-300",
+                            children: String(sr.searchStatus || "NOT_RUN_YET").replace(/_/g, " ")
+                          }),
+                          a.jsx("td", {
+                            className: "px-3 py-2 whitespace-nowrap text-[10px] text-slate-500",
+                            children: sr.lastSuccessfulSearch ? new Date(sr.lastSuccessfulSearch).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"
+                          }),
+                          a.jsx("td", { className: "px-3 py-2 text-center font-black text-emerald-600 dark:text-emerald-400", children: sr.newProspectsDiscovered }),
+                          a.jsx("td", { className: "px-3 py-2 text-center font-bold text-amber-600 dark:text-amber-400", children: sr.duplicatesDetected }),
+                          a.jsx("td", { className: "px-3 py-2 text-center font-bold text-indigo-600 dark:text-indigo-400", children: sr.contactDetailsAvailable }),
+                          a.jsxs("td", {
+                            className: "px-3 py-2 text-[10px] max-w-xs space-y-0.5",
+                            children: [
+                              sr.errors && sr.errors.length > 0 && a.jsx("div", { className: "font-bold text-rose-600 dark:text-rose-400", children: "⚠ " + sr.errors[0] }),
+                              a.jsx("div", { className: "text-slate-500 dark:text-slate-400", children: sr.requirement })
+                            ]
+                          })
                         ]
                       }, sr.id))
                     })
@@ -6994,6 +6982,16 @@ function SuperAdminLeadGenConsole() {
                 className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800",
                 children: [
                   a.jsxs("select", {
+                    value: originFilter,
+                    onChange: e => setOriginFilter(e.target.value),
+                    className: "px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer",
+                    children: [
+                      a.jsx("option", { value: "ALL", children: "All Origins (External + Existing)" }),
+                      a.jsx("option", { value: "EXTERNAL", children: "🌐 Externally Discovered Only" }),
+                      a.jsx("option", { value: "PROJECT", children: "📋 Existing Project Leads Only" })
+                    ]
+                  }),
+                  a.jsxs("select", {
                     value: verificationFilter,
                     onChange: e => setVerificationFilter(e.target.value),
                     className: "px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer",
@@ -7107,6 +7105,10 @@ function SuperAdminLeadGenConsole() {
                               a.jsxs("span", {
                                 className: "px-2.5 py-1 bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 text-[10px] font-black rounded-lg flex items-center gap-1",
                                 children: [lead.sourceIcon || "🏢", lead.sourceName || "Portal Lead"]
+                              }),
+                              a.jsx("span", {
+                                className: Be("px-2 py-0.5 rounded-lg text-[9px] font-black border", (lead.discoveryOrigin === "EXTERNAL_AI_DISCOVERY" || lead.externalDiscovered) ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300" : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300"),
+                                children: (lead.discoveryOrigin === "EXTERNAL_AI_DISCOVERY" || lead.externalDiscovered) ? "🌐 External Discovery" : "📋 Existing Project Lead"
                               }),
                               a.jsxs("span", {
                                 className: "px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-black rounded-lg",
