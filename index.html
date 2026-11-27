@@ -4860,6 +4860,345 @@ window.LeadFinderEngine = (() => {
   };
 })();
 
+// ==========================================
+// SUPER ADMIN: THEME MANAGEMENT DASHBOARD (STRIPE, LINEAR & VERCEL INSPIRED)
+// ==========================================
+
+const ThemeIcon = ({ size = 18, className = "" }) => a.jsxs("svg", {
+  width: size,
+  height: size,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: "2",
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+  className,
+  children: [
+    a.jsx("circle", { cx: "13.5", cy: "6.5", r: ".5", fill: "currentColor" }),
+    a.jsx("circle", { cx: "17.5", cy: "10.5", r: ".5", fill: "currentColor" }),
+    a.jsx("circle", { cx: "8.5", cy: "7.5", r: ".5", fill: "currentColor" }),
+    a.jsx("circle", { cx: "6.5", cy: "12.5", r: ".5", fill: "currentColor" }),
+    a.jsx("path", { d: "M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" })
+  ]
+});
+
+window.SRINOOS_THEME_PRESETS = [
+  {
+    id: "linear-obsidian",
+    name: "Linear Obsidian Dark",
+    tag: "Linear Minimalist",
+    mode: "dark",
+    bgColor: "#080b18",
+    cardColor: "#0f172a",
+    primaryColor: "#6366f1",
+    accentColor: "#818cf8",
+    textColor: "#ffffff",
+    mutedTextColor: "#cbd5e1",
+    navColor: "#0b0f19",
+    borderColor: "#1e293b",
+    borderRadius: "16px",
+    description: "Deep obsidian workspace with luminous indigo glow and ultra-crisp typography."
+  },
+  {
+    id: "vercel-midnight",
+    name: "Vercel Midnight Cyber",
+    tag: "Vercel Geist",
+    mode: "dark",
+    bgColor: "#030712",
+    cardColor: "#0b1120",
+    primaryColor: "#06b6d4",
+    accentColor: "#38bdf8",
+    textColor: "#ffffff",
+    mutedTextColor: "#94a3b8",
+    navColor: "#050811",
+    borderColor: "#162032",
+    borderRadius: "14px",
+    description: "Pitch-black developer terminal aesthetic with electric cyan laser accents."
+  },
+  {
+    id: "stripe-royal-navy",
+    name: "Stripe Royal Navy",
+    tag: "Stripe Finance",
+    mode: "dark",
+    bgColor: "#0a0f1d",
+    cardColor: "#111827",
+    primaryColor: "#3b82f6",
+    accentColor: "#60a5fa",
+    textColor: "#ffffff",
+    mutedTextColor: "#94a3b8",
+    navColor: "#0c1322",
+    borderColor: "#1f2937",
+    borderRadius: "16px",
+    description: "Executive deep sapphire navy with high-trust corporate elegance."
+  },
+  {
+    id: "emerald-sovereign",
+    name: "Emerald Sovereign Dark",
+    tag: "Emerald Luxury",
+    mode: "dark",
+    bgColor: "#04130f",
+    cardColor: "#07231b",
+    primaryColor: "#10b981",
+    accentColor: "#34d399",
+    textColor: "#ffffff",
+    mutedTextColor: "#a7f3d0",
+    navColor: "#051a14",
+    borderColor: "#0f3d30",
+    borderRadius: "16px",
+    description: "Rich forest obsidian paired with vibrant jade-emerald accents."
+  },
+  {
+    id: "sunset-velvet-rose",
+    name: "Sunset Velvet Rose",
+    tag: "Velvet Glow",
+    mode: "dark",
+    bgColor: "#0f0914",
+    cardColor: "#1b1122",
+    primaryColor: "#f43f5e",
+    accentColor: "#fb7185",
+    textColor: "#ffffff",
+    mutedTextColor: "#fbcfe8",
+    navColor: "#140c1a",
+    borderColor: "#2e1b38",
+    borderRadius: "18px",
+    description: "Luxurious amethyst-black background with glowing rose-gold highlights."
+  },
+  {
+    id: "stripe-pristine-light",
+    name: "Stripe Pristine Glass",
+    tag: "Stripe Clean",
+    mode: "light",
+    bgColor: "#f8fafc",
+    cardColor: "#ffffff",
+    primaryColor: "#4f46e5",
+    accentColor: "#6366f1",
+    textColor: "#0f172a",
+    mutedTextColor: "#475569",
+    navColor: "#ffffff",
+    borderColor: "#e2e8f0",
+    borderRadius: "16px",
+    description: "Ultra-clean, crisp, high-contrast light theme with rich indigo branding."
+  },
+  {
+    id: "vercel-pure-titanium",
+    name: "Vercel Pure Titanium",
+    tag: "Vercel Mono",
+    mode: "light",
+    bgColor: "#ffffff",
+    cardColor: "#f4f4f5",
+    primaryColor: "#18181b",
+    accentColor: "#27272a",
+    textColor: "#09090b",
+    mutedTextColor: "#52525b",
+    navColor: "#fafafa",
+    borderColor: "#e4e4e7",
+    borderRadius: "12px",
+    description: "Pure architectural minimalism with crisp monochrome slate accents."
+  }
+];
+
+window.getGlobalThemeConfig = () => {
+  try {
+    const dbNotices = Ee?.getState?.()?.allDbNotices || [];
+    const dbTheme = dbNotices.find(n => n.id === "saas-global-theme-config");
+    if (dbTheme && dbTheme.content) {
+      const parsed = JSON.parse(dbTheme.content);
+      if (parsed && parsed.primaryColor) return parsed;
+    }
+  } catch(_) {}
+
+  try {
+    const local = localStorage.getItem("srinoos_global_theme_config");
+    if (local) {
+      const parsed = JSON.parse(local);
+      if (parsed && parsed.primaryColor) return parsed;
+    }
+  } catch(_) {}
+
+  return window.SRINOOS_THEME_PRESETS[0];
+};
+
+window.applyGlobalThemeToDOM = (cfg) => {
+  if (!cfg) return;
+  const isDark = cfg.mode !== "light";
+  const doc = document.documentElement;
+
+  doc.classList.toggle("dark", isDark);
+  doc.classList.toggle("theme-neo-dark", isDark);
+  doc.classList.toggle("theme-glass-light", !isDark);
+  doc.style.colorScheme = isDark ? "dark" : "light";
+
+  const bgColor = cfg.bgColor || (isDark ? "#080b18" : "#f8fafc");
+  const cardColor = cfg.cardColor || (isDark ? "#0f172a" : "#ffffff");
+  const primaryColor = cfg.primaryColor || "#6366f1";
+  const accentColor = cfg.accentColor || "#818cf8";
+  const textColor = cfg.textColor || (isDark ? "#ffffff" : "#0f172a");
+  const mutedTextColor = cfg.mutedTextColor || (isDark ? "#cbd5e1" : "#475569");
+  const navColor = cfg.navColor || (isDark ? "#0b0f19" : "#ffffff");
+  const borderColor = cfg.borderColor || (isDark ? "#1e293b" : "#e2e8f0");
+
+  doc.style.setProperty("--theme-bg", bgColor);
+  doc.style.setProperty("--theme-card-bg", cardColor);
+  doc.style.setProperty("--theme-primary", primaryColor);
+  doc.style.setProperty("--theme-accent", accentColor);
+  doc.style.setProperty("--theme-text", textColor);
+  doc.style.setProperty("--theme-text-muted", mutedTextColor);
+  doc.style.setProperty("--theme-nav-bg", navColor);
+  doc.style.setProperty("--theme-border", borderColor);
+
+  let styleEl = document.getElementById("srinoos-dynamic-global-theme");
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = "srinoos-dynamic-global-theme";
+    document.head.appendChild(styleEl);
+  }
+
+  styleEl.innerHTML = `
+    :root {
+      --theme-bg: ${bgColor} !important;
+      --theme-card-bg: ${cardColor} !important;
+      --theme-primary: ${primaryColor} !important;
+      --theme-accent: ${accentColor} !important;
+      --theme-text: ${textColor} !important;
+      --theme-text-muted: ${mutedTextColor} !important;
+      --theme-nav-bg: ${navColor} !important;
+      --theme-border: ${borderColor} !important;
+    }
+    body, html, #root {
+      background-color: ${bgColor} !important;
+      color: ${textColor} !important;
+    }
+    .min-h-screen {
+      background-color: ${bgColor} !important;
+    }
+    .bg-white, .bg-slate-50, .bg-slate-100\\/70, .bg-slate-100,
+    .dark\\:bg-slate-900, .dark\\:bg-slate-950, .bg-slate-900, .bg-slate-950 {
+      background-color: ${cardColor} !important;
+      border-color: ${borderColor} !important;
+      color: ${textColor} !important;
+    }
+    .border-slate-200, .border-slate-100, .border-slate-800, .border-slate-700, .border-white\\/10 {
+      border-color: ${borderColor} !important;
+    }
+    .app-theme-button-primary,
+    button.bg-indigo-600,
+    button[class*="bg-indigo-600"] {
+      background-color: ${primaryColor} !important;
+      color: #ffffff !important;
+      border-color: ${primaryColor} !important;
+    }
+    input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+    textarea, select {
+      background-color: ${isDark ? cardColor : "#ffffff"} !important;
+      color: ${textColor} !important;
+      border-color: ${borderColor} !important;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: ${primaryColor} !important;
+      outline: 2px solid ${primaryColor}40 !important;
+    }
+    select option, select optgroup {
+      background-color: ${cardColor} !important;
+      color: ${textColor} !important;
+    }
+
+    /* UNIVERSAL HIGH-CONTRAST READABILITY & VISIBILITY STANDARDIZATION */
+    ${isDark ? `
+      h1, h2, h3, h4, h5, h6, .text-slate-900, .text-slate-800, .dark\\:text-white, .dark\\:text-slate-100 {
+        color: #ffffff !important;
+      }
+      .text-slate-400, .text-gray-400, .text-zinc-400, .text-slate-450, .text-slate-550, .text-slate-500, .text-gray-500 {
+        color: #cbd5e1 !important;
+      }
+      .text-slate-300, .text-gray-300, .text-zinc-300, .dark\\:text-slate-300, .dark\\:text-slate-400 {
+        color: #e2e8f0 !important;
+      }
+      .text-slate-600, .text-slate-700 {
+        color: #94a3b8 !important;
+      }
+      th {
+        color: #ffffff !important;
+        font-weight: 800 !important;
+      }
+      td, label {
+        color: #e2e8f0 !important;
+      }
+      ::placeholder {
+        color: #94a3b8 !important;
+        opacity: 1 !important;
+      }
+    ` : `
+      h1, h2, h3, h4, h5, h6, .text-slate-900, .text-slate-800, .dark\\:text-white {
+        color: #0f172a !important;
+      }
+      .text-slate-400, .text-gray-400, .text-zinc-400, .text-slate-450 {
+        color: #475569 !important;
+      }
+      .text-slate-500, .text-gray-500, .text-zinc-500, .text-slate-550 {
+        color: #334155 !important;
+      }
+      .text-slate-300, .text-gray-300, .text-zinc-300 {
+        color: #475569 !important;
+      }
+      .text-slate-200, .text-gray-200 {
+        color: #64748b !important;
+      }
+      th {
+        color: #0f172a !important;
+        font-weight: 800 !important;
+      }
+      td {
+        color: #1e293b !important;
+      }
+      label {
+        color: #1e293b !important;
+        font-weight: 600 !important;
+      }
+      ::placeholder {
+        color: #64748b !important;
+        opacity: 1 !important;
+      }
+    `}
+  `;
+};
+
+window.saveGlobalThemeConfig = async (themeConfig) => {
+  const jsonStr = JSON.stringify(themeConfig);
+  try {
+    localStorage.setItem("srinoos_global_theme_config", jsonStr);
+  } catch(_) {}
+
+  window.applyGlobalThemeToDOM(themeConfig);
+  window.dispatchEvent(new CustomEvent("srinoos_theme_updated", { detail: themeConfig }));
+
+  try {
+    const regN = {
+      id: "saas-global-theme-config",
+      title: "SaaS Global Theme Configuration",
+      date: new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date()),
+      content: jsonStr,
+      owner_id: "acc1"
+    };
+    const curN = Ee.getState().allDbNotices || [];
+    const uNotices = curN.some(x => x.id === "saas-global-theme-config")
+      ? curN.map(x => x.id === "saas-global-theme-config" ? regN : x)
+      : [...curN, regN];
+    if (Ee.getState().setAllDbNotices) Ee.getState().setAllDbNotices(uNotices);
+    else Ee.setState({ allDbNotices: uNotices });
+
+    await we.from("notices").upsert([regN], { onConflict: "id" });
+  } catch(err) {
+    console.warn("Supabase global theme sync error:", err);
+  }
+  return themeConfig;
+};
+
+// Initial theme apply on startup
+try {
+  window.applyGlobalThemeToDOM(window.getGlobalThemeConfig());
+} catch(_) {}
+
 function SuperAdminThemeManagementConsole() {
   const [activeTheme, setActiveTheme] = b.useState(() => window.getGlobalThemeConfig());
   const [previewConfig, setPreviewConfig] = b.useState(() => window.getGlobalThemeConfig());
