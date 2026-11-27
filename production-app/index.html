@@ -4231,6 +4231,205 @@ function PGTenantLeadGenerationHub() {
 // ==========================================
 // SUPER ADMIN: TENANT LEAD GENERATION CONSOLE (UNIFIED AI AGENT)
 // ==========================================
+
+window.LeadFinderEngine = (() => {
+  const VERIFICATION_STATUSES = [
+    { id: "NEW", label: "New", badge: "bg-sky-50 text-sky-700 border-sky-200" },
+    { id: "UNVERIFIED", label: "Unverified", badge: "bg-slate-100 text-slate-600 border-slate-200" },
+    { id: "CONTACT_VERIFIED", label: "Contact Verified", badge: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+    { id: "GENUINE_ENQUIRY", label: "Genuine Enquiry", badge: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    { id: "INTERESTED", label: "Interested", badge: "bg-teal-50 text-teal-700 border-teal-200" },
+    { id: "NOT_INTERESTED", label: "Not Interested", badge: "bg-amber-50 text-amber-700 border-amber-200" },
+    { id: "DUPLICATE", label: "Duplicate", badge: "bg-orange-50 text-orange-700 border-orange-200" },
+    { id: "INVALID", label: "Invalid", badge: "bg-rose-50 text-rose-700 border-rose-200" },
+    { id: "CONVERTED", label: "Converted", badge: "bg-purple-50 text-purple-700 border-purple-200" }
+  ];
+
+  const PLATFORM_CATALOG = [
+    { id: "source-direct", name: "Direct Website & Guest Boarding Enquiries", icon: "🌐", authStatus: "LIVE_AUTHORIZED", canCollectLeads: true, requirement: "Live & connected directly to Srinooscoliving Guest Boarding & Website Enquiry database." },
+    { id: "source-magicbricks", name: "Magicbricks", icon: "🏢", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires Magicbricks Commercial Partner Lead API / Webhook key or authorized partner CSV import." },
+    { id: "source-99acres", name: "99acres", icon: "🏠", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires 99acres Business Partner Lead API / authorized CRM webhook credentials." },
+    { id: "source-housing", name: "Housing.com", icon: "🏘️", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires Housing.com Commercial Partner API / authorized lead sync integration." },
+    { id: "source-justdial", name: "Justdial", icon: "📞", authStatus: "PARTNER_API_REQUIRED", canCollectLeads: false, requirement: "Requires Justdial Paid Lead API / Webhook authorization for verified buyer enquiries." },
+    { id: "source-facebook", name: "Facebook Lead Ads", icon: "📘", authStatus: "ACCOUNT_AUTH_REQUIRED", canCollectLeads: false, requirement: "Requires Meta Graph API Page Access Token & Leadgen Webhook authorization." },
+    { id: "source-instagram", name: "Instagram Lead Ads", icon: "📸", authStatus: "ACCOUNT_AUTH_REQUIRED", canCollectLeads: false, requirement: "Requires Instagram Business Account linked to Meta Lead Ads Webhook." },
+    { id: "source-google", name: "Google Search / Ads Lead Forms", icon: "🔍", authStatus: "ACCOUNT_AUTH_REQUIRED", canCollectLeads: false, requirement: "Requires Google Ads Lead Form Extension Webhook key. Public search results are not direct tenant enquiries." },
+    { id: "source-google-maps", name: "Google Maps & Business Directories", icon: "🗺️", authStatus: "MARKET_RESEARCH_ONLY", canCollectLeads: false, requirement: "Market & competitor property research only — NEVER classified as genuine tenant enquiries." }
+  ];
+
+  const normalizePhone = raw => {
+    const digits = String(raw || "").replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.length === 12 && digits.startsWith("91")) return digits.slice(2);
+    if (digits.length === 11 && digits.startsWith("0")) return digits.slice(1);
+    return digits.length >= 10 ? digits.slice(-10) : "";
+  };
+
+  const normalizeEmail = raw => {
+    const s = String(raw || "").trim().toLowerCase();
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) ? s : "";
+  };
+
+  const normalizeText = raw => String(raw || "").trim().toLowerCase().replace(/\s+/g, " ");
+
+  const mapLegacyVerificationStatus = lead => {
+    if (lead?.verificationStatus && VERIFICATION_STATUSES.some(v => v.id === lead.verificationStatus)) {
+      return lead.verificationStatus;
+    }
+    if (lead?.status === "CONVERTED") return "CONVERTED";
+    if (lead?.status === "DUPLICATE") return "DUPLICATE";
+    if (lead?.status === "INVALID") return "INVALID";
+    if (lead?.status === "NOT_INTERESTED") return "NOT_INTERESTED";
+    if (lead?.status === "VISIT_SCHEDULED" || lead?.status === "TOKEN_PAID") return "INTERESTED";
+    const hasPhone = !!normalizePhone(lead?.phone || lead?.whatsapp);
+    const hasEmail = !!normalizeEmail(lead?.email);
+    const hasEnquiry = !!normalizeText(lead?.originalEnquiry || lead?.notes);
+    if (lead?.sourceAuthorized && (hasPhone || hasEmail) && hasEnquiry) return "CONTACT_VERIFIED";
+    if (!hasPhone && !hasEmail) return "UNVERIFIED";
+    return lead?.status === "NEW" ? "NEW" : "UNVERIFIED";
+  };
+
+  const findDuplicateLead = (candidate, existingLeads) => {
+    const list = Array.isArray(existingLeads) ? existingLeads : [];
+    const cPhone = normalizePhone(candidate?.phone || candidate?.whatsapp);
+    const cWa = normalizePhone(candidate?.whatsapp || candidate?.phone);
+    const cEmail = normalizeEmail(candidate?.email);
+    const cUrl = normalizeText(candidate?.sourceUrl || candidate?.externalRef);
+    const cName = normalizeText(candidate?.tenantName);
+    const cLoc = normalizeText(candidate?.location || candidate?.building);
+    const cEnq = normalizeText(candidate?.originalEnquiry || candidate?.notes);
+
+    for (const ex of list) {
+      if (!ex) continue;
+      if (candidate?.id && ex.id === candidate.id) {
+        return { isDuplicate: true, matchType: "EXACT_ID", matchedLead: ex, reason: "Exact lead ID already exists" };
+      }
+      const ePhone = normalizePhone(ex.phone || ex.whatsapp);
+      const eWa = normalizePhone(ex.whatsapp || ex.phone);
+      if ((cPhone && (cPhone === ePhone || cPhone === eWa)) || (cWa && (cWa === ePhone || cWa === eWa))) {
+        return { isDuplicate: true, matchType: "PHONE_MATCH", matchedLead: ex, reason: "Matched normalized mobile/WhatsApp number (" + (cPhone || cWa) + ")" };
+      }
+      const eEmail = normalizeEmail(ex.email);
+      if (cEmail && eEmail && cEmail === eEmail) {
+        return { isDuplicate: true, matchType: "EMAIL_MATCH", matchedLead: ex, reason: "Matched normalized email (" + cEmail + ")" };
+      }
+      const eUrl = normalizeText(ex.sourceUrl || ex.externalRef);
+      if (cUrl && eUrl && cUrl === eUrl) {
+        return { isDuplicate: true, matchType: "SOURCE_REF_MATCH", matchedLead: ex, reason: "Matched identical source URL/reference" };
+      }
+      const exRefs = Array.isArray(ex.sourceReferences) ? ex.sourceReferences : [];
+      if (cUrl && exRefs.some(r => normalizeText(r?.sourceUrl || r?.externalRef) === cUrl)) {
+        return { isDuplicate: true, matchType: "MULTI_SOURCE_REF_MATCH", matchedLead: ex, reason: "Source reference already linked to existing lead" };
+      }
+      const eName = normalizeText(ex.tenantName);
+      const eLoc = normalizeText(ex.location || ex.building);
+      const eEnq = normalizeText(ex.originalEnquiry || ex.notes);
+      if (cName && eName && cName === eName) {
+        if ((cLoc && eLoc && cLoc === eLoc) || (cEnq && eEnq && (cEnq === eEnq || (cEnq.length > 20 && eEnq.includes(cEnq.slice(0, 20)))))) {
+          return { isDuplicate: true, matchType: "NAME_CONTEXT_MATCH", matchedLead: ex, reason: "Matched same person name + location/enquiry context" };
+        }
+      }
+    }
+    return { isDuplicate: false, matchType: "UNIQUE", matchedLead: null, reason: "No existing duplicate found" };
+  };
+
+  const mergeDuplicateLead = (existingLead, candidate, dupInfo) => {
+    const nowIso = new Date().toISOString();
+    const prevRefs = Array.isArray(existingLead.sourceReferences) && existingLead.sourceReferences.length > 0
+      ? [...existingLead.sourceReferences]
+      : [{
+          sourceId: existingLead.sourceId || "source-unknown",
+          sourceName: existingLead.sourceName || "Original Source",
+          sourceUrl: existingLead.sourceUrl || existingLead.externalRef || "",
+          discoveredAt: existingLead.discoveredAt || existingLead.createdAt || nowIso,
+          enquiryText: existingLead.originalEnquiry || existingLead.notes || ""
+        }];
+    const newRefKey = normalizeText((candidate.sourceId || "") + "|" + (candidate.sourceUrl || candidate.externalRef || candidate.id || ""));
+    const alreadyHasRef = prevRefs.some(r => normalizeText((r.sourceId || "") + "|" + (r.sourceUrl || r.externalRef || "")) === newRefKey);
+    if (!alreadyHasRef && (candidate.sourceId !== existingLead.sourceId || candidate.sourceUrl || candidate.externalRef)) {
+      prevRefs.push({
+        sourceId: candidate.sourceId || "source-direct",
+        sourceName: candidate.sourceName || "Additional Source",
+        sourceUrl: candidate.sourceUrl || candidate.externalRef || "",
+        discoveredAt: candidate.discoveredAt || nowIso,
+        enquiryText: candidate.originalEnquiry || candidate.notes || ""
+      });
+    }
+    // Preserve ALL existing verified data; only fill missing fields if empty
+    return {
+      ...existingLead,
+      phone: existingLead.phone || candidate.phone || "",
+      whatsapp: existingLead.whatsapp || candidate.whatsapp || "",
+      email: existingLead.email || candidate.email || "",
+      location: existingLead.location || candidate.location || "",
+      preferredMoveInDate: existingLead.preferredMoveInDate || candidate.preferredMoveInDate || "",
+      sourceReferences: prevRefs,
+      duplicateCheckResult: "MERGED (" + (dupInfo?.matchType || "DUPLICATE") + ") • " + prevRefs.length + " source ref(s)",
+      lastCheckedAt: nowIso,
+      updatedAt: nowIso
+    };
+  };
+
+  const computeEvidenceScore = lead => {
+    let score = 0;
+    const reasons = [];
+    const enqText = normalizeText(lead?.originalEnquiry || lead?.notes);
+    const hasPgKeywords = /(pg|hostel|room|bed|sharing|coliving|co-living|stay|rent|ac|non-ac|move-in|onboard|deposit)/i.test(enqText) || !!lead?.sharingPreference;
+    if (enqText.length >= 10 && hasPgKeywords) {
+      score += 25;
+      reasons.push("+25 Active PG accommodation enquiry");
+    } else if (enqText.length > 0) {
+      score += 10;
+      reasons.push("+10 Partial enquiry note");
+    }
+
+    const ts = Date.parse(lead?.discoveredAt || lead?.createdAt || "");
+    if (!isNaN(ts)) {
+      const ageDays = (Date.now() - ts) / 86400000;
+      if (ageDays <= 14) { score += 20; reasons.push("+20 Recent enquiry (<=14d)"); }
+      else if (ageDays <= 30) { score += 10; reasons.push("+10 Enquiry within 30d"); }
+    }
+
+    const validPhone = !!normalizePhone(lead?.phone || lead?.whatsapp);
+    const validEmail = !!normalizeEmail(lead?.email);
+    if (validPhone) { score += 10; reasons.push("+10 Valid mobile number"); }
+    if (validEmail) { score += 10; reasons.push("+10 Valid email address"); }
+
+    const hasLoc = !!normalizeText(lead?.location || lead?.building);
+    const hasBudget = Number(lead?.budget) > 0;
+    if (hasLoc) { score += 8; reasons.push("+8 Location specified"); }
+    if (hasBudget) { score += 7; reasons.push("+7 Budget specified"); }
+
+    if (lead?.preferredMoveInDate) { score += 10; reasons.push("+10 Move-in date specified"); }
+
+    const vStat = mapLegacyVerificationStatus(lead);
+    if (vStat === "GENUINE_ENQUIRY" || vStat === "INTERESTED" || vStat === "CONVERTED") {
+      score += 10;
+      reasons.push("+10 Confirmed / verified interest");
+    } else if (vStat === "CONTACT_VERIFIED") {
+      score += 5;
+      reasons.push("+5 Contact verified");
+    } else if (vStat === "INVALID" || vStat === "NOT_INTERESTED" || vStat === "DUPLICATE") {
+      score = Math.min(score, 20);
+      reasons.push("Capped due to " + vStat + " status");
+    }
+
+    return { score: Math.max(0, Math.min(100, score)), reasons };
+  };
+
+  return {
+    VERIFICATION_STATUSES,
+    PLATFORM_CATALOG,
+    normalizePhone,
+    normalizeEmail,
+    normalizeText,
+    mapLegacyVerificationStatus,
+    findDuplicateLead,
+    mergeDuplicateLead,
+    computeEvidenceScore
+  };
+})();
+
 function SuperAdminLeadGenConsole() {
   const [leadData, setLeadData] = b.useState(() => window.getLeadGenData());
   const [activeSubTab, setActiveSubTab] = b.useState("agent"); // "agent", "intelligence", "pipeline", "campaigns", "matrix", "sources"
@@ -4251,8 +4450,14 @@ function SuperAdminLeadGenConsole() {
   // Search & Filter State
   const [searchQuery, setSearchQuery] = b.useState("");
   const [statusFilter, setStatusFilter] = b.useState("ALL");
+  const [verificationFilter, setVerificationFilter] = b.useState("ALL");
   const [sourceFilter, setSourceFilter] = b.useState("ALL");
   const [ownerFilter, setOwnerFilter] = b.useState("ALL");
+  const [sharingFilter, setSharingFilter] = b.useState("ALL");
+  const [maxBudgetFilter, setMaxBudgetFilter] = b.useState("");
+  const [moveInFilter, setMoveInFilter] = b.useState("");
+  const [recentDaysFilter, setRecentDaysFilter] = b.useState("ALL");
+  const [onlyNewLeads, setOnlyNewLeads] = b.useState(!0);
 
   // Convert to Resident Modal State
   const [convertingLead, setConvertingLead] = b.useState(null);
@@ -4420,162 +4625,164 @@ function SuperAdminLeadGenConsole() {
     const secondOwner = ownerAccounts[1]?.id || defaultOwner;
     const secondOwnerName = ownerAccounts[1]?.name || defaultOwnerName;
 
-    const newEnquiries = [
-      {
-        id: "lead-" + Date.now() + "-1",
-        ownerId: defaultOwner,
-        ownerName: defaultOwnerName,
-        sourceId: "source-magicbricks",
-        sourceName: "Magicbricks Direct",
-        sourceIcon: "🏢",
-        tenantName: "Rahul Sharma",
-        phone: "+91 98234 11204",
-        whatsapp: "+91 98234 11204",
-        email: "rahul.sharma@infosys.com",
-        sharingPreference: agentSharing === "Any" ? "Double Sharing" : agentSharing,
-        budgetRange: "₹" + maxRentVal.toLocaleString("en-IN") + " / mo",
-        budget: maxRentVal,
-        preferredMoveInDate: new Date(Date.now() + 86400000 * 2).toISOString().substring(0, 10),
-        profession: isBangalore ? "Software Engineer at Infosys" : isPune ? "QA Analyst at TCS Hinjewadi" : "Software Developer",
-        gender: "Male",
-        foodPreference: "Veg & Non-Veg",
-        notes: "Transferred from Mumbai. Moving in 2 days. Needs quiet study desk, AC, and high-speed WiFi for remote calls.",
-        status: "NEW",
-        intentScore: 96,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        convertedTenantId: null
-      },
-      {
-        id: "lead-" + Date.now() + "-2",
-        ownerId: secondOwner,
-        ownerName: secondOwnerName,
-        sourceId: "source-99acres",
-        sourceName: "99acres Prime",
-        sourceIcon: "🏠",
-        tenantName: "Ananya Sen",
-        phone: "+91 97112 54320",
-        whatsapp: "+91 97112 54320",
-        email: "ananya.sen@wipro.com",
-        sharingPreference: "Single Room",
-        budgetRange: "₹" + Math.round(maxRentVal * 1.35).toLocaleString("en-IN") + " / mo",
-        budget: Math.round(maxRentVal * 1.35),
-        preferredMoveInDate: new Date(Date.now() + 86400000 * 3).toISOString().substring(0, 10),
-        profession: "Product Designer at Wipro",
-        gender: "Female",
-        foodPreference: "Veg Only",
-        notes: "Looking for gated security, biometric entry, and clean South Indian home food.",
-        status: "CONTACTED",
-        intentScore: 94,
-        createdAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-        updatedAt: new Date().toISOString(),
-        convertedTenantId: null
-      },
-      {
-        id: "lead-" + Date.now() + "-3",
-        ownerId: defaultOwner,
-        ownerName: defaultOwnerName,
-        sourceId: "source-housing",
-        sourceName: "Housing.com Assured",
-        sourceIcon: "🏡",
-        tenantName: "Rohan Deshmukh",
-        phone: "+91 99345 88712",
-        whatsapp: "+91 99345 88712",
-        email: "rohan.d@deloitte.com",
-        sharingPreference: "Double Sharing",
-        budgetRange: "₹" + Math.round(maxRentVal * 0.9).toLocaleString("en-IN") + " / mo",
-        budget: Math.round(maxRentVal * 0.9),
-        preferredMoveInDate: new Date(Date.now() + 86400000 * 4).toISOString().substring(0, 10),
-        profession: "Consultant at Deloitte",
-        gender: "Male",
-        foodPreference: "Veg & Non-Veg",
-        notes: "Ready to pay token online immediately if room photos match reality.",
-        status: "VISIT_SCHEDULED",
-        intentScore: 98,
-        createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
-        updatedAt: new Date().toISOString(),
-        convertedTenantId: null
-      },
-      {
-        id: "lead-" + Date.now() + "-4",
-        ownerId: secondOwner,
-        ownerName: secondOwnerName,
-        sourceId: "source-google",
-        sourceName: "Google Search Ads & Maps",
-        sourceIcon: "🔍",
-        tenantName: "Priya Sundaram",
-        phone: "+91 96123 45678",
-        whatsapp: "+91 96123 45678",
-        email: "priya.sundaram@google.com",
-        sharingPreference: "Single Room",
-        budgetRange: "₹" + Math.round(maxRentVal * 1.4).toLocaleString("en-IN") + " / mo",
-        budget: Math.round(maxRentVal * 1.4),
-        preferredMoveInDate: new Date(Date.now() + 86400000 * 5).toISOString().substring(0, 10),
-        profession: "Cloud Engineer at Google",
-        gender: "Female",
-        foodPreference: "Veg Only",
-        notes: "Urgent move-in within 48 hours. Requires high-speed Wi-Fi, attached balcony, and covered parking.",
-        status: "NEW",
-        intentScore: 97,
-        createdAt: new Date(Date.now() - 3600000 * 18).toISOString(),
-        updatedAt: new Date().toISOString(),
-        convertedTenantId: null
-      },
-      {
-        id: "lead-" + Date.now() + "-5",
-        ownerId: defaultOwner,
-        ownerName: defaultOwnerName,
-        sourceId: "source-meta",
-        sourceName: "Meta & Instagram Ads",
-        sourceIcon: "📱",
-        tenantName: "Sneha Kulkarni",
-        phone: "+91 98451 22334",
-        whatsapp: "+91 98451 22334",
-        email: "sneha.k@cognizant.com",
-        sharingPreference: "Double Sharing",
-        budgetRange: "₹" + Math.round(maxRentVal * 0.85).toLocaleString("en-IN") + " / mo",
-        budget: Math.round(maxRentVal * 0.85),
-        preferredMoveInDate: new Date(Date.now() + 86400000 * 6).toISOString().substring(0, 10),
-        profession: "Associate at Cognizant",
-        gender: "Female",
-        foodPreference: "Veg & Non-Veg",
-        notes: "Clicked Instagram Reel ad. Inquired about washing machine facilities and power backup.",
-        status: "CONTACTED",
-        intentScore: 92,
-        createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-        updatedAt: new Date().toISOString(),
-        convertedTenantId: null
-      },
-      {
-        id: "lead-" + Date.now() + "-6",
-        ownerId: secondOwner,
-        ownerName: secondOwnerName,
-        sourceId: "source-qr-flyers",
-        sourceName: "Printable Smart QR Flyers",
-        sourceIcon: "📷",
-        tenantName: "Venkatesh Iyer",
-        phone: "+91 97412 88990",
-        whatsapp: "+91 97412 88990",
-        email: "venkatesh.i@tcs.com",
-        sharingPreference: "Triple Sharing",
-        budgetRange: "₹" + Math.round(maxRentVal * 0.65).toLocaleString("en-IN") + " / mo",
-        budget: Math.round(maxRentVal * 0.65),
-        preferredMoveInDate: new Date(Date.now() + 86400000 * 1).toISOString().substring(0, 10),
-        profession: "Systems Engineer at TCS",
-        gender: "Male",
-        foodPreference: "Veg & Non-Veg",
-        notes: "Scanned QR code flyer at bus stop near tech park. Wants immediate spot visit this evening.",
-        status: "NEW",
-        intentScore: 95,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        convertedTenantId: null
-      }
-    ];
+    const eng = window.LeadFinderEngine;
+    const nowIso = new Date().toISOString();
+    const discoveredCandidates = [];
 
-    const existingIds = new Set(newEnquiries.map(l => l.id));
-    const preservedLeads = (leadData.leads || []).filter(l => !existingIds.has(l.id));
-    const updatedLeads = [...newEnquiries, ...preservedLeads];
+    // 1. Pull REAL, AUTHORIZED live enquiries from Direct Website / Guest Boarding (guest-reg-*)
+    try {
+      const regRows = window.fetchGuestRegsSafe ? await window.fetchGuestRegsSafe(!0) : [];
+      const statusMap = window.getGuestRegStatusMap ? window.getGuestRegStatusMap(Ee.getState().allDbNotices) : {};
+      (regRows || []).forEach(nt => {
+        if (!nt || !nt.content) return;
+        try {
+          const p = typeof nt.content === "string" ? JSON.parse(nt.content) : nt.content;
+          if (!p || p.type !== "GUEST_REGISTRATION_APP") return;
+          const stOv = statusMap[nt.id] || {};
+          const effStatus = stOv.status || p.status || "PENDING_SUPER_ADMIN";
+          if (effStatus === "REJECTED") return;
+          const bldLoc = stOv.building || p.building || p.buildingId || "";
+          const hasValidPhone = !!eng.normalizePhone(p.phone);
+          const hasValidEmail = !!eng.normalizeEmail(p.email);
+          const vStat = effStatus === "APPROVED"
+            ? "CONVERTED"
+            : (hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED";
+          const cand = {
+            id: "lead-real-" + nt.id,
+            externalRef: nt.id,
+            ownerId: stOv.ownerId || p.ownerId || defaultOwner,
+            ownerName: stOv.ownerName || p.ownerName || defaultOwnerName,
+            sourceId: "source-direct",
+            sourceName: p.source === "SAAS_GUEST_BOARDING" ? "Direct Website (Guest Boarding)" : "Direct Website (Owner Invite Link)",
+            sourceIcon: "🌐",
+            sourceUrl: window.location.origin + "/?ref=" + encodeURIComponent(nt.id),
+            sourceAuthorized: true,
+            tenantName: (p.name || "").trim(),
+            phone: (p.phone || "").trim(),
+            whatsapp: (p.phone || "").trim(),
+            email: (p.email || "").trim(),
+            location: bldLoc,
+            sharingPreference: p.sharingPreference || "",
+            budgetRange: p.roomPreference ? (p.roomPreference + " • " + (p.sharingPreference || "Sharing")) : "",
+            budget: 0,
+            preferredMoveInDate: p.joinDate || "",
+            profession: (p.companyCollege || "").trim(),
+            gender: "",
+            foodPreference: p.foodPreference || "",
+            originalEnquiry: "Submitted Guest Boarding form for " + (p.roomPreference || "PG") + " (" + (p.sharingPreference || "Sharing") + ", " + (p.foodPreference || "Food") + ")" + (bldLoc ? " at " + bldLoc : "") + ".",
+            notes: "Verified live Guest Boarding submission (" + nt.id + ")." + (p.addressCurrent ? " Address: " + p.addressCurrent : ""),
+            status: effStatus === "APPROVED" ? "CONVERTED" : "NEW",
+            verificationStatus: vStat,
+            discoveredAt: p.submittedAt || nowIso,
+            lastCheckedAt: nowIso,
+            createdAt: p.submittedAt || nowIso,
+            updatedAt: nowIso,
+            convertedTenantId: null
+          };
+          const ev = eng.computeEvidenceScore(cand);
+          cand.intentScore = ev.score;
+          cand.scoreBreakdown = ev.reasons;
+          discoveredCandidates.push(cand);
+        } catch (_) {}
+      });
+    } catch (err) {
+      console.warn("Direct Guest Boarding scan warning:", err);
+    }
+
+    // 2. Pull REAL live enquiries from Supabase onboarding_apps table
+    try {
+      const { data: obRows } = await we.from("onboarding_apps").select("*").limit(200);
+      (obRows || []).forEach(ob => {
+        if (!ob || !ob.name) return;
+        const hasValidPhone = !!eng.normalizePhone(ob.phone);
+        const hasValidEmail = !!eng.normalizeEmail(ob.email);
+        const cand = {
+          id: "lead-ob-" + ob.id,
+          externalRef: String(ob.id),
+          ownerId: ob.owner_id || defaultOwner,
+          ownerName: defaultOwnerName,
+          sourceId: "source-direct",
+          sourceName: "Direct Website Onboarding",
+          sourceIcon: "🌐",
+          sourceUrl: window.location.origin + "/?onboarding=" + encodeURIComponent(ob.id),
+          sourceAuthorized: true,
+          tenantName: String(ob.name || "").trim(),
+          phone: String(ob.phone || "").trim(),
+          whatsapp: String(ob.phone || "").trim(),
+          email: String(ob.email || "").trim(),
+          location: String(ob.building || "").trim(),
+          sharingPreference: ob.sharing_preference || "",
+          budgetRange: ob.room_preference ? (ob.room_preference + " • " + (ob.sharing_preference || "")) : "",
+          budget: 0,
+          preferredMoveInDate: "",
+          profession: String(ob.company_college || "").trim(),
+          gender: "",
+          foodPreference: ob.food_preference || "",
+          originalEnquiry: "Direct onboarding application: " + (ob.room_preference || "PG") + " / " + (ob.sharing_preference || "Sharing"),
+          notes: "Live onboarding_apps record (" + ob.id + ").",
+          status: ob.status === "APPROVED" ? "CONVERTED" : "NEW",
+          verificationStatus: ob.status === "APPROVED" ? "CONVERTED" : ((hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED"),
+          discoveredAt: ob.created_at || nowIso,
+          lastCheckedAt: nowIso,
+          createdAt: ob.created_at || nowIso,
+          updatedAt: nowIso,
+          convertedTenantId: null
+        };
+        const ev = eng.computeEvidenceScore(cand);
+        cand.intentScore = ev.score;
+        cand.scoreBreakdown = ev.reasons;
+        discoveredCandidates.push(cand);
+      });
+    } catch (_) {}
+
+    // 3. Apply strict duplicate detection & merge without deleting any existing leads!
+    let updatedLeads = [...(leadData.leads || [])];
+    let addedCount = 0;
+    let duplicatesMergedCount = 0;
+    let filteredOutCount = 0;
+    const cityTerm = eng.normalizeText(agentAddress);
+    const sharingTerm = eng.normalizeText(agentSharing);
+    const cutoffMs = recentDaysFilter !== "ALL" ? (Date.now() - Number(recentDaysFilter) * 86400000) : 0;
+
+    for (const cand of discoveredCandidates) {
+      if (cutoffMs > 0) {
+        const cTs = Date.parse(cand.discoveredAt || "");
+        if (!isNaN(cTs) && cTs < cutoffMs) { filteredOutCount++; continue; }
+      }
+      if (sharingTerm && sharingTerm !== "all" && cand.sharingPreference && !eng.normalizeText(cand.sharingPreference).includes(sharingTerm.split(" ")[0])) {
+        // Still allow if user didn't strictly filter sharing
+      }
+      const dup = eng.findDuplicateLead(cand, updatedLeads);
+      if (dup.isDuplicate && dup.matchedLead) {
+        duplicatesMergedCount++;
+        const merged = eng.mergeDuplicateLead(dup.matchedLead, cand, dup);
+        const ev = eng.computeEvidenceScore(merged);
+        merged.intentScore = ev.score;
+        merged.scoreBreakdown = ev.reasons;
+        updatedLeads = updatedLeads.map(l => l.id === dup.matchedLead.id ? merged : l);
+      } else {
+        cand.duplicateCheckResult = "UNIQUE (Verified New)";
+        cand.sourceReferences = [{
+          sourceId: cand.sourceId,
+          sourceName: cand.sourceName,
+          sourceUrl: cand.sourceUrl || "",
+          discoveredAt: cand.discoveredAt,
+          enquiryText: cand.originalEnquiry || ""
+        }];
+        updatedLeads = [cand, ...updatedLeads];
+        addedCount++;
+      }
+    }
+
+    const lastRunSummary = {
+      ranAt: nowIso,
+      queryLocation: agentAddress,
+      addedCount,
+      duplicatesMergedCount,
+      filteredOutCount,
+      authorizedSourcesChecked: ["Direct Website Enquiries & Guest Boarding"],
+      unavailableSources: eng.PLATFORM_CATALOG.filter(p => !p.canCollectLeads).map(p => ({ name: p.name, status: p.authStatus, requirement: p.requirement }))
+    };
 
     const updatedConfig = {
       address: agentAddress,
@@ -4583,35 +4790,29 @@ function SuperAdminLeadGenConsole() {
       budget: targetBudgetVal,
       sharing: agentSharing,
       maxRent: maxRentVal,
-      status: "ACTIVE",
-      lastRunAt: new Date().toISOString()
-    };
-
-    const updatedAnalytics = {
-      totalEnquiriesDiscovered: updatedLeads.length,
-      verifiedLeadsCount: updatedLeads.filter(l => (l.intentScore || 90) >= 92).length,
-      conversionRate: "32.4%",
-      projectedMonthlyRevenue: updatedLeads.reduce((acc, curr) => acc + (Number(curr.budget) || maxRentVal), 0),
-      averageCpl: "₹172"
+      status: "READY",
+      lastRunAt: nowIso,
+      lastRunSummary
     };
 
     const updatedAgentData = {
+      leads: updatedLeads,
       agentConfig: updatedConfig,
-      marketResearch: research,
-      campaigns: campaignGen,
-      analytics: updatedAnalytics
+      campaigns: generatedCampaigns
     };
 
-    await window.saveLeadGenData(leadData.sources, updatedLeads, leadData.ownerPermissions, updatedAgentData);
-    setLeadData({
+    await saveData({
       sources: leadData.sources,
-      leads: updatedLeads,
       ownerPermissions: leadData.ownerPermissions,
       ...updatedAgentData
     });
 
     setIsAgentRunning(!1);
-    z.success("🎉 AI Agent completed mission for " + agentAddress + "! Found " + newEnquiries.length + " verified enquiries and generated campaigns.");
+    if (addedCount > 0) {
+      z.success("Discovery complete: " + addedCount + " genuine new enquiry(s) added, " + duplicatesMergedCount + " duplicate(s) skipped/merged. External portals require Partner API authorization.");
+    } else {
+      z.success("Discovery complete: 0 new uncollected enquiries (" + duplicatesMergedCount + " already collected & deduplicated). No fictional leads generated.");
+    }
     setActiveSubTab("pipeline");
   };
 
@@ -5114,61 +5315,123 @@ function SuperAdminLeadGenConsole() {
   // Ingest Lead Submit
   const handleIngestLeadSubmit = async e => {
     e.preventDefault();
-    if (!ingestName.trim() || !ingestPhone.trim()) {
-      z.error("Name and Phone are required.");
+    if (!ingestName.trim()) {
+      z.error("Applicant Name is required.");
       return;
     }
-    const srcObj = leadData.sources.find(s => s.id === ingestSourceId) || leadData.sources[0] || { id: "source-manual", name: "Manual", icon: "📝" };
+    const eng = window.LeadFinderEngine;
+    const srcObj = leadData.sources.find(s => s.id === ingestSourceId) || leadData.sources[0] || { id: "source-direct", name: "Direct Website Enquiry", icon: "🌐" };
     const targetOwner = ownerAccounts.find(a => a.id === ingestOwnerId) || { id: ingestOwnerId, name: "Owner" };
+    const nowIso = new Date().toISOString();
+    const cleanPhone = (ingestPhone || "").trim();
+    const cleanEmail = (ingestEmail || "").trim();
+    const hasContact = !!eng.normalizePhone(cleanPhone) || !!eng.normalizeEmail(cleanEmail);
+    const vStatus = hasContact ? "CONTACT_VERIFIED" : "UNVERIFIED";
 
-    const newLead = {
+    const candidateLead = {
       id: "lead-" + Date.now(),
       ownerId: targetOwner.id,
       ownerName: targetOwner.name || targetOwner.email,
       sourceId: srcObj.id,
       sourceName: srcObj.name,
-      sourceIcon: srcObj.icon || "🏢",
+      sourceIcon: srcObj.icon || "🌐",
+      sourceUrl: "",
+      sourceAuthorized: true,
       tenantName: ingestName.trim(),
-      phone: ingestPhone.trim(),
-      whatsapp: (ingestWhatsapp || ingestPhone).trim(),
-      email: ingestEmail.trim(),
+      phone: cleanPhone,
+      whatsapp: (ingestWhatsapp || cleanPhone).trim(),
+      email: cleanEmail,
+      location: leadData.agentConfig?.address || "",
       sharingPreference: ingestSharing,
-      budgetRange: ingestBudget,
-      budget: Number((ingestBudget.match(/\d+/g) || [9500]).join("")) || 9500,
-      preferredMoveInDate: ingestMoveInDate,
-      profession: ingestProfession.trim(),
-      gender: ingestGender,
-      foodPreference: "Veg & Non-Veg",
-      notes: ingestNotes.trim(),
-      status: ingestStatus,
-      intentScore: 95,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      budgetRange: ingestBudget ? ("₹" + Number(ingestBudget).toLocaleString("en-IN") + " / mo") : "",
+      budget: Number(ingestBudget) || 0,
+      preferredMoveInDate: ingestMoveIn || "",
+      profession: (ingestProfession || "").trim(),
+      gender: ingestGender || "",
+      foodPreference: ingestFood || "",
+      originalEnquiry: (ingestNotes || "").trim(),
+      notes: (ingestNotes || "").trim(),
+      status: "NEW",
+      verificationStatus: vStatus,
+      discoveredAt: nowIso,
+      lastCheckedAt: nowIso,
+      createdAt: nowIso,
+      updatedAt: nowIso,
       convertedTenantId: null
     };
 
-    const updatedLeads = [newLead, ...(leadData.leads || [])];
-    await window.saveLeadGenData(leadData.sources, updatedLeads, leadData.ownerPermissions);
-    setLeadData(prev => ({ ...prev, leads: updatedLeads }));
+    const dup = eng.findDuplicateLead(candidateLead, leadData.leads || []);
+    let updatedLeads;
+    if (dup.isDuplicate && dup.matchedLead) {
+      const merged = eng.mergeDuplicateLead(dup.matchedLead, candidateLead, dup);
+      const ev = eng.computeEvidenceScore(merged);
+      merged.intentScore = ev.score;
+      merged.scoreBreakdown = ev.reasons;
+      updatedLeads = (leadData.leads || []).map(l => l.id === dup.matchedLead.id ? merged : l);
+      await saveData({ ...leadData, leads: updatedLeads });
+      setIsIngestModalOpen(!1);
+      z.success("Duplicate detected (" + dup.reason + "). Merged source reference into existing lead without creating a duplicate!");
+      return;
+    }
+
+    const ev = eng.computeEvidenceScore(candidateLead);
+    candidateLead.intentScore = ev.score;
+    candidateLead.scoreBreakdown = ev.reasons;
+    candidateLead.duplicateCheckResult = "UNIQUE (Verified New)";
+    candidateLead.sourceReferences = [{
+      sourceId: candidateLead.sourceId,
+      sourceName: candidateLead.sourceName,
+      sourceUrl: "",
+      discoveredAt: nowIso,
+      enquiryText: candidateLead.originalEnquiry
+    }];
+
+    updatedLeads = [candidateLead, ...(leadData.leads || [])];
+    await saveData({ ...leadData, leads: updatedLeads });
     setIsIngestModalOpen(!1);
-    setIngestName("");
-    setIngestPhone("+91 ");
-    setIngestNotes("");
-    z.success("Lead enquiry ingested and assigned successfully!");
+    setIngestName(""); setIngestPhone(""); setIngestWhatsapp(""); setIngestEmail(""); setIngestBudget(""); setIngestProfession(""); setIngestNotes("");
+    z.success(hasContact ? "Enquiry saved with Contact Verified status!" : "Enquiry saved as Unverified (no contact details invented).");
+  };
+
+  const handleUpdateVerificationStatus = async (leadId, newVStatus) => {
+    const eng = window.LeadFinderEngine;
+    const nowIso = new Date().toISOString();
+    const updatedLeads = (leadData.leads || []).map(l => {
+      if (l.id !== leadId) return l;
+      const next = { ...l, verificationStatus: newVStatus, lastCheckedAt: nowIso, updatedAt: nowIso };
+      const ev = eng.computeEvidenceScore(next);
+      next.intentScore = ev.score;
+      next.scoreBreakdown = ev.reasons;
+      return next;
+    });
+    await saveData({ ...leadData, leads: updatedLeads });
+    z.success("Verification status updated to " + newVStatus.replace(/_/g, " ") + ".");
   };
 
   // Filtered Leads
   const filteredLeads = (leadData.leads || []).filter(lead => {
+    const eng = window.LeadFinderEngine;
     if (statusFilter !== "ALL" && lead.status !== statusFilter) return !1;
+    const vStat = eng.mapLegacyVerificationStatus(lead);
+    if (verificationFilter !== "ALL" && vStat !== verificationFilter) return !1;
     if (sourceFilter !== "ALL" && lead.sourceId !== sourceFilter) return !1;
     if (ownerFilter !== "ALL" && lead.ownerId !== ownerFilter) return !1;
+    if (sharingFilter !== "ALL" && !(lead.sharingPreference || "").toLowerCase().includes(sharingFilter.toLowerCase())) return !1;
+    if (maxBudgetFilter && Number(maxBudgetFilter) > 0 && Number(lead.budget) > 0 && Number(lead.budget) > Number(maxBudgetFilter)) return !1;
+    if (moveInFilter && lead.preferredMoveInDate && lead.preferredMoveInDate > moveInFilter) return !1;
+    if (recentDaysFilter !== "ALL") {
+      const ts = Date.parse(lead.discoveredAt || lead.createdAt || "");
+      if (!isNaN(ts) && (Date.now() - ts) > Number(recentDaysFilter) * 86400000) return !1;
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchName = (lead.tenantName || "").toLowerCase().includes(q);
       const matchPhone = (lead.phone || "").toLowerCase().includes(q);
-      const matchNotes = (lead.notes || "").toLowerCase().includes(q);
+      const matchEmail = (lead.email || "").toLowerCase().includes(q);
+      const matchLoc = (lead.location || "").toLowerCase().includes(q);
+      const matchNotes = (lead.notes || lead.originalEnquiry || "").toLowerCase().includes(q);
       const matchProf = (lead.profession || "").toLowerCase().includes(q);
-      if (!matchName && !matchPhone && !matchNotes && !matchProf) return !1;
+      if (!matchName && !matchPhone && !matchEmail && !matchLoc && !matchNotes && !matchProf) return !1;
     }
     return !0;
   });
@@ -5869,7 +6132,7 @@ function SuperAdminLeadGenConsole() {
                   a.jsxs("div", {
                     children: [
                       a.jsxs("h3", { className: "text-base font-black text-slate-900 dark:text-white flex items-center gap-2", children: [a.jsx(TargetIcon, { size: 18, className: "text-purple-600" }), "Live Tenant Enquiries Vault (", filteredLeads.length, " Records)"] }),
-                      a.jsx("p", { className: "text-xs text-slate-500 font-medium mt-0.5", children: "Discovered from Magicbricks, 99acres, Housing.com, Google Ads, Meta Ads & Smart QR Flyers." })
+                      a.jsx("p", { className: "text-xs text-slate-500 font-medium mt-0.5", children: "Evidence-backed tenant enquiries with strict duplicate detection, verification status, and honest source transparency (zero fabricated contacts)." })
                     ]
                   }),
                   a.jsxs("div", {
@@ -5900,7 +6163,7 @@ function SuperAdminLeadGenConsole() {
                     type: "text",
                     value: searchQuery,
                     onChange: e => setSearchQuery(e.target.value),
-                    placeholder: "Search by tenant name, phone, company, college...",
+                    placeholder: "Search name, city/location, phone, email, enquiry...",
                     className: "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-purple-600"
                   }),
                   a.jsxs("select", {
@@ -5933,6 +6196,76 @@ function SuperAdminLeadGenConsole() {
                       a.jsx("option", { value: "ALL", children: "All Assigned Owners" }),
                       ownerAccounts.map(o => a.jsx("option", { key: o.id, value: o.id, children: "🏢 " + (o.name || o.email) }))
                     ]
+                  })
+                ]
+              })
+            ,
+
+              // Precision Search & Verification Filters Row
+              a.jsxs("div", {
+                className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800",
+                children: [
+                  a.jsxs("select", {
+                    value: verificationFilter,
+                    onChange: e => setVerificationFilter(e.target.value),
+                    className: "px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer",
+                    children: [
+                      a.jsx("option", { value: "ALL", children: "All Verification Statuses" }),
+                      window.LeadFinderEngine.VERIFICATION_STATUSES.map(vs => a.jsx("option", { value: vs.id, children: vs.label }, vs.id))
+                    ]
+                  }),
+                  a.jsxs("select", {
+                    value: sharingFilter,
+                    onChange: e => setSharingFilter(e.target.value),
+                    className: "px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer",
+                    children: [
+                      a.jsx("option", { value: "ALL", children: "All Accommodation Types" }),
+                      a.jsx("option", { value: "Single", children: "Single Room" }),
+                      a.jsx("option", { value: "Double", children: "Double Sharing" }),
+                      a.jsx("option", { value: "Triple", children: "Triple Sharing" })
+                    ]
+                  }),
+                  a.jsx("input", {
+                    type: "number",
+                    value: maxBudgetFilter,
+                    onChange: e => setMaxBudgetFilter(e.target.value),
+                    placeholder: "Max Monthly Budget (₹)",
+                    className: "px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none"
+                  }),
+                  a.jsx("input", {
+                    type: "date",
+                    value: moveInFilter,
+                    onChange: e => setMoveInFilter(e.target.value),
+                    title: "Move-in on or before date",
+                    className: "px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none"
+                  }),
+                  a.jsxs("select", {
+                    value: recentDaysFilter,
+                    onChange: e => setRecentDaysFilter(e.target.value),
+                    className: "px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer",
+                    children: [
+                      a.jsx("option", { value: "ALL", children: "Date Range: All Time" }),
+                      a.jsx("option", { value: "7", children: "Recent: Last 7 Days" }),
+                      a.jsx("option", { value: "14", children: "Recent: Last 14 Days" }),
+                      a.jsx("option", { value: "30", children: "Recent: Last 30 Days" })
+                    ]
+                  })
+                ]
+              }),
+              leadData.agentConfig?.lastRunSummary && a.jsxs("div", {
+                className: "p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-300 flex flex-wrap items-center justify-between gap-2",
+                children: [
+                  a.jsxs("span", {
+                    children: [
+                      a.jsx("strong", { className: "text-slate-900 dark:text-white", children: "Last Discovery Audit: " }),
+                      leadData.agentConfig.lastRunSummary.addedCount, " genuine new • ",
+                      leadData.agentConfig.lastRunSummary.duplicatesMergedCount, " duplicate(s) skipped/merged • ",
+                      "Checked live Direct Website & Guest Boarding records."
+                    ]
+                  }),
+                  a.jsx("span", {
+                    className: "text-[10px] font-bold text-amber-700 dark:text-amber-400",
+                    children: "⚠️ External portals (Magicbricks, 99acres, Housing, Justdial, Meta, Google Ads) require Partner API auth • Google Maps = Market Research only"
                   })
                 ]
               })
@@ -5985,7 +6318,30 @@ function SuperAdminLeadGenConsole() {
                               }),
                               a.jsxs("span", {
                                 className: "px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-black rounded-lg",
-                                children: [lead.intentScore || 95, "% Intent"]
+                                title: (lead.scoreBreakdown || window.LeadFinderEngine.computeEvidenceScore(lead).reasons).join(" | "),
+                                children: [window.LeadFinderEngine.computeEvidenceScore(lead).score, "/100 Evidence Score"]
+                              }),
+                              a.jsxs("select", {
+                                value: window.LeadFinderEngine.mapLegacyVerificationStatus(lead),
+                                onChange: ev => handleUpdateVerificationStatus(lead.id, ev.target.value),
+                                title: "Lead Verification Status (saved to Supabase)",
+                                className: "px-2 py-0.5 rounded-lg text-[10px] font-black border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 cursor-pointer outline-none",
+                                children: window.LeadFinderEngine.VERIFICATION_STATUSES.map(vs => a.jsx("option", { value: vs.id, children: vs.label }, vs.id))
+                              }),
+                              a.jsx("span", {
+                                className: "px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[9px] font-bold rounded-lg",
+                                children: lead.duplicateCheckResult || "Unique"
+                              }),
+                              a.jsxs("span", {
+                                className: "text-[9px] text-slate-400 font-semibold",
+                                children: ["Discovered: ", (lead.discoveredAt || lead.createdAt) ? new Date(lead.discoveredAt || lead.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—", lead.lastCheckedAt ? (" • Checked: " + new Date(lead.lastCheckedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })) : ""]
+                              }),
+                              lead.sourceUrl && a.jsx("a", {
+                                href: lead.sourceUrl,
+                                target: "_blank",
+                                rel: "noopener noreferrer",
+                                className: "text-[9px] font-bold text-indigo-600 hover:underline",
+                                children: "Source Ref ↗"
                               })
                             ]
                           }),
@@ -6478,6 +6834,33 @@ function SuperAdminLeadGenConsole() {
                 onClick: openAddSource,
                 className: "px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer border-none shadow-md shadow-purple-600/20",
                 children: [a.jsx("span", { children: "+" }), "Add New Channel"]
+              })
+            ]
+          }),
+
+          // Platform Integration & Authorization Transparency Matrix
+          a.jsxs("div", {
+            className: "p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3",
+            children: [
+              a.jsx("h4", { className: "text-xs font-black uppercase tracking-widest text-slate-500", children: "Official Source Authorization & Availability Status (No Fabricated Leads)" }),
+              a.jsx("div", {
+                className: "grid grid-cols-1 md:grid-cols-3 gap-3",
+                children: window.LeadFinderEngine.PLATFORM_CATALOG.map(pl => a.jsxs("div", {
+                  className: "p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 text-left",
+                  children: [
+                    a.jsxs("div", {
+                      className: "flex items-center justify-between gap-2",
+                      children: [
+                        a.jsxs("span", { className: "text-xs font-black text-slate-900 dark:text-white", children: [pl.icon, " ", pl.name] }),
+                        a.jsx("span", {
+                          className: Be("px-2 py-0.5 rounded-full text-[9px] font-black uppercase border", pl.authStatus === "LIVE_AUTHORIZED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : pl.authStatus === "MARKET_RESEARCH_ONLY" ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-amber-50 text-amber-700 border-amber-200"),
+                          children: pl.authStatus.replace(/_/g, " ")
+                        })
+                      ]
+                    }),
+                    a.jsx("p", { className: "text-[10px] text-slate-500 dark:text-slate-400 leading-snug", children: pl.requirement })
+                  ]
+                }, pl.id))
               })
             ]
           }),
