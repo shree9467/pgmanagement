@@ -4432,6 +4432,22 @@ window.LeadFinderEngine = (() => {
 
 function SuperAdminLeadGenConsole() {
   const [leadData, setLeadData] = b.useState(() => window.getLeadGenData());
+  const saveData = async (nextData) => {
+    const merged = { ...leadData, ...(nextData || {}) };
+    await window.saveLeadGenData(
+      merged.sources,
+      merged.leads,
+      merged.ownerPermissions,
+      {
+        agentConfig: merged.agentConfig,
+        marketResearch: merged.marketResearch,
+        campaigns: merged.campaigns,
+        analytics: merged.analytics
+      }
+    );
+    setLeadData(merged);
+    return merged;
+  };
   const [activeSubTab, setActiveSubTab] = b.useState("agent"); // "agent", "intelligence", "pipeline", "campaigns", "matrix", "sources"
 
   // Mission Launcher Form State
