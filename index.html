@@ -4476,13 +4476,40 @@ function SuperAdminLeadGenConsole() {
   const [onlyNewLeads, setOnlyNewLeads] = b.useState(!0);
   const agentRunIdRef = b.useRef(0);
   const [agentError, setAgentError] = b.useState("");
+  const [missionMonitor, setMissionMonitor] = b.useState(() => {
+    const ls = leadData?.agentConfig?.lastRunSummary;
+    return {
+      status: ls ? "COMPLETED" : "IDLE",
+      totalSources: window.LeadFinderEngine.PLATFORM_CATALOG.length,
+      connectedSources: window.LeadFinderEngine.PLATFORM_CATALOG.filter(p => p.canCollectLeads).length,
+      sourcesProcessed: ls ? (ls.authorizedSourcesChecked?.length || 1) : 0,
+      sourcesFailed: ls ? (ls.sourceWarnings?.length || 0) : 0,
+      totalTasks: 5,
+      completedTasks: ls ? ["prep", "guest_reg", "onboarding", "dedup", "save"] : [],
+      failedTasks: ls?.sourceWarnings || [],
+      newlyDiscovered: ls?.addedCount || 0,
+      duplicatesDetected: ls?.duplicatesMergedCount || 0,
+      unverifiedLeads: (leadData?.leads || []).filter(l => window.LeadFinderEngine.mapLegacyVerificationStatus(l) === "UNVERIFIED").length,
+      progress: ls ? 100 : 0,
+      failureReason: "",
+      lastRunAt: ls?.ranAt || ""
+    };
+  });
+  const completedTasksRef = b.useRef(new Set());
+  const cachedCandsRef = b.useRef([]);
+
   const stopAiLeadFinderAgent = () => {
     agentRunIdRef.current += 1;
     setIsAgentRunning(!1);
-    setAgentProgress(0);
-    setAgentStep(0);
+    setMissionMonitor(prev => ({ ...prev, status: "PAUSED", failureReason: "Paused by Super Admin — click Resume to continue without repeating completed tasks." }));
+    z.info("Lead discovery paused. Click Resume to continue or Restart to run fresh without duplicates.");
+  };
+
+  const restartAiLeadFinderAgent = () => {
+    completedTasksRef.current = new Set();
+    cachedCandsRef.current = [];
     setAgentError("");
-    z.info("Lead discovery stopped. You can restart safely anytime without creating duplicates.");
+    runAiLeadFinderAgent({ resume: false });
   };
 
   // Convert to Resident Modal State
@@ -4537,8 +4564,13 @@ function SuperAdminLeadGenConsole() {
   }, []);
 
   // Run AI Tenant Lead Finder & Marketing Agent
-  const runAiLeadFinderAgent = async () => {
+  const runAiLeadFinderAgent = async (opts) => {
     if (isAgentRunning) return;
+    const isResume = !!(opts && opts.resume);
+    if (!isResume) {
+      completedTasksRef.current = new Set();
+      cachedCandsRef.current = [];
+    }
     const myRunId = agentRunIdRef.current + 1;
     agentRunIdRef.current = myRunId;
     const isCancelled = () => agentRunIdRef.current !== myRunId;
@@ -4565,7 +4597,20 @@ function SuperAdminLeadGenConsole() {
     setAgentError("");
     setAgentStep(1);
     setAgentProgress(15);
-    setAgentStatusText("Step 1/5: Preparing search criteria & generating AI marketing campaign assets...");
+    setAgentStatusText(isResume ? "Resuming discovery from last incomplete task..." : "Step 1/5: Preparing search criteria & generating AI marketing campaign assets...");
+    setMissionMonitor(prev => ({
+      ...prev,
+      status: "RUNNING",
+      totalSources: window.LeadFinderEngine.PLATFORM_CATALOG.length,
+      connectedSources: window.LeadFinderEngine.PLATFORM_CATALOG.filter(p => p.canCollectLeads).length,
+      sourcesProcessed: isResume ? prev.sourcesProcessed : 0,
+      sourcesFailed: isResume ? prev.sourcesFailed : 0,
+      totalTasks: 5,
+      completedTasks: Array.from(completedTasksRef.current),
+      failedTasks: [],
+      progress: 15,
+      failureReason: ""
+    }));
 
     try {
       const isBangalore = /bangalore|bengaluru|koramangala|whitefield|indiranagar|electronic city/i.test(agentAddress);
@@ -4662,12 +4707,18 @@ function SuperAdminLeadGenConsole() {
       const discoveredCandidates = [];
       const sourceWarnings = [];
 
-      // Stage 2: Query Direct Website / Guest Boarding (cached-first + 6s timeout + 1 retry, never blocks on 7.4MB blob!)
+      completedTasksRef.current.add("prep");
+      let sourcesOk = 0;
+      if (isResume && cachedCandsRef.current.length > 0) {
+        discoveredCandidates.push(...cachedCandsRef.current);
+      }
+
+      // Stage 2: Query Direct Website / Guest Boarding (skipped if already completed before Pause/Resume!)
       setAgentStep(2);
       setAgentProgress(40);
-      setAgentStatusText("Step 2/5: Scanning authorized Direct Website & Guest Boarding enquiries...");
+      setAgentStatusText(completedTasksRef.current.has("guest_reg") ? "Step 2/5: Guest Boarding already completed (skipping repeat)..." : "Step 2/5: Scanning authorized Direct Website & Guest Boarding enquiries...");
 
-      try {
+      if (!completedTasksRef.current.has("guest_reg")) try {
         const regRows = await withTimeoutRetry(
           "Direct Guest Boarding",
           () => window.fetchGuestRegsSafe ? window.fetchGuestRegsSafe(!1) : [],
@@ -4726,8 +4777,11 @@ function SuperAdminLeadGenConsole() {
             cand.intentScore = ev.score;
             cand.scoreBreakdown = ev.reasons;
             discoveredCandidates.push(cand);
+            cachedCandsRef.current.push(cand);
           } catch (_) {}
         });
+        completedTasksRef.current.add("guest_reg");
+        sourcesOk++;
       } catch (err) {
         if (err?.message === "CANCELLED") return;
         console.warn("Guest Boarding source skipped due to timeout/error:", err);
@@ -4736,12 +4790,12 @@ function SuperAdminLeadGenConsole() {
 
       if (isCancelled()) return;
 
-      // Stage 3: Query Supabase onboarding_apps (independent 6s timeout + 1 retry)
+      // Stage 3: Query Supabase onboarding_apps (skipped if already completed before Pause/Resume!)
       setAgentStep(3);
       setAgentProgress(65);
-      setAgentStatusText("Step 3/5: Checking live website onboarding enquiries...");
+      setAgentStatusText(completedTasksRef.current.has("onboarding") ? "Step 3/5: Website Onboarding already completed (skipping repeat)..." : "Step 3/5: Checking live website onboarding enquiries...");
 
-      try {
+      if (!completedTasksRef.current.has("onboarding")) try {
         const obRes = await withTimeoutRetry(
           "Website Onboarding",
           () => we.from("onboarding_apps").select("*").limit(200),
@@ -4790,7 +4844,10 @@ function SuperAdminLeadGenConsole() {
           cand.intentScore = ev.score;
           cand.scoreBreakdown = ev.reasons;
           discoveredCandidates.push(cand);
+          cachedCandsRef.current.push(cand);
         });
+        completedTasksRef.current.add("onboarding");
+        sourcesOk++;
       } catch (err) {
         if (err?.message === "CANCELLED") return;
         console.warn("Onboarding apps source skipped due to timeout/error:", err);
@@ -4873,7 +4930,7 @@ function SuperAdminLeadGenConsole() {
           ownerPermissions: leadData.ownerPermissions,
           leads: updatedLeads,
           agentConfig: updatedConfig,
-          campaigns: generatedCampaigns
+          campaigns: campaignGen
         }),
         8000,
         1
@@ -4881,6 +4938,25 @@ function SuperAdminLeadGenConsole() {
 
       if (isCancelled()) return;
 
+      completedTasksRef.current.add("dedup");
+      completedTasksRef.current.add("save");
+      const unverifiedCount = updatedLeads.filter(l => eng.mapLegacyVerificationStatus(l) === "UNVERIFIED").length;
+      setMissionMonitor({
+        status: sourceWarnings.length > 0 ? "COMPLETED_WITH_WARNINGS" : "COMPLETED",
+        totalSources: eng.PLATFORM_CATALOG.length,
+        connectedSources: eng.PLATFORM_CATALOG.filter(p => p.canCollectLeads).length,
+        sourcesProcessed: sourcesOk || 1,
+        sourcesFailed: sourceWarnings.length,
+        totalTasks: 5,
+        completedTasks: Array.from(completedTasksRef.current),
+        failedTasks: sourceWarnings,
+        newlyDiscovered: addedCount,
+        duplicatesDetected: duplicatesMergedCount,
+        unverifiedLeads: unverifiedCount,
+        progress: 100,
+        failureReason: sourceWarnings.length > 0 ? sourceWarnings.join(" | ") : "",
+        lastRunAt: nowIso
+      });
       setAgentProgress(100);
       setAgentStatusText("Completed! " + addedCount + " new enquiry(s) added, " + duplicatesMergedCount + " duplicate(s) skipped/merged.");
       await new Promise(r => setTimeout(r, 250));
@@ -4898,8 +4974,16 @@ function SuperAdminLeadGenConsole() {
     } catch (err) {
       if (err?.message !== "CANCELLED") {
         console.error("AI Lead Finder error:", err);
-        setAgentError(err?.message || "Lead discovery encountered an error.");
-        z.error("Lead discovery stopped: " + (err?.message || "Please retry."));
+        const errMsg = err?.message || "Lead discovery encountered an error.";
+        setAgentError(errMsg);
+        setMissionMonitor(prev => ({
+          ...prev,
+          status: "FAILED",
+          completedTasks: Array.from(completedTasksRef.current),
+          failedTasks: [...(prev.failedTasks || []), errMsg],
+          failureReason: errMsg
+        }));
+        z.error("Lead discovery error: " + errMsg);
       }
     } finally {
       if (agentRunIdRef.current === myRunId) {
@@ -5686,6 +5770,52 @@ function SuperAdminLeadGenConsole() {
       activeSubTab === "agent" && a.jsxs("div", {
         className: "space-y-6",
         children: [
+          // Live Execution Monitor & Controls (Stop / Resume / Restart)
+          a.jsxs("div", {
+            className: "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm space-y-4 text-left",
+            children: [
+              a.jsxs("div", {
+                className: "flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3",
+                children: [
+                  a.jsxs("div", {
+                    className: "flex items-center gap-2.5 flex-wrap",
+                    children: [
+                      a.jsx("h4", { className: "font-black text-sm text-slate-900 dark:text-white", children: "📡 Discovery Execution Monitor" }),
+                      a.jsx("span", {
+                        className: Be("px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border", missionMonitor.status === "COMPLETED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : missionMonitor.status === "RUNNING" ? "bg-indigo-50 text-indigo-700 border-indigo-200 animate-pulse" : missionMonitor.status === "FAILED" ? "bg-rose-50 text-rose-700 border-rose-200" : missionMonitor.status === "PAUSED" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-600 border-slate-200"),
+                        children: missionMonitor.status.replace(/_/g, " ")
+                      }),
+                      a.jsxs("span", { className: "text-[11px] font-bold text-slate-500", children: ["Progress: ", missionMonitor.progress, "%"] })
+                    ]
+                  }),
+                  a.jsxs("div", {
+                    className: "flex flex-wrap items-center gap-2",
+                    children: [
+                      isAgentRunning && a.jsx("button", { type: "button", onClick: stopAiLeadFinderAgent, className: "px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-black cursor-pointer", children: "⏹ Stop" }),
+                      !isAgentRunning && (missionMonitor.status === "PAUSED" || missionMonitor.status === "FAILED") && a.jsx("button", { type: "button", onClick: () => runAiLeadFinderAgent({ resume: true }), className: "px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black cursor-pointer border-none", children: "▶ Resume" }),
+                      !isAgentRunning && a.jsx("button", { type: "button", onClick: restartAiLeadFinderAgent, className: "px-3 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-indigo-600 text-white rounded-xl text-xs font-black cursor-pointer border-none", children: "↻ Restart Discovery" })
+                    ]
+                  })
+                ]
+              }),
+              a.jsxs("div", {
+                className: "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs",
+                children: [
+                  a.jsxs("div", { className: "p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800", children: [a.jsx("p", { className: "text-[9px] font-black uppercase text-slate-400", children: "Sources Connected" }), a.jsxs("p", { className: "font-black text-slate-900 dark:text-white mt-0.5", children: [missionMonitor.connectedSources, " / ", missionMonitor.totalSources] })] }),
+                  a.jsxs("div", { className: "p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800", children: [a.jsx("p", { className: "text-[9px] font-black uppercase text-slate-400", children: "Processed / Failed" }), a.jsxs("p", { className: "font-black text-slate-900 dark:text-white mt-0.5", children: [missionMonitor.sourcesProcessed, " ok / ", missionMonitor.sourcesFailed, " fail"] })] }),
+                  a.jsxs("div", { className: "p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800", children: [a.jsx("p", { className: "text-[9px] font-black uppercase text-slate-400", children: "Tasks Completed" }), a.jsxs("p", { className: "font-black text-indigo-600 dark:text-indigo-400 mt-0.5", children: [missionMonitor.completedTasks.length, " / ", missionMonitor.totalTasks] })] }),
+                  a.jsxs("div", { className: "p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800", children: [a.jsx("p", { className: "text-[9px] font-black uppercase text-slate-400", children: "New Genuine Leads" }), a.jsx("p", { className: "font-black text-emerald-600 mt-0.5", children: missionMonitor.newlyDiscovered })] }),
+                  a.jsxs("div", { className: "p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800", children: [a.jsx("p", { className: "text-[9px] font-black uppercase text-slate-400", children: "Duplicates Skipped" }), a.jsx("p", { className: "font-black text-amber-600 mt-0.5", children: missionMonitor.duplicatesDetected })] }),
+                  a.jsxs("div", { className: "p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800", children: [a.jsx("p", { className: "text-[9px] font-black uppercase text-slate-400", children: "Unverified Leads" }), a.jsx("p", { className: "font-black text-slate-600 dark:text-slate-300 mt-0.5", children: missionMonitor.unverifiedLeads })] })
+                ]
+              }),
+              (agentError || missionMonitor.failureReason) && a.jsxs("div", {
+                className: "p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-xs font-bold text-rose-700 dark:text-rose-300",
+                children: ["⚠️ Status Detail: ", agentError || missionMonitor.failureReason]
+              })
+            ]
+          }),
+
           // Mission Launcher Box
           a.jsxs("div", {
             className: "bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-900/40 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6",
