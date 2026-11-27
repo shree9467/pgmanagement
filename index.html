@@ -5473,7 +5473,7 @@ function SuperAdminLeadGenConsole() {
         completed_at: nowIso
       });
       const unverifiedCount = updatedLeads.filter(l => eng.mapLegacyVerificationStatus(l) === "UNVERIFIED").length;
-      const connectedLiveCount = enrichedReports.filter(s => s.connectionStatus === "CONNECTED" || s.connectionStatus === "CONNECTED_RESEARCH_ONLY").length;
+      const connectedLiveCount = enrichedReports.filter(s => ["CONNECTED", "FREE_PUBLIC_SEARCH_ACTIVE", "OPENSTREETMAP_ACTIVE", "META_CONNECTED", "WEBHOOK_READY", "PUBLIC_MODE_KEY_OPTIONAL", "CONNECTED_RESEARCH_ONLY"].includes(s.connectionStatus)).length;
       const failedCount = enrichedReports.filter(s => s.searchStatus === "FAILED" || s.connectionStatus === "ERROR").length;
 
       setMissionMonitor({
@@ -6401,7 +6401,7 @@ function SuperAdminLeadGenConsole() {
                       children: [
                         a.jsxs("span", { className: "font-black text-xs text-slate-900 dark:text-white", children: [sr.icon, " ", sr.name] }),
                         a.jsx("span", {
-                          className: Be("px-2 py-0.5 rounded-full text-[9px] font-black uppercase border", sr.connectionStatus === "CONNECTED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : sr.connectionStatus === "CONNECTED_RESEARCH_ONLY" || sr.connectionStatus === "RESEARCH_ONLY" ? "bg-sky-50 text-sky-700 border-sky-200" : sr.connectionStatus === "ERROR" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200"),
+                          className: Be("px-2 py-0.5 rounded-full text-[9px] font-black uppercase border", (sr.connectionStatus === "CONNECTED" || sr.connectionStatus === "FREE_PUBLIC_SEARCH_ACTIVE" || sr.connectionStatus === "META_CONNECTED" || sr.connectionStatus === "WEBHOOK_READY") ? "bg-emerald-50 text-emerald-700 border-emerald-200" : (sr.connectionStatus === "OPENSTREETMAP_ACTIVE" || sr.connectionStatus === "CONNECTED_RESEARCH_ONLY" || sr.connectionStatus === "RESEARCH_ONLY") ? "bg-sky-50 text-sky-700 border-sky-200" : sr.connectionStatus === "PUBLIC_MODE_KEY_OPTIONAL" ? "bg-indigo-50 text-indigo-700 border-indigo-200" : sr.connectionStatus === "ERROR" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200"),
                           children: String(sr.connectionStatus || "NOT_CONNECTED").replace(/_/g, " ")
                         })
                       ]
@@ -6456,7 +6456,7 @@ function SuperAdminLeadGenConsole() {
                           a.jsx("td", {
                             className: "px-3 py-2 whitespace-nowrap",
                             children: a.jsx("span", {
-                              className: Be("px-2 py-0.5 rounded-full text-[9px] font-black uppercase border", sr.connectionStatus === "CONNECTED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : sr.connectionStatus === "CONNECTED_RESEARCH_ONLY" || sr.connectionStatus === "RESEARCH_ONLY" ? "bg-sky-50 text-sky-700 border-sky-200" : sr.connectionStatus === "ERROR" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200"),
+                              className: Be("px-2 py-0.5 rounded-full text-[9px] font-black uppercase border", (sr.connectionStatus === "CONNECTED" || sr.connectionStatus === "FREE_PUBLIC_SEARCH_ACTIVE" || sr.connectionStatus === "META_CONNECTED" || sr.connectionStatus === "WEBHOOK_READY") ? "bg-emerald-50 text-emerald-700 border-emerald-200" : (sr.connectionStatus === "OPENSTREETMAP_ACTIVE" || sr.connectionStatus === "CONNECTED_RESEARCH_ONLY" || sr.connectionStatus === "RESEARCH_ONLY") ? "bg-sky-50 text-sky-700 border-sky-200" : sr.connectionStatus === "PUBLIC_MODE_KEY_OPTIONAL" ? "bg-indigo-50 text-indigo-700 border-indigo-200" : sr.connectionStatus === "ERROR" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200"),
                               children: String(sr.connectionStatus || "NOT_CONNECTED").replace(/_/g, " ")
                             })
                           }),

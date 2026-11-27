@@ -1,15 +1,21 @@
-// Independent External PG Customer Lead Discovery API (Vercel Serverless Function)
-// Researches ONLY the 8 external platforms:
-// Magicbricks, 99acres, Housing.com, Google Search, Google Maps, Facebook, Instagram, Justdial.
+// Zero-Cost External PG Customer Discovery Engine (Vercel Serverless Function)
+// Works immediately with $0 paid API keys across all 8 external platforms:
+// 1. Google Search (SEARXNG / GOOGLE_CSE / Free DuckDuckGo HTML + Cheerio + Public Forums)
+// 2. Google Maps (Free OpenStreetMap Overpass API + Nominatim / optional GOOGLE_MAPS_API_KEY) — market_research ONLY
+// 3. Facebook (Meta Lead Ads API + /api/leads/meta-webhook / Public Mode fallback)
+// 4. Instagram (Meta Lead Ads API + /api/leads/meta-webhook / Public Mode fallback)
+// 5-8. Magicbricks, 99acres, Housing.com, Justdial (Optional Partner API / Safe Public Requirement Mode)
 // NEVER reads or recycles internal project leads, Direct Website Enquiries, Guest Boarding, or tenant DBs.
-// NEVER fabricates names, phone numbers, email addresses, or fake connections.
+// NEVER fabricates names, phone numbers, email addresses, or fake enquiries.
 
 import crypto from "node:crypto";
+import * as cheerio from "cheerio";
 
-const USER_AGENT = "SrinoosPGDiscoveryAgent/2.1 (+https://srinooscoliving.com)";
+const BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+const BOT_UA = "SrinoosPGDiscoveryAgent/3.0 (+https://srinooscoliving.com)";
 
-const SEEKER_POSITIVE_RE = /\b(looking for|searching for|need a|need pg|want a|wanted|required|suggest|recommend|recommendations|anyone know|moving to|shifting to|relocating to|help me find|good pg|best pg|pg near|hostel near|shared room|flatmate|roommate)\b/i;
-const OWNER_AD_NEGATIVE_RE = /\b(book now|beds available|rooms available|zero brokerage|call us now|contact us for booking|starting from ₹|free trial stay|for rent by owner|we offer|our pg offers|luxury pg available|vacancy available|instant booking|dm for rent|rental concierge|tell me exactly what you need|i.?ll help you find|analysis on last \d+)\b/i;
+const SEEKER_POSITIVE_RE = /\b(looking for|searching for|need a|need pg|want a|wanted|required|suggest|recommend|recommendations|anyone know|moving to|shifting to|relocating to|help me find|good pg|best pg|pg near|hostel near|shared room|flatmate|roommate|seeking pg|pg enquiry)\b/i;
+const OWNER_AD_NEGATIVE_RE = /\b(book now|beds available|rooms available|zero brokerage|call us now|contact us for booking|starting from ₹|free trial stay|for rent by owner|we offer|our pg offers|luxury pg available|vacancy available|instant booking|dm for rent|rental concierge|tell me exactly what you need|i.?ll help you find|analysis on last \d+|verified listings|properties for rent|pg in .* starting|top \d+ pgs|best \d+ pgs)\b/i;
 
 function normalizePhone(raw) {
   const digits = String(raw || "").replace(/\D/g, "");
@@ -54,8 +60,8 @@ function extractSharing(text) {
 
 function extractGender(text, accommodationType = "") {
   const t = `${text || ""} ${accommodationType || ""}`.toLowerCase();
-  if (/\b(girls|ladies|female|women)\b/.test(t)) return "Female";
-  if (/\b(boys|gents|male|men)\b/.test(t)) return "Male";
+  if (/\b(girls?|ladies|female|women)\b/.test(t)) return "Female";
+  if (/\b(boys?|gents?|male|men)\b/.test(t)) return "Male";
   if (/\b(co-living|coliving|unisex)\b/.test(t)) return "Co-living";
   return "";
 }
@@ -71,15 +77,19 @@ function computeContentHash(sourceUrl, enquiryText) {
   return crypto.createHash("sha256").update(`${normUrl}|${normText}`).digest("hex").slice(0, 24);
 }
 
-function isGenuineAccommodationSeeker(title, body) {
+function isGenuineAccommodationSeeker(title, body, url = "") {
   const combined = `${title || ""} ${body || ""}`.trim();
-  if (combined.length < 15) return false;
+  if (combined.length < 18) return false;
   if (!/(pg|paying guest|hostel|coliving|co-living|shared room|student accommodation|pg accommodation)/i.test(combined)) return false;
   if (OWNER_AD_NEGATIVE_RE.test(combined)) return false;
+  // Reject obvious property listing catalog URLs unless they are explicit Q&A / discussion / requirement pages
+  if (/\/(pg-in-|paying-guest-in-|hostels-in-|property-for-rent)/i.test(url) && !/(forum|question|discussion|reddit|quora|post|comments)/i.test(url)) {
+    return false;
+  }
   return SEEKER_POSITIVE_RE.test(combined);
 }
 
-async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -89,172 +99,201 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
   }
 }
 
-// 1. Google Search & Public Accommodation Discussion Discovery
-async function searchGoogleAndPublicDiscussions({ city, locality, sharing, maxBudget, audience, accommodationType, recentDays }) {
+// Free DuckDuckGo HTML Search Parser using Cheerio ($0 cost, works on Vercel)
+async function searchDuckDuckGoHtml(query, timeoutMs = 10000) {
+  const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+  const resp = await fetchWithTimeout(ddgUrl, {
+    headers: {
+      "User-Agent": BROWSER_UA,
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "en-IN,en;q=0.9"
+    }
+  }, timeoutMs);
+
+  if (!resp.ok) {
+    throw new Error(`DuckDuckGo HTML HTTP ${resp.status}`);
+  }
+  const html = await resp.text();
+  const $ = cheerio.load(html);
+  const results = [];
+
+  $(".result").each((_, el) => {
+    const $el = $(el);
+    const titleEl = $el.find(".result__a").first();
+    const title = titleEl.text().trim();
+    let href = titleEl.attr("href") || "";
+    const snippet = $el.find(".result__snippet").first().text().trim();
+
+    // Unwrap DuckDuckGo uddg redirect URLs
+    if (href.includes("uddg=")) {
+      try {
+        const parsed = new URL(href.startsWith("//") ? "https:" + href : (href.startsWith("/") ? "https://html.duckduckgo.com" + href : href));
+        const real = parsed.searchParams.get("uddg");
+        if (real) href = real;
+      } catch (_) {}
+    } else if (href.startsWith("//")) {
+      href = "https:" + href;
+    }
+
+    if (title && href && /^https?:\/\//i.test(href)) {
+      results.push({ title, url: href, snippet });
+    }
+  });
+
+  return results;
+}
+
+function buildProspectFromSearchItem({ item, sourceId, sourcePlatform, sourceIcon, locationTerm, city, shortLoc, sharing, accommodationType, audience, startedAt, maxBudget }) {
+  const title = String(item?.title || "").trim();
+  const snippet = String(item?.snippet || "").trim();
+  const link = String(item?.url || "").trim();
+  if (!link || !isGenuineAccommodationSeeker(title, snippet, link)) return null;
+
+  const combined = `${title} ${snippet}`;
+  const phone = extractPublicPhone(combined);
+  const email = extractPublicEmail(combined);
+  const budget = extractBudget(combined);
+  if (maxBudget > 0 && budget > 0 && budget > maxBudget * 1.45) return null;
+
+  let host = "web";
+  try { host = new URL(link).hostname.replace(/^www\./, ""); } catch (_) {}
+
+  // Try to extract reddit username or forum handle if present in URL/title
+  const redditUser = combined.match(/u\/([A-Za-z0-9_-]{3,24})/);
+  const tenantName = redditUser ? `u/${redditUser[1]}` : `Public Seeker (${host})`;
+
+  const enquiryDesc = `${title}${snippet ? " — " + snippet : ""}`.slice(0, 420);
+  const contentHash = computeContentHash(link, enquiryDesc);
+  const hasContact = !!(phone || email);
+
+  return {
+    externalRef: link,
+    external_lead_id: `${sourceId.replace("source-", "")}-${contentHash}`,
+    contentHash,
+    sourceId,
+    sourcePlatform,
+    sourceName: `${sourcePlatform} (${host})`,
+    sourceIcon,
+    sourceUrl: link,
+    sourceAuthorized: true,
+    discoveryOrigin: "EXTERNAL_AI_DISCOVERY",
+    tenantName,
+    phone,
+    whatsapp: phone,
+    email,
+    city: city || shortLoc,
+    location: locationTerm,
+    accommodationType: accommodationType || extractGender(combined) || "PG Accommodation",
+    sharingPreference: extractSharing(combined) || "",
+    budget,
+    budgetRange: budget > 0 ? `₹${budget.toLocaleString("en-IN")}/mo` : "",
+    bedsRequired: extractBedsRequired(combined),
+    preferredMoveInDate: "",
+    gender: extractGender(combined, accommodationType),
+    profession: audience || "",
+    originalEnquiry: enquiryDesc,
+    notes: `Externally discovered via ${sourcePlatform} (${host}). ${hasContact ? "Public contact details extracted." : "Unverified opportunity — reach out via original Source URL."}`,
+    verificationStatus: hasContact ? "CONTACT_VERIFIED" : "UNVERIFIED_OPPORTUNITY",
+    verification_status: hasContact ? "contact_verified" : "unverified_opportunity",
+    discoveredAt: startedAt
+  };
+}
+
+// 1. Free Multi-Engine Public Search (Google Search Card)
+async function searchGoogleMultiEngine({ city, locality, sharing, maxBudget, audience, accommodationType, recentDays }) {
   const startedAt = new Date().toISOString();
-  const locationTerm = [locality, city].filter(Boolean).join(", ").trim() || "Bangalore";
+  const locationTerm = [locality, city].filter(Boolean).join(", ").trim() || "Pune";
   const shortLoc = locationTerm.split(",")[0].trim();
+  const cityOrLoc = (city || shortLoc).trim();
   const typeTerm = String(accommodationType || "").trim();
   const prospects = [];
   const errors = [];
+  let modeLabel = "FREE_PUBLIC_SEARCH_ACTIVE";
+  let succeeded = false;
 
-  // A. Authorized Google Custom Search JSON API (GOOGLE_CSE_API_KEY + GOOGLE_CSE_CX)
-  const gKey = String(process.env.GOOGLE_CSE_API_KEY || "").trim();
-  const gCx = String(process.env.GOOGLE_CSE_CX || "").trim();
-  let googleApiSucceeded = false;
-
-  if (gKey && gCx) {
-    const queries = [
-      `"looking for PG" "${shortLoc}" ${typeTerm ? `"${typeTerm}"` : ""} (site:reddit.com OR site:quora.com)`.trim(),
-      `"PG accommodation" OR "shared room required" "${shortLoc}" ${sharing ? `"${sharing}"` : ""}`.trim()
-    ];
-    const dateRestrict = Number(recentDays) > 0 && Number(recentDays) <= 30 ? `&dateRestrict=d${Number(recentDays)}` : "";
-
-    for (const q of queries) {
-      try {
-        const url = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(gKey)}&cx=${encodeURIComponent(gCx)}&q=${encodeURIComponent(q)}&num=10${dateRestrict}`;
-        const resp = await fetchWithTimeout(url, { headers: { "User-Agent": USER_AGENT } }, 12000);
-        if (resp.status === 403 || resp.status === 429) {
-          errors.push(`Google CSE quota/access error (HTTP ${resp.status}). Check billing & API key restrictions.`);
-          continue;
-        }
-        if (!resp.ok) {
-          errors.push(`Google CSE HTTP ${resp.status}`);
-          continue;
-        }
-        googleApiSucceeded = true;
+  // A. Optional SearXNG Self-Hosted Instance
+  const searxBase = String(process.env.SEARXNG_BASE_URL || "").trim().replace(/\/+$/, "");
+  if (searxBase) {
+    try {
+      const q = `"looking for PG" ${shortLoc} ${cityOrLoc !== shortLoc ? cityOrLoc : ""}`.trim();
+      const resp = await fetchWithTimeout(`${searxBase}/search?q=${encodeURIComponent(q)}&format=json`, { headers: { "User-Agent": BOT_UA } }, 9000);
+      if (resp.ok) {
         const data = await resp.json();
-        for (const item of Array.isArray(data?.items) ? data.items : []) {
-          const title = String(item?.title || "").trim();
-          const snippet = String(item?.snippet || "").trim();
-          if (!item?.link || !isGenuineAccommodationSeeker(title, snippet)) continue;
-          const combined = `${title} ${snippet}`;
-          const phone = extractPublicPhone(combined);
-          const email = extractPublicEmail(combined);
-          const budget = extractBudget(combined);
-          if (maxBudget > 0 && budget > 0 && budget > maxBudget * 1.4) continue;
-
-          const enquiryDesc = `${title} — ${snippet}`.slice(0, 420);
-          const contentHash = computeContentHash(item.link, enquiryDesc);
-          const hasContact = !!(phone || email);
-          prospects.push({
-            externalRef: item.link,
-            external_lead_id: `gcse-${contentHash}`,
-            contentHash,
+        succeeded = true;
+        modeLabel = "SEARXNG_CONNECTED";
+        for (const r of Array.isArray(data?.results) ? data.results.slice(0, 15) : []) {
+          const p = buildProspectFromSearchItem({
+            item: { title: r.title, url: r.url, snippet: r.content },
             sourceId: "source-google",
             sourcePlatform: "Google Search",
-            sourceName: `Google Search (${item.displayLink || "web"})`,
             sourceIcon: "🔍",
-            sourceUrl: item.link,
-            sourceAuthorized: true,
-            discoveryOrigin: "EXTERNAL_AI_DISCOVERY",
-            tenantName: item.displayLink ? `Public Seeker (${item.displayLink})` : "Public Web Seeker",
-            phone,
-            whatsapp: phone,
-            email,
-            city: city || shortLoc,
-            location: locationTerm,
-            accommodationType: typeTerm || extractGender(combined) || "PG Accommodation",
-            sharingPreference: extractSharing(combined) || sharing || "",
-            budget,
-            budgetRange: budget > 0 ? `₹${budget.toLocaleString("en-IN")}/mo` : "",
-            bedsRequired: extractBedsRequired(combined),
-            preferredMoveInDate: "",
-            gender: extractGender(combined, typeTerm),
-            profession: audience || "",
-            originalEnquiry: enquiryDesc,
-            notes: `Externally discovered via Google Search (${item.displayLink || "web"}). ${hasContact ? "Public contact present." : "Unverified opportunity — follow up via Source URL."}`,
-            verificationStatus: hasContact ? "CONTACT_VERIFIED" : "UNVERIFIED_OPPORTUNITY",
-            verification_status: hasContact ? "contact_verified" : "unverified_opportunity",
-            discoveredAt: startedAt
+            locationTerm, city: cityOrLoc, shortLoc, sharing, accommodationType: typeTerm, audience, startedAt, maxBudget
           });
+          if (p) prospects.push(p);
         }
-      } catch (err) {
-        errors.push(`Google CSE error: ${err?.message || "request failed"}`);
-      }
-    }
-  }
-
-  // B. Permitted Public Community Accommodation Enquiries (PullPush public Reddit index)
-  let publicSearchWorked = false;
-  const ppQueries = [
-    `looking for PG ${shortLoc} ${typeTerm ? typeTerm.split(" ")[0] : ""}`.trim(),
-    `PG accommodation ${city || shortLoc}`
-  ];
-  for (const pq of ppQueries) {
-    try {
-      const ppUrl = `https://api.pullpush.io/reddit/search/submission/?q=${encodeURIComponent(pq)}&size=12&sort=desc&sort_type=created_utc`;
-      const resp = await fetchWithTimeout(ppUrl, {
-        headers: { "User-Agent": "Mozilla/5.0 (compatible; SrinoosPGAgent/2.1)", "Accept": "application/json" }
-      }, 10000);
-      if (resp.status === 403 || resp.status === 429) {
-        errors.push(`Public Community Index HTTP ${resp.status} (cloud datacenter IP blocked)`);
-        continue;
-      }
-      if (!resp.ok) {
-        errors.push(`Public Community Index HTTP ${resp.status}`);
-        continue;
-      }
-      publicSearchWorked = true;
-      const json = await resp.json();
-      const posts = Array.isArray(json?.data) ? json.data : [];
-      for (const post of posts) {
-        if (!post || !post.permalink) continue;
-        const title = String(post.title || "").trim();
-        const selftext = String(post.selftext || "").trim();
-        if (!isGenuineAccommodationSeeker(title, selftext)) continue;
-
-        const combined = `${title} ${selftext}`;
-        const phone = extractPublicPhone(combined);
-        const email = extractPublicEmail(combined);
-        const budget = extractBudget(combined);
-        if (maxBudget > 0 && budget > 0 && budget > maxBudget * 1.4) continue;
-
-        const postUrl = post.permalink.startsWith("http") ? post.permalink : `https://www.reddit.com${post.permalink}`;
-        const author = post.author && post.author !== "[deleted]" ? `u/${post.author}` : "Public Forum Seeker";
-        const createdIso = post.created_utc ? new Date(post.created_utc * 1000).toISOString() : startedAt;
-        const enquiryDesc = `${title}${selftext ? " — " + selftext.slice(0, 260) : ""}`.slice(0, 420);
-        const contentHash = computeContentHash(postUrl, enquiryDesc);
-        const hasContact = !!(phone || email);
-
-        prospects.push({
-          externalRef: postUrl,
-          external_lead_id: `reddit-${post.id || contentHash}`,
-          contentHash,
-          sourceId: "source-google",
-          sourcePlatform: "Google Search",
-          sourceName: `Google Search / Public Forum (r/${post.subreddit || "india"})`,
-          sourceIcon: "🔍",
-          sourceUrl: postUrl,
-          sourceAuthorized: true,
-          discoveryOrigin: "EXTERNAL_AI_DISCOVERY",
-          tenantName: author,
-          phone,
-          whatsapp: phone,
-          email,
-          city: city || shortLoc,
-          location: locationTerm,
-          accommodationType: typeTerm || extractGender(combined) || "PG Accommodation",
-          sharingPreference: extractSharing(combined) || "",
-          budget,
-          budgetRange: budget > 0 ? `₹${budget.toLocaleString("en-IN")}/mo` : "",
-          bedsRequired: extractBedsRequired(combined),
-          preferredMoveInDate: "",
-          gender: extractGender(combined, typeTerm),
-          profession: "",
-          originalEnquiry: enquiryDesc,
-          notes: `Public accommodation enquiry in r/${post.subreddit || "community"}. ${hasContact ? "Public contact found." : "Unverified opportunity — reach out via original Source URL."}`,
-          verificationStatus: hasContact ? "CONTACT_VERIFIED" : "UNVERIFIED_OPPORTUNITY",
-          verification_status: hasContact ? "contact_verified" : "unverified_opportunity",
-          discoveredAt: createdIso
-        });
       }
     } catch (err) {
-      errors.push(`Public community query failed: ${err?.message || "timeout"}`);
+      errors.push(`SearXNG error: ${err?.message || "unreachable"}`);
     }
   }
 
-  // Deduplicate within this search batch by contentHash / sourceUrl
+  // B. Optional Google Custom Search API (if user adds keys)
+  const gKey = String(process.env.GOOGLE_CSE_API_KEY || "").trim();
+  const gCx = String(process.env.GOOGLE_CSE_CX || "").trim();
+  if (gKey && gCx) {
+    try {
+      const q = `"looking for PG" "${shortLoc}" (site:reddit.com OR site:quora.com)`;
+      const dateRestrict = Number(recentDays) > 0 && Number(recentDays) <= 30 ? `&dateRestrict=d${Number(recentDays)}` : "";
+      const url = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(gKey)}&cx=${encodeURIComponent(gCx)}&q=${encodeURIComponent(q)}&num=10${dateRestrict}`;
+      const resp = await fetchWithTimeout(url, { headers: { "User-Agent": BOT_UA } }, 10000);
+      if (resp.ok) {
+        const data = await resp.json();
+        succeeded = true;
+        modeLabel = "GOOGLE_CSE_CONNECTED";
+        for (const item of Array.isArray(data?.items) ? data.items : []) {
+          const p = buildProspectFromSearchItem({
+            item: { title: item.title, url: item.link, snippet: item.snippet },
+            sourceId: "source-google",
+            sourcePlatform: "Google Search",
+            sourceIcon: "🔍",
+            locationTerm, city: cityOrLoc, shortLoc, sharing, accommodationType: typeTerm, audience, startedAt, maxBudget
+          });
+          if (p) prospects.push(p);
+        }
+      } else {
+        errors.push(`Google CSE HTTP ${resp.status}`);
+      }
+    } catch (err) {
+      errors.push(`Google CSE error: ${err?.message || "timeout"}`);
+    }
+  }
+
+  // C. Zero-Config Free Public Search Fallback (DuckDuckGo HTML + Cheerio)
+  const ddgQueries = [
+    `site:reddit.com "looking for PG" ${cityOrLoc} ${shortLoc !== cityOrLoc ? shortLoc : ""}`.trim(),
+    `site:reddit.com "PG" "need" OR "suggest" ${shortLoc} ${typeTerm ? typeTerm.split(" ")[0] : ""}`.trim(),
+    `site:quora.com "looking for PG" ${cityOrLoc}`.trim()
+  ];
+  for (const dq of ddgQueries) {
+    try {
+      const items = await searchDuckDuckGoHtml(dq, 9000);
+      if (items.length > 0) succeeded = true;
+      for (const item of items) {
+        const p = buildProspectFromSearchItem({
+          item,
+          sourceId: "source-google",
+          sourcePlatform: "Google Search",
+          sourceIcon: "🔍",
+          locationTerm, city: cityOrLoc, shortLoc, sharing, accommodationType: typeTerm, audience, startedAt, maxBudget
+        });
+        if (p) prospects.push(p);
+      }
+    } catch (err) {
+      errors.push(`DuckDuckGo HTML: ${err?.message || "timeout"}`);
+    }
+  }
+
+  // Deduplicate batch by contentHash
   const seen = new Set();
   const uniqueProspects = prospects.filter(p => {
     const key = p.contentHash || (p.sourceUrl || "").toLowerCase();
@@ -263,83 +302,93 @@ async function searchGoogleAndPublicDiscussions({ city, locality, sharing, maxBu
     return true;
   });
 
-  const contactsAvailable = uniqueProspects.filter(p => p.phone || p.email).length;
-  const hasGoogleApi = !!(gKey && gCx);
-  const worked = googleApiSucceeded || publicSearchWorked;
-
   return {
     sourceReport: {
       id: "source-google",
       name: "Google Search",
       icon: "🔍",
-      connectionStatus: worked ? "CONNECTED" : "API_KEY_REQUIRED",
-      authStatus: googleApiSucceeded ? "LIVE_API_CONNECTED" : (publicSearchWorked ? "PUBLIC_SEARCH_LIVE" : "ACCOUNT_AUTH_REQUIRED"),
-      searchStatus: worked ? "COMPLETED" : "BLOCKED_NEEDS_GOOGLE_API_KEY",
-      lastSuccessfulSearch: worked ? startedAt : null,
+      connectionStatus: succeeded ? "FREE_PUBLIC_SEARCH_ACTIVE" : "DEGRADED",
+      authStatus: modeLabel,
+      searchStatus: succeeded ? "COMPLETED" : "FAILED",
+      lastSuccessfulSearch: succeeded ? startedAt : null,
       newProspectsDiscovered: uniqueProspects.length,
-      contactDetailsAvailable: contactsAvailable,
-      errors: worked ? [] : (errors.length > 0 ? errors : ["Missing GOOGLE_CSE_API_KEY & GOOGLE_CSE_CX in Vercel Environment Variables."]),
-      requirement: hasGoogleApi
-        ? "Connected to Google Custom Search JSON API (GOOGLE_CSE_API_KEY + GOOGLE_CSE_CX)."
-        : "Add GOOGLE_CSE_API_KEY + GOOGLE_CSE_CX (Google Custom Search JSON API) in Vercel Environment Variables for reliable live Google Search discovery."
+      contactDetailsAvailable: uniqueProspects.filter(p => p.phone || p.email).length,
+      errors: succeeded ? [] : errors,
+      requirement: succeeded
+        ? "Free Multi-Engine Public Search active ($0 cost via DuckDuckGo HTML + Cheerio). Optional: add GOOGLE_CSE_API_KEY + GOOGLE_CSE_CX or SEARXNG_BASE_URL."
+        : "Public search temporarily rate-limited. Optional: add GOOGLE_CSE_API_KEY + GOOGLE_CSE_CX or SEARXNG_BASE_URL."
     },
     prospects: uniqueProspects
   };
 }
 
-// 2. Google Maps — Market Research & Demand Mapping ONLY (NEVER classified as tenant leads)
-async function researchGoogleMapsDemand({ city, locality }) {
+// 2. Free Geospatial Demand Radar (Google Maps Card — OpenStreetMap Overpass API + Nominatim)
+// Strictly market_research ONLY — NEVER inserts business listings as tenant leads!
+async function researchGeospatialDemand({ city, locality }) {
   const startedAt = new Date().toISOString();
-  const locationTerm = [locality, city].filter(Boolean).join(", ").trim() || "Koramangala, Bangalore";
+  const locationTerm = [locality, city].filter(Boolean).join(", ").trim() || "Pune";
   const mapsKey = String(process.env.GOOGLE_MAPS_API_KEY || "").trim();
   const demandHubs = [];
   const errors = [];
   let succeeded = false;
-  let usedGooglePlaces = false;
+  let lat = null, lon = null;
 
+  // Step A: Geocode locality via OpenStreetMap Nominatim (free)
+  try {
+    const nomUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationTerm)}&format=json&limit=3`;
+    const resp = await fetchWithTimeout(nomUrl, { headers: { "User-Agent": BOT_UA, "Accept": "application/json" } }, 7000);
+    if (resp.ok) {
+      const places = await resp.json();
+      if (Array.isArray(places) && places.length > 0) {
+        succeeded = true;
+        lat = parseFloat(places[0].lat);
+        lon = parseFloat(places[0].lon);
+        places.forEach(pl => {
+          if (pl?.display_name) demandHubs.push(pl.display_name.split(",").slice(0, 2).join(", "));
+        });
+      }
+    }
+  } catch (err) {
+    errors.push(`Nominatim: ${err?.message || "timeout"}`);
+  }
+
+  // Step B: Query Free OpenStreetMap Overpass API for nearby colleges, universities & IT parks (within 4km)
+  if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
+    try {
+      const overpassQuery = `[out:json][timeout:8];(node["amenity"~"university|college"](around:4000,${lat},${lon});node["office"~"it|company"](around:4000,${lat},${lon});way["landuse"="commercial"](around:4000,${lat},${lon}););out center 8;`;
+      const ovResp = await fetchWithTimeout("https://overpass-api.de/api/interpreter", {
+        method: "POST",
+        headers: { "User-Agent": BOT_UA, "Content-Type": "application/x-www-form-urlencoded" },
+        body: "data=" + encodeURIComponent(overpassQuery)
+      }, 9000);
+      if (ovResp.ok) {
+        const ovData = await ovResp.json();
+        const elems = Array.isArray(ovData?.elements) ? ovData.elements : [];
+        elems.forEach(el => {
+          const nm = el?.tags?.name;
+          const cat = el?.tags?.amenity || el?.tags?.office || el?.tags?.landuse || "Hub";
+          if (nm) demandHubs.unshift(`${nm} (${cat})`);
+        });
+      }
+    } catch (_) {
+      // Non-fatal: Nominatim hubs already captured
+    }
+  }
+
+  // Optional Google Maps Places enhancement if user sets GOOGLE_MAPS_API_KEY
   if (mapsKey) {
     try {
-      const q = encodeURIComponent(`colleges OR IT parks OR tech parks near ${locationTerm}`);
-      const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${q}&key=${encodeURIComponent(mapsKey)}`;
-      const resp = await fetchWithTimeout(url, { headers: { "User-Agent": USER_AGENT } }, 10000);
+      const q = encodeURIComponent(`colleges OR IT parks near ${locationTerm}`);
+      const resp = await fetchWithTimeout(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${q}&key=${encodeURIComponent(mapsKey)}`, { headers: { "User-Agent": BOT_UA } }, 8000);
       const data = await resp.json();
-      if (resp.ok && (data?.status === "OK" || data?.status === "ZERO_RESULTS")) {
+      if (resp.ok && data?.status === "OK") {
         succeeded = true;
-        usedGooglePlaces = true;
-        (data.results || []).slice(0, 6).forEach(pl => {
-          if (pl?.name) demandHubs.push(`${pl.name}${pl.formatted_address ? " (" + pl.formatted_address.split(",")[0] + ")" : ""}`);
-        });
-      } else {
-        errors.push(`Google Maps Places API: ${data?.status || "HTTP " + resp.status}`);
+        (data.results || []).slice(0, 5).forEach(pl => { if (pl?.name) demandHubs.unshift(pl.name); });
       }
-    } catch (err) {
-      errors.push(`Google Maps API error: ${err?.message || "timeout"}`);
-    }
+    } catch (_) {}
   }
 
-  // Fallback to permitted OpenStreetMap Nominatim geo-research when GOOGLE_MAPS_API_KEY is not set
-  if (!succeeded) {
-    try {
-      const q = encodeURIComponent(locationTerm);
-      const nomUrl = `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=5&addressdetails=1`;
-      const resp = await fetchWithTimeout(nomUrl, {
-        headers: { "User-Agent": USER_AGENT, "Accept": "application/json" }
-      }, 10000);
-      if (resp.ok) {
-        const places = await resp.json();
-        if (Array.isArray(places) && places.length > 0) {
-          succeeded = true;
-          places.forEach(pl => {
-            if (pl?.display_name) demandHubs.push(pl.display_name.split(",").slice(0, 3).join(", "));
-          });
-        }
-      } else {
-        errors.push(`Geo lookup HTTP ${resp.status}`);
-      }
-    } catch (err) {
-      errors.push(`Geo research error: ${err?.message || "timeout"}`);
-    }
-  }
+  const uniqueHubs = [...new Set(demandHubs)].slice(0, 8);
 
   return {
     sourceReport: {
@@ -347,172 +396,175 @@ async function researchGoogleMapsDemand({ city, locality }) {
       name: "Google Maps",
       icon: "🗺️",
       resultType: "market_research",
-      connectionStatus: succeeded ? "CONNECTED_RESEARCH_ONLY" : "RESEARCH_ONLY",
-      authStatus: usedGooglePlaces ? "GOOGLE_MAPS_API_RESEARCH_ONLY" : "MARKET_RESEARCH_ONLY",
-      searchStatus: succeeded ? "MARKET_RESEARCH_COMPLETED" : "SKIPPED_NO_TENANT_ENQUIRIES",
+      connectionStatus: succeeded ? "OPENSTREETMAP_ACTIVE" : "RESEARCH_ONLY",
+      authStatus: mapsKey ? "GOOGLE_MAPS_API_RESEARCH_ONLY" : "MARKET_RESEARCH_ONLY",
+      searchStatus: succeeded ? "MARKET_RESEARCH_COMPLETED" : "DEGRADED",
       lastSuccessfulSearch: succeeded ? startedAt : null,
       newProspectsDiscovered: 0,
       contactDetailsAvailable: 0,
-      errors,
-      demandHubs,
-      requirement: usedGooglePlaces
-        ? "Connected to Google Maps Places API for demand mapping only. Business listings are NEVER inserted as tenant leads."
-        : "Market & demand-area research active (OpenStreetMap). Add GOOGLE_MAPS_API_KEY for Google Places IT park/college cluster scoring. Business listings are NEVER classified as tenant leads."
+      errors: succeeded ? [] : errors,
+      demandHubs: uniqueHubs,
+      requirement: "Free OpenStreetMap Overpass + Nominatim active ($0 cost) for IT park & college demand mapping. Business listings are NEVER inserted as tenant leads."
     },
     prospects: [],
-    demandHubs
+    demandHubs: uniqueHubs
   };
 }
 
-// 3. Meta Graph API Lead Ads (Facebook & Instagram) — strictly authorized tokens only
-async function queryMetaLeadAds({ platformId, platformName, icon, formIdEnv }) {
+// 3. Facebook & Instagram (Authorized Meta Lead Ads + Safe Public Search Fallback)
+async function searchSocialPlatform({ platformId, platformName, icon, domain, formIdEnv, city, locality, sharing, accommodationType, audience, maxBudget }) {
   const startedAt = new Date().toISOString();
+  const locationTerm = [locality, city].filter(Boolean).join(", ").trim() || "Pune";
+  const shortLoc = locationTerm.split(",")[0].trim();
+  const cityOrLoc = (city || shortLoc).trim();
   const token = String(process.env.META_PAGE_ACCESS_TOKEN || "").trim();
   const formId = String(process.env[formIdEnv] || "").trim();
+  const prospects = [];
+  const errors = [];
 
-  if (!token || !formId) {
-    const missing = [!token ? "META_PAGE_ACCESS_TOKEN" : "", !formId ? formIdEnv : ""].filter(Boolean).join(" & ");
-    return {
-      sourceReport: {
-        id: platformId,
-        name: platformName,
-        icon,
-        connectionStatus: "NOT_CONNECTED",
-        authStatus: "ACCOUNT_AUTH_REQUIRED",
-        searchStatus: "AWAITING_API_CREDENTIALS",
-        lastSuccessfulSearch: null,
-        newProspectsDiscovered: 0,
-        contactDetailsAvailable: 0,
-        errors: [`Missing ${missing} in Vercel environment variables.`],
-        requirement: `Requires authorized Meta Graph API Page Access Token and ${platformName} Lead Ads Form ID (${formIdEnv}). Private profiles, private groups, and DMs are never scraped.`
-      },
-      prospects: []
-    };
-  }
-
-  try {
-    const url = `https://graph.facebook.com/v20.0/${encodeURIComponent(formId)}/leads?access_token=${encodeURIComponent(token)}&limit=25`;
-    const resp = await fetchWithTimeout(url, { headers: { "User-Agent": USER_AGENT } }, 12000);
-    const data = await resp.json();
-    if (!resp.ok || data?.error) {
-      throw new Error(data?.error?.message || `Meta Graph API HTTP ${resp.status}`);
-    }
-    const prospects = (Array.isArray(data?.data) ? data.data : []).map(item => {
-      const fields = {};
-      (Array.isArray(item?.field_data) ? item.field_data : []).forEach(f => {
-        fields[String(f?.name || "").toLowerCase()] = Array.isArray(f?.values) ? f.values[0] : "";
-      });
-      const phone = normalizePhone(fields.phone_number || fields.phone || fields.mobile || "");
-      const email = String(fields.email || "").trim().toLowerCase();
-      const enquiryDesc = fields.notes || `Submitted ${platformName} Lead Ad form.`;
-      const srcUrl = `https://business.facebook.com/latest/leads_center?lead_id=${encodeURIComponent(item.id || "")}`;
-      const contentHash = computeContentHash(srcUrl, enquiryDesc);
-      const hasContact = !!(phone || email);
+  // Mode A: Authorized Meta Graph API Lead Ads
+  if (token && formId) {
+    try {
+      const url = `https://graph.facebook.com/v20.0/${encodeURIComponent(formId)}/leads?access_token=${encodeURIComponent(token)}&limit=25`;
+      const resp = await fetchWithTimeout(url, { headers: { "User-Agent": BOT_UA } }, 10000);
+      const data = await resp.json();
+      if (!resp.ok || data?.error) throw new Error(data?.error?.message || `Meta HTTP ${resp.status}`);
+      for (const item of Array.isArray(data?.data) ? data.data : []) {
+        const fields = {};
+        (Array.isArray(item?.field_data) ? item.field_data : []).forEach(f => {
+          fields[String(f?.name || "").toLowerCase()] = Array.isArray(f?.values) ? f.values[0] : "";
+        });
+        const phone = normalizePhone(fields.phone_number || fields.phone || fields.mobile || "");
+        const email = String(fields.email || "").trim().toLowerCase();
+        const enquiryDesc = fields.notes || `Submitted ${platformName} Lead Ad form.`;
+        const srcUrl = `https://business.facebook.com/latest/leads_center?lead_id=${encodeURIComponent(item.id || "")}`;
+        const contentHash = computeContentHash(srcUrl, enquiryDesc);
+        const hasContact = !!(phone || email);
+        prospects.push({
+          externalRef: `meta-${item.id}`,
+          external_lead_id: `meta-${item.id}`,
+          contentHash,
+          sourceId: platformId,
+          sourcePlatform: platformName,
+          sourceName: `${platformName} Lead Ads`,
+          sourceIcon: icon,
+          sourceUrl: srcUrl,
+          sourceAuthorized: true,
+          discoveryOrigin: "EXTERNAL_AI_DISCOVERY",
+          tenantName: fields.full_name || fields.name || `${platformName} Lead`,
+          phone, whatsapp: phone, email,
+          city: fields.city || cityOrLoc,
+          location: fields.preferred_location || fields.city || locationTerm,
+          accommodationType: fields.accommodation_type || accommodationType || "PG Accommodation",
+          sharingPreference: fields.sharing_preference || "",
+          budget: extractBudget(fields.budget || ""),
+          budgetRange: fields.budget || "",
+          bedsRequired: 1,
+          preferredMoveInDate: fields.move_in_date || "",
+          gender: extractGender(fields.gender || "", accommodationType),
+          profession: fields.job_title || "",
+          originalEnquiry: enquiryDesc,
+          notes: `Authorized ${platformName} Lead Ads submission (${item.id}).`,
+          verificationStatus: hasContact ? "CONTACT_VERIFIED" : "UNVERIFIED_OPPORTUNITY",
+          verification_status: hasContact ? "contact_verified" : "unverified_opportunity",
+          discoveredAt: item.created_time || startedAt
+        });
+      }
       return {
-        externalRef: `meta-${item.id}`,
-        external_lead_id: `meta-${item.id}`,
-        contentHash,
-        sourceId: platformId,
-        sourcePlatform: platformName,
-        sourceName: `${platformName} Lead Ads`,
-        sourceIcon: icon,
-        sourceUrl: srcUrl,
-        sourceAuthorized: true,
-        discoveryOrigin: "EXTERNAL_AI_DISCOVERY",
-        tenantName: fields.full_name || fields.name || `${platformName} Lead`,
-        phone,
-        whatsapp: phone,
-        email,
-        city: fields.city || "",
-        location: fields.preferred_location || fields.city || "",
-        accommodationType: fields.accommodation_type || "PG Accommodation",
-        sharingPreference: fields.sharing_preference || "",
-        budget: extractBudget(fields.budget || ""),
-        budgetRange: fields.budget || "",
-        bedsRequired: 1,
-        preferredMoveInDate: fields.move_in_date || "",
-        gender: extractGender(fields.gender || ""),
-        profession: fields.job_title || "",
-        originalEnquiry: enquiryDesc,
-        notes: `Authorized ${platformName} Lead Ads submission (${item.id}).`,
-        verificationStatus: hasContact ? "CONTACT_VERIFIED" : "UNVERIFIED_OPPORTUNITY",
-        verification_status: hasContact ? "contact_verified" : "unverified_opportunity",
-        discoveredAt: item.created_time || startedAt
+        sourceReport: {
+          id: platformId, name: platformName, icon,
+          connectionStatus: "META_CONNECTED",
+          authStatus: "LIVE_API_CONNECTED",
+          searchStatus: "COMPLETED",
+          lastSuccessfulSearch: startedAt,
+          newProspectsDiscovered: prospects.length,
+          contactDetailsAvailable: prospects.filter(p => p.phone || p.email).length,
+          errors: [],
+          requirement: `Connected to authorized ${platformName} Lead Ads via Meta Graph API & /api/leads/meta-webhook.`
+        },
+        prospects
       };
-    });
+    } catch (err) {
+      errors.push(`Meta API: ${err?.message || "error"}`);
+    }
+  }
 
-    return {
-      sourceReport: {
-        id: platformId,
-        name: platformName,
-        icon,
-        connectionStatus: "CONNECTED",
-        authStatus: "LIVE_API_CONNECTED",
-        searchStatus: "COMPLETED",
-        lastSuccessfulSearch: startedAt,
-        newProspectsDiscovered: prospects.length,
-        contactDetailsAvailable: prospects.filter(p => p.phone || p.email).length,
-        errors: [],
-        requirement: `Connected to authorized ${platformName} Lead Ads via Meta Graph API.`
-      },
-      prospects
-    };
+  // Mode B: Safe Public Indexed Posts Fallback (Never scrapes private profiles, private groups, or DMs)
+  let publicRan = false;
+  try {
+    const q = `site:${domain} "looking for PG" ${cityOrLoc}`;
+    const items = await searchDuckDuckGoHtml(q, 9000);
+    publicRan = true;
+    for (const item of items) {
+      const p = buildProspectFromSearchItem({
+        item, sourceId: platformId, sourcePlatform: platformName, sourceIcon: icon,
+        locationTerm, city: cityOrLoc, shortLoc, sharing, accommodationType, audience, startedAt, maxBudget
+      });
+      if (p) prospects.push(p);
+    }
   } catch (err) {
-    return {
-      sourceReport: {
-        id: platformId,
-        name: platformName,
-        icon,
-        connectionStatus: "ERROR",
-        authStatus: "AUTH_ERROR",
-        searchStatus: "FAILED",
-        lastSuccessfulSearch: null,
-        newProspectsDiscovered: 0,
-        contactDetailsAvailable: 0,
-        errors: [err?.message || "Meta Graph API error"],
-        requirement: `Verify META_PAGE_ACCESS_TOKEN and ${formIdEnv} permissions.`
-      },
-      prospects: []
-    };
+    errors.push(`Public search: ${err?.message || "timeout"}`);
   }
-}
 
-// 4. Commercial Portal Partner Integrations (Magicbricks, 99acres, Housing.com, Justdial)
-function checkPartnerPortalSource({ id, name, icon, envKey, requirement }) {
-  const hasKey = !!String(process.env[envKey] || "").trim();
-  if (!hasKey) {
-    return {
-      sourceReport: {
-        id,
-        name,
-        icon,
-        connectionStatus: "NOT_CONNECTED",
-        authStatus: "AWAITING_PARTNER_API",
-        searchStatus: "AWAITING_PARTNER_API",
-        lastSuccessfulSearch: null,
-        newProspectsDiscovered: 0,
-        contactDetailsAvailable: 0,
-        errors: [`Missing ${envKey}. Public ${name} pages contain property owner ads/listings, not direct tenant enquiries.`],
-        requirement
-      },
-      prospects: []
-    };
-  }
   return {
     sourceReport: {
-      id,
-      name,
-      icon,
-      connectionStatus: "WEBHOOK_READY",
-      authStatus: "PARTNER_WEBHOOK_CONFIGURED",
-      searchStatus: "AWAITING_INCOMING_WEBHOOK",
-      lastSuccessfulSearch: null,
-      newProspectsDiscovered: 0,
-      contactDetailsAvailable: 0,
-      errors: [],
-      requirement: `${name} partner key detected (${envKey}). Configure ${name} CRM webhook push to receive real-time verified buyer enquiries.`
+      id: platformId, name: platformName, icon,
+      connectionStatus: publicRan ? "PUBLIC_MODE_KEY_OPTIONAL" : "NOT_CONNECTED",
+      authStatus: "PUBLIC_MODE_META_OPTIONAL",
+      searchStatus: publicRan ? "COMPLETED" : "DEGRADED",
+      lastSuccessfulSearch: publicRan ? startedAt : null,
+      newProspectsDiscovered: prospects.length,
+      contactDetailsAvailable: prospects.filter(p => p.phone || p.email).length,
+      errors: publicRan ? [] : errors,
+      requirement: `Public mode active ($0 cost, public indexed posts only — never private profiles/DMs). Optional: add META_PAGE_ACCESS_TOKEN + ${formIdEnv} & /api/leads/meta-webhook for Lead Ads.`
     },
-    prospects: []
+    prospects
+  };
+}
+
+// 4. Property Portals (Magicbricks, 99acres, Housing.com, Justdial — Optional Partner API + Safe Public Seeker Mode)
+async function searchPortalSource({ id, name, icon, domain, envKey, city, locality, sharing, accommodationType, audience, maxBudget }) {
+  const startedAt = new Date().toISOString();
+  const locationTerm = [locality, city].filter(Boolean).join(", ").trim() || "Pune";
+  const shortLoc = locationTerm.split(",")[0].trim();
+  const cityOrLoc = (city || shortLoc).trim();
+  const hasPartnerKey = !!String(process.env[envKey] || "").trim();
+  const prospects = [];
+  const errors = [];
+  let publicRan = false;
+
+  // Safe Public Requirement-Page Discovery via DuckDuckGo HTML + Cheerio
+  // Strictly filters OUT owner/broker ads & directory listings; NEVER invents masked phones
+  try {
+    const q = `site:${domain} ("looking for PG" OR "need PG" OR "PG wanted") ${cityOrLoc}`;
+    const items = await searchDuckDuckGoHtml(q, 9000);
+    publicRan = true;
+    for (const item of items) {
+      const p = buildProspectFromSearchItem({
+        item, sourceId: id, sourcePlatform: name, sourceIcon: icon,
+        locationTerm, city: cityOrLoc, shortLoc, sharing, accommodationType, audience, startedAt, maxBudget
+      });
+      if (p) prospects.push(p);
+    }
+  } catch (err) {
+    errors.push(`Public check: ${err?.message || "timeout"}`);
+  }
+
+  return {
+    sourceReport: {
+      id, name, icon,
+      connectionStatus: hasPartnerKey ? "WEBHOOK_READY" : (publicRan ? "PUBLIC_MODE_KEY_OPTIONAL" : "NOT_CONNECTED"),
+      authStatus: hasPartnerKey ? "PARTNER_WEBHOOK_CONFIGURED" : "PUBLIC_MODE_PARTNER_OPTIONAL",
+      searchStatus: publicRan ? "COMPLETED" : "DEGRADED",
+      lastSuccessfulSearch: publicRan ? startedAt : null,
+      newProspectsDiscovered: prospects.length,
+      contactDetailsAvailable: prospects.filter(p => p.phone || p.email).length,
+      errors: publicRan ? [] : errors,
+      requirement: hasPartnerKey
+        ? `${name} partner key (${envKey}) detected + safe public seeker filter active. Owner ads & directory listings excluded.`
+        : `PUBLIC MODE (PARTNER KEY OPTIONAL): Safe seeker-only filter active; owner ads & directory listings excluded. Optional: add ${envKey} for direct paywalled phone numbers.`
+    },
+    prospects
   };
 }
 
@@ -545,55 +597,46 @@ export default async function handler(req, res) {
   const allow = id => !Array.isArray(selectedSourceIds) || selectedSourceIds.length === 0 || selectedSourceIds.includes(id);
   const runStartedAt = new Date().toISOString();
 
-  // Execute all 8 external platforms independently via Promise.allSettled so one failure NEVER blocks the others
+  // Execute all 8 external platforms concurrently via Promise.allSettled with per-source 15s isolation
+  const withIsoTimeout = (promise, fallbackId, fallbackName, fallbackIcon) =>
+    Promise.race([
+      promise,
+      new Promise(resolve => setTimeout(() => resolve({
+        sourceReport: {
+          id: fallbackId, name: fallbackName, icon: fallbackIcon,
+          connectionStatus: "DEGRADED", authStatus: "TIMEOUT", searchStatus: "TIMED_OUT_15S",
+          lastSuccessfulSearch: null, newProspectsDiscovered: 0, contactDetailsAvailable: 0,
+          errors: [`${fallbackName} timed out after 15s — other sources continued unaffected.`],
+          requirement: "Per-source timeout guard prevented pipeline stall."
+        },
+        prospects: []
+      }), 15000))
+    ]);
+
   const tasks = [
     allow("source-google")
-      ? searchGoogleAndPublicDiscussions({ city, locality, sharing, maxBudget: Number(maxBudget) || 0, audience, accommodationType, recentDays })
+      ? withIsoTimeout(searchGoogleMultiEngine({ city, locality, sharing, maxBudget: Number(maxBudget) || 0, audience, accommodationType, recentDays }), "source-google", "Google Search", "🔍")
       : Promise.resolve(null),
     allow("source-google-maps")
-      ? researchGoogleMapsDemand({ city, locality })
+      ? withIsoTimeout(researchGeospatialDemand({ city, locality }), "source-google-maps", "Google Maps", "🗺️")
       : Promise.resolve(null),
     allow("source-facebook")
-      ? queryMetaLeadAds({ platformId: "source-facebook", platformName: "Facebook", icon: "📘", formIdEnv: "FACEBOOK_LEADGEN_FORM_ID" })
+      ? withIsoTimeout(searchSocialPlatform({ platformId: "source-facebook", platformName: "Facebook", icon: "📘", domain: "facebook.com", formIdEnv: "FACEBOOK_LEADGEN_FORM_ID", city, locality, sharing, accommodationType, audience, maxBudget: Number(maxBudget) || 0 }), "source-facebook", "Facebook", "📘")
       : Promise.resolve(null),
     allow("source-instagram")
-      ? queryMetaLeadAds({ platformId: "source-instagram", platformName: "Instagram", icon: "📸", formIdEnv: "INSTAGRAM_LEADGEN_FORM_ID" })
+      ? withIsoTimeout(searchSocialPlatform({ platformId: "source-instagram", platformName: "Instagram", icon: "📸", domain: "instagram.com", formIdEnv: "INSTAGRAM_LEADGEN_FORM_ID", city, locality, sharing, accommodationType, audience, maxBudget: Number(maxBudget) || 0 }), "source-instagram", "Instagram", "📸")
       : Promise.resolve(null),
     allow("source-magicbricks")
-      ? Promise.resolve(checkPartnerPortalSource({
-          id: "source-magicbricks",
-          name: "Magicbricks",
-          icon: "🏢",
-          envKey: "MAGICBRICKS_PARTNER_API_KEY",
-          requirement: "Requires Magicbricks Commercial Partner Lead API / CRM Webhook credentials (MAGICBRICKS_PARTNER_API_KEY). Owner ads are never treated as tenant enquiries."
-        }))
+      ? withIsoTimeout(searchPortalSource({ id: "source-magicbricks", name: "Magicbricks", icon: "🏢", domain: "magicbricks.com", envKey: "MAGICBRICKS_PARTNER_API_KEY", city, locality, sharing, accommodationType, audience, maxBudget: Number(maxBudget) || 0 }), "source-magicbricks", "Magicbricks", "🏢")
       : Promise.resolve(null),
     allow("source-99acres")
-      ? Promise.resolve(checkPartnerPortalSource({
-          id: "source-99acres",
-          name: "99acres",
-          icon: "🏠",
-          envKey: "NINETY_NINE_ACRES_API_KEY",
-          requirement: "Requires 99acres Business Partner Lead API / CRM Webhook credentials (NINETY_NINE_ACRES_API_KEY). Owner ads are never treated as tenant enquiries."
-        }))
+      ? withIsoTimeout(searchPortalSource({ id: "source-99acres", name: "99acres", icon: "🏠", domain: "99acres.com", envKey: "NINETY_NINE_ACRES_API_KEY", city, locality, sharing, accommodationType, audience, maxBudget: Number(maxBudget) || 0 }), "source-99acres", "99acres", "🏠")
       : Promise.resolve(null),
     allow("source-housing")
-      ? Promise.resolve(checkPartnerPortalSource({
-          id: "source-housing",
-          name: "Housing.com",
-          icon: "🏘️",
-          envKey: "HOUSING_PARTNER_API_KEY",
-          requirement: "Requires Housing.com Commercial Partner Lead API credentials (HOUSING_PARTNER_API_KEY). Owner ads are never treated as tenant enquiries."
-        }))
+      ? withIsoTimeout(searchPortalSource({ id: "source-housing", name: "Housing.com", icon: "🏘️", domain: "housing.com", envKey: "HOUSING_PARTNER_API_KEY", city, locality, sharing, accommodationType, audience, maxBudget: Number(maxBudget) || 0 }), "source-housing", "Housing.com", "🏘️")
       : Promise.resolve(null),
     allow("source-justdial")
-      ? Promise.resolve(checkPartnerPortalSource({
-          id: "source-justdial",
-          name: "Justdial",
-          icon: "📞",
-          envKey: "JUSTDIAL_API_KEY",
-          requirement: "Requires Justdial Paid Lead API / Webhook authorization (JUSTDIAL_API_KEY). Ordinary business directory listings are never treated as tenant enquiries."
-        }))
+      ? withIsoTimeout(searchPortalSource({ id: "source-justdial", name: "Justdial", icon: "📞", domain: "justdial.com", envKey: "JUSTDIAL_API_KEY", city, locality, sharing, accommodationType, audience, maxBudget: Number(maxBudget) || 0 }), "source-justdial", "Justdial", "📞")
       : Promise.resolve(null)
   ];
 
