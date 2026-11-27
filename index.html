@@ -4946,19 +4946,31 @@ function SuperAdminLeadGenConsole() {
   const completedTasksRef = b.useRef(new Set());
   const cachedCandsRef = b.useRef([]);
 
+  const safeNotifyInfo = msg => {
+    const text = String(msg || "");
+    try {
+      if (z && typeof z.info === "function") z.info(text);
+      else if (typeof z === "function") z(text, { icon: "ℹ️" });
+      else console.info("[LeadDiscovery]", text);
+    } catch (_) {
+      console.info("[LeadDiscovery]", text);
+    }
+  };
+
   const stopAiLeadFinderAgent = () => {
     activeRunLockRef.current = false;
     agentRunIdRef.current += 1;
     persistDiscoveryRun({ id: "run-stopped-" + Date.now(), status: "stopped", updated_at: new Date().toISOString() });
     setIsAgentRunning(!1);
     setMissionMonitor(prev => ({ ...prev, status: "PAUSED", failureReason: "Paused by Super Admin — click Resume to continue without repeating completed tasks." }));
-    z.info("Lead discovery paused. Click Resume to continue or Restart to run fresh without duplicates.");
+    safeNotifyInfo("Lead discovery paused. Click Resume to continue or Restart to run fresh without duplicates.");
   };
 
   const restartAiLeadFinderAgent = () => {
     completedTasksRef.current = new Set();
     cachedCandsRef.current = [];
     setAgentError("");
+    setMissionMonitor(prev => ({ ...prev, status: "RUNNING", progress: 0, failureReason: "", failedTasks: [] }));
     runAiLeadFinderAgent({ resume: false });
   };
 
@@ -5075,7 +5087,7 @@ function SuperAdminLeadGenConsole() {
   // Run AI Tenant Lead Finder & Marketing Agent
   const runAiLeadFinderAgent = async (opts) => {
     if (isAgentRunning || activeRunLockRef.current) {
-      z.info("Discovery run already in progress — prevented overlapping duplicate run.");
+      safeNotifyInfo("Discovery run already in progress — prevented overlapping duplicate run.");
       return;
     }
     activeRunLockRef.current = true;
@@ -5503,13 +5515,13 @@ function SuperAdminLeadGenConsole() {
         z.success("External discovery complete: 0 new uncollected external prospects (" + duplicatesMergedCount + " duplicate(s) already in Leads List).");
       }
       if (sourceWarnings.length > 0) {
-        z.info("External source note: " + sourceWarnings.join("; "));
+        safeNotifyInfo("External source note: " + sourceWarnings.join("; "));
       }
       setActiveSubTab("pipeline");
     } catch (err) {
       if (err?.message !== "CANCELLED") {
         console.error("AI Lead Finder error:", err);
-        const errMsg = err?.message || "Lead discovery encountered an error.";
+        const errMsg = err instanceof Error ? err.message : (typeof err === "string" ? err : String(err?.message || err || "Lead discovery encountered an error."));
         setAgentError(errMsg);
         setMissionMonitor(prev => ({
           ...prev,
