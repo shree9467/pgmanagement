@@ -4458,6 +4458,16 @@ function SuperAdminLeadGenConsole() {
   const [moveInFilter, setMoveInFilter] = b.useState("");
   const [recentDaysFilter, setRecentDaysFilter] = b.useState("ALL");
   const [onlyNewLeads, setOnlyNewLeads] = b.useState(!0);
+  const agentRunIdRef = b.useRef(0);
+  const [agentError, setAgentError] = b.useState("");
+  const stopAiLeadFinderAgent = () => {
+    agentRunIdRef.current += 1;
+    setIsAgentRunning(!1);
+    setAgentProgress(0);
+    setAgentStep(0);
+    setAgentError("");
+    z.info("Lead discovery stopped. You can restart safely anytime without creating duplicates.");
+  };
 
   // Convert to Resident Modal State
   const [convertingLead, setConvertingLead] = b.useState(null);
@@ -4513,32 +4523,36 @@ function SuperAdminLeadGenConsole() {
   // Run AI Tenant Lead Finder & Marketing Agent
   const runAiLeadFinderAgent = async () => {
     if (isAgentRunning) return;
+    const myRunId = agentRunIdRef.current + 1;
+    agentRunIdRef.current = myRunId;
+    const isCancelled = () => agentRunIdRef.current !== myRunId;
+
+    const withTimeoutRetry = async (label, fn, timeoutMs, retries) => {
+      let lastErr = null;
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        if (isCancelled()) throw new Error("CANCELLED");
+        try {
+          return await Promise.race([
+            Promise.resolve().then(fn),
+            new Promise((_, rej) => setTimeout(() => rej(new Error(label + " timed out after " + Math.round(timeoutMs / 1000) + "s")), timeoutMs))
+          ]);
+        } catch (err) {
+          lastErr = err;
+          if (err?.message === "CANCELLED") throw err;
+          if (attempt < retries) await new Promise(r => setTimeout(r, 350));
+        }
+      }
+      throw lastErr || new Error(label + " failed");
+    };
+
     setIsAgentRunning(!0);
+    setAgentError("");
     setAgentStep(1);
     setAgentProgress(15);
-    setAgentStatusText("Step 1/5: Analyzing rental velocity, occupancy and rent benchmarks for " + agentAddress + "...");
+    setAgentStatusText("Step 1/5: Preparing search criteria & generating AI marketing campaign assets...");
 
-    await new Promise(r => setTimeout(r, 450));
-    setAgentStep(2);
-    setAgentProgress(35);
-    setAgentStatusText("Step 2/5: Benchmarking conversion patterns from Magicbricks, 99acres, Housing.com, Google Search & Maps...");
-
-    await new Promise(r => setTimeout(r, 450));
-    setAgentStep(3);
-    setAgentProgress(60);
-    setAgentStatusText("Step 3/5: Discovering genuine, recent tenant enquiries from permitted portals with verified intent...");
-
-    await new Promise(r => setTimeout(r, 450));
-    setAgentStep(4);
-    setAgentProgress(80);
-    setAgentStatusText("Step 4/5: Generating high-converting Google Ads, Meta Reels video scripts, web forms, and Smart QR flyer...");
-
-    await new Promise(r => setTimeout(r, 450));
-    setAgentStep(5);
-    setAgentProgress(95);
-    setAgentStatusText("Step 5/5: Auto-matching inquiries to suitable PG Owners and synchronizing database pipeline...");
-
-    const isBangalore = /bangalore|bengaluru|koramangala|whitefield|indiranagar|electronic city/i.test(agentAddress);
+    try {
+      const isBangalore = /bangalore|bengaluru|koramangala|whitefield|indiranagar|electronic city/i.test(agentAddress);
     const isPune = /pune|hinjewadi|wakad|baner|kothrud|viman nagar/i.test(agentAddress);
     const isHyd = /hyderabad|hitec|gachibowli|madhapur|kondapur/i.test(agentAddress);
     const isGurgaon = /gurgaon|gurugram|dlf|cyber/i.test(agentAddress);
@@ -4625,57 +4639,134 @@ function SuperAdminLeadGenConsole() {
     const secondOwner = ownerAccounts[1]?.id || defaultOwner;
     const secondOwnerName = ownerAccounts[1]?.name || defaultOwnerName;
 
-    const eng = window.LeadFinderEngine;
-    const nowIso = new Date().toISOString();
-    const discoveredCandidates = [];
+    
+      if (isCancelled()) return;
+      const eng = window.LeadFinderEngine;
+      const nowIso = new Date().toISOString();
+      const discoveredCandidates = [];
+      const sourceWarnings = [];
 
-    // 1. Pull REAL, AUTHORIZED live enquiries from Direct Website / Guest Boarding (guest-reg-*)
-    try {
-      const regRows = window.fetchGuestRegsSafe ? await window.fetchGuestRegsSafe(!0) : [];
-      const statusMap = window.getGuestRegStatusMap ? window.getGuestRegStatusMap(Ee.getState().allDbNotices) : {};
-      (regRows || []).forEach(nt => {
-        if (!nt || !nt.content) return;
-        try {
-          const p = typeof nt.content === "string" ? JSON.parse(nt.content) : nt.content;
-          if (!p || p.type !== "GUEST_REGISTRATION_APP") return;
-          const stOv = statusMap[nt.id] || {};
-          const effStatus = stOv.status || p.status || "PENDING_SUPER_ADMIN";
-          if (effStatus === "REJECTED") return;
-          const bldLoc = stOv.building || p.building || p.buildingId || "";
-          const hasValidPhone = !!eng.normalizePhone(p.phone);
-          const hasValidEmail = !!eng.normalizeEmail(p.email);
-          const vStat = effStatus === "APPROVED"
-            ? "CONVERTED"
-            : (hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED";
+      // Stage 2: Query Direct Website / Guest Boarding (cached-first + 6s timeout + 1 retry, never blocks on 7.4MB blob!)
+      setAgentStep(2);
+      setAgentProgress(40);
+      setAgentStatusText("Step 2/5: Scanning authorized Direct Website & Guest Boarding enquiries...");
+
+      try {
+        const regRows = await withTimeoutRetry(
+          "Direct Guest Boarding",
+          () => window.fetchGuestRegsSafe ? window.fetchGuestRegsSafe(!1) : [],
+          6500,
+          1
+        );
+        if (isCancelled()) return;
+        const statusMap = window.getGuestRegStatusMap ? window.getGuestRegStatusMap(Ee.getState().allDbNotices) : {};
+        (regRows || []).forEach(nt => {
+          if (!nt || !nt.content) return;
+          try {
+            const p = typeof nt.content === "string" ? JSON.parse(nt.content) : nt.content;
+            if (!p || p.type !== "GUEST_REGISTRATION_APP") return;
+            const stOv = statusMap[nt.id] || {};
+            const effStatus = stOv.status || p.status || "PENDING_SUPER_ADMIN";
+            if (effStatus === "REJECTED") return;
+            const bldLoc = stOv.building || p.building || p.buildingId || "";
+            const hasValidPhone = !!eng.normalizePhone(p.phone);
+            const hasValidEmail = !!eng.normalizeEmail(p.email);
+            const vStat = effStatus === "APPROVED"
+              ? "CONVERTED"
+              : (hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED";
+            const cand = {
+              id: "lead-real-" + nt.id,
+              externalRef: nt.id,
+              ownerId: stOv.ownerId || p.ownerId || defaultOwner,
+              ownerName: stOv.ownerName || p.ownerName || defaultOwnerName,
+              sourceId: "source-direct",
+              sourceName: p.source === "SAAS_GUEST_BOARDING" ? "Direct Website (Guest Boarding)" : "Direct Website (Owner Invite Link)",
+              sourceIcon: "🌐",
+              sourceUrl: window.location.origin + "/?ref=" + encodeURIComponent(nt.id),
+              sourceAuthorized: true,
+              tenantName: (p.name || "").trim(),
+              phone: (p.phone || "").trim(),
+              whatsapp: (p.phone || "").trim(),
+              email: (p.email || "").trim(),
+              location: bldLoc,
+              sharingPreference: p.sharingPreference || "",
+              budgetRange: p.roomPreference ? (p.roomPreference + " • " + (p.sharingPreference || "Sharing")) : "",
+              budget: 0,
+              preferredMoveInDate: p.joinDate || "",
+              profession: (p.companyCollege || "").trim(),
+              gender: "",
+              foodPreference: p.foodPreference || "",
+              originalEnquiry: "Submitted Guest Boarding form for " + (p.roomPreference || "PG") + " (" + (p.sharingPreference || "Sharing") + ", " + (p.foodPreference || "Food") + ")" + (bldLoc ? " at " + bldLoc : "") + ".",
+              notes: "Verified live Guest Boarding submission (" + nt.id + ")." + (p.addressCurrent ? " Address: " + p.addressCurrent : ""),
+              status: effStatus === "APPROVED" ? "CONVERTED" : "NEW",
+              verificationStatus: vStat,
+              discoveredAt: p.submittedAt || nowIso,
+              lastCheckedAt: nowIso,
+              createdAt: p.submittedAt || nowIso,
+              updatedAt: nowIso,
+              convertedTenantId: null
+            };
+            const ev = eng.computeEvidenceScore(cand);
+            cand.intentScore = ev.score;
+            cand.scoreBreakdown = ev.reasons;
+            discoveredCandidates.push(cand);
+          } catch (_) {}
+        });
+      } catch (err) {
+        if (err?.message === "CANCELLED") return;
+        console.warn("Guest Boarding source skipped due to timeout/error:", err);
+        sourceWarnings.push("Direct Guest Boarding: " + (err?.message || "temporarily unavailable"));
+      }
+
+      if (isCancelled()) return;
+
+      // Stage 3: Query Supabase onboarding_apps (independent 6s timeout + 1 retry)
+      setAgentStep(3);
+      setAgentProgress(65);
+      setAgentStatusText("Step 3/5: Checking live website onboarding enquiries...");
+
+      try {
+        const obRes = await withTimeoutRetry(
+          "Website Onboarding",
+          () => we.from("onboarding_apps").select("*").limit(200),
+          6000,
+          1
+        );
+        if (isCancelled()) return;
+        const obRows = obRes?.data || [];
+        obRows.forEach(ob => {
+          if (!ob || !ob.name) return;
+          const hasValidPhone = !!eng.normalizePhone(ob.phone);
+          const hasValidEmail = !!eng.normalizeEmail(ob.email);
           const cand = {
-            id: "lead-real-" + nt.id,
-            externalRef: nt.id,
-            ownerId: stOv.ownerId || p.ownerId || defaultOwner,
-            ownerName: stOv.ownerName || p.ownerName || defaultOwnerName,
+            id: "lead-ob-" + ob.id,
+            externalRef: String(ob.id),
+            ownerId: ob.owner_id || defaultOwner,
+            ownerName: defaultOwnerName,
             sourceId: "source-direct",
-            sourceName: p.source === "SAAS_GUEST_BOARDING" ? "Direct Website (Guest Boarding)" : "Direct Website (Owner Invite Link)",
+            sourceName: "Direct Website Onboarding",
             sourceIcon: "🌐",
-            sourceUrl: window.location.origin + "/?ref=" + encodeURIComponent(nt.id),
+            sourceUrl: window.location.origin + "/?onboarding=" + encodeURIComponent(ob.id),
             sourceAuthorized: true,
-            tenantName: (p.name || "").trim(),
-            phone: (p.phone || "").trim(),
-            whatsapp: (p.phone || "").trim(),
-            email: (p.email || "").trim(),
-            location: bldLoc,
-            sharingPreference: p.sharingPreference || "",
-            budgetRange: p.roomPreference ? (p.roomPreference + " • " + (p.sharingPreference || "Sharing")) : "",
+            tenantName: String(ob.name || "").trim(),
+            phone: String(ob.phone || "").trim(),
+            whatsapp: String(ob.phone || "").trim(),
+            email: String(ob.email || "").trim(),
+            location: String(ob.building || "").trim(),
+            sharingPreference: ob.sharing_preference || "",
+            budgetRange: ob.room_preference ? (ob.room_preference + " • " + (ob.sharing_preference || "")) : "",
             budget: 0,
-            preferredMoveInDate: p.joinDate || "",
-            profession: (p.companyCollege || "").trim(),
+            preferredMoveInDate: "",
+            profession: String(ob.company_college || "").trim(),
             gender: "",
-            foodPreference: p.foodPreference || "",
-            originalEnquiry: "Submitted Guest Boarding form for " + (p.roomPreference || "PG") + " (" + (p.sharingPreference || "Sharing") + ", " + (p.foodPreference || "Food") + ")" + (bldLoc ? " at " + bldLoc : "") + ".",
-            notes: "Verified live Guest Boarding submission (" + nt.id + ")." + (p.addressCurrent ? " Address: " + p.addressCurrent : ""),
-            status: effStatus === "APPROVED" ? "CONVERTED" : "NEW",
-            verificationStatus: vStat,
-            discoveredAt: p.submittedAt || nowIso,
+            foodPreference: ob.food_preference || "",
+            originalEnquiry: "Direct onboarding application: " + (ob.room_preference || "PG") + " / " + (ob.sharing_preference || "Sharing"),
+            notes: "Live onboarding_apps record (" + ob.id + ").",
+            status: ob.status === "APPROVED" ? "CONVERTED" : "NEW",
+            verificationStatus: ob.status === "APPROVED" ? "CONVERTED" : ((hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED"),
+            discoveredAt: ob.created_at || nowIso,
             lastCheckedAt: nowIso,
-            createdAt: p.submittedAt || nowIso,
+            createdAt: ob.created_at || nowIso,
             updatedAt: nowIso,
             convertedTenantId: null
           };
@@ -4683,137 +4774,122 @@ function SuperAdminLeadGenConsole() {
           cand.intentScore = ev.score;
           cand.scoreBreakdown = ev.reasons;
           discoveredCandidates.push(cand);
-        } catch (_) {}
-      });
-    } catch (err) {
-      console.warn("Direct Guest Boarding scan warning:", err);
-    }
-
-    // 2. Pull REAL live enquiries from Supabase onboarding_apps table
-    try {
-      const { data: obRows } = await we.from("onboarding_apps").select("*").limit(200);
-      (obRows || []).forEach(ob => {
-        if (!ob || !ob.name) return;
-        const hasValidPhone = !!eng.normalizePhone(ob.phone);
-        const hasValidEmail = !!eng.normalizeEmail(ob.email);
-        const cand = {
-          id: "lead-ob-" + ob.id,
-          externalRef: String(ob.id),
-          ownerId: ob.owner_id || defaultOwner,
-          ownerName: defaultOwnerName,
-          sourceId: "source-direct",
-          sourceName: "Direct Website Onboarding",
-          sourceIcon: "🌐",
-          sourceUrl: window.location.origin + "/?onboarding=" + encodeURIComponent(ob.id),
-          sourceAuthorized: true,
-          tenantName: String(ob.name || "").trim(),
-          phone: String(ob.phone || "").trim(),
-          whatsapp: String(ob.phone || "").trim(),
-          email: String(ob.email || "").trim(),
-          location: String(ob.building || "").trim(),
-          sharingPreference: ob.sharing_preference || "",
-          budgetRange: ob.room_preference ? (ob.room_preference + " • " + (ob.sharing_preference || "")) : "",
-          budget: 0,
-          preferredMoveInDate: "",
-          profession: String(ob.company_college || "").trim(),
-          gender: "",
-          foodPreference: ob.food_preference || "",
-          originalEnquiry: "Direct onboarding application: " + (ob.room_preference || "PG") + " / " + (ob.sharing_preference || "Sharing"),
-          notes: "Live onboarding_apps record (" + ob.id + ").",
-          status: ob.status === "APPROVED" ? "CONVERTED" : "NEW",
-          verificationStatus: ob.status === "APPROVED" ? "CONVERTED" : ((hasValidPhone || hasValidEmail) ? "CONTACT_VERIFIED" : "UNVERIFIED"),
-          discoveredAt: ob.created_at || nowIso,
-          lastCheckedAt: nowIso,
-          createdAt: ob.created_at || nowIso,
-          updatedAt: nowIso,
-          convertedTenantId: null
-        };
-        const ev = eng.computeEvidenceScore(cand);
-        cand.intentScore = ev.score;
-        cand.scoreBreakdown = ev.reasons;
-        discoveredCandidates.push(cand);
-      });
-    } catch (_) {}
-
-    // 3. Apply strict duplicate detection & merge without deleting any existing leads!
-    let updatedLeads = [...(leadData.leads || [])];
-    let addedCount = 0;
-    let duplicatesMergedCount = 0;
-    let filteredOutCount = 0;
-    const cityTerm = eng.normalizeText(agentAddress);
-    const sharingTerm = eng.normalizeText(agentSharing);
-    const cutoffMs = recentDaysFilter !== "ALL" ? (Date.now() - Number(recentDaysFilter) * 86400000) : 0;
-
-    for (const cand of discoveredCandidates) {
-      if (cutoffMs > 0) {
-        const cTs = Date.parse(cand.discoveredAt || "");
-        if (!isNaN(cTs) && cTs < cutoffMs) { filteredOutCount++; continue; }
+        });
+      } catch (err) {
+        if (err?.message === "CANCELLED") return;
+        console.warn("Onboarding apps source skipped due to timeout/error:", err);
+        sourceWarnings.push("Website Onboarding: " + (err?.message || "temporarily unavailable"));
       }
-      if (sharingTerm && sharingTerm !== "all" && cand.sharingPreference && !eng.normalizeText(cand.sharingPreference).includes(sharingTerm.split(" ")[0])) {
-        // Still allow if user didn't strictly filter sharing
+
+      if (isCancelled()) return;
+
+      // Stage 4: Strict deduplication, merging & evidence-based scoring
+      setAgentStep(4);
+      setAgentProgress(85);
+      setAgentStatusText("Step 4/5: Running duplicate detection, verification & evidence scoring...");
+
+      let updatedLeads = [...(leadData.leads || [])];
+      let addedCount = 0;
+      let duplicatesMergedCount = 0;
+      let filteredOutCount = 0;
+      const cutoffMs = recentDaysFilter !== "ALL" ? (Date.now() - Number(recentDaysFilter) * 86400000) : 0;
+
+      for (const cand of discoveredCandidates) {
+        if (cutoffMs > 0) {
+          const cTs = Date.parse(cand.discoveredAt || "");
+          if (!isNaN(cTs) && cTs < cutoffMs) { filteredOutCount++; continue; }
+        }
+        const dup = eng.findDuplicateLead(cand, updatedLeads);
+        if (dup.isDuplicate && dup.matchedLead) {
+          duplicatesMergedCount++;
+          const merged = eng.mergeDuplicateLead(dup.matchedLead, cand, dup);
+          const ev = eng.computeEvidenceScore(merged);
+          merged.intentScore = ev.score;
+          merged.scoreBreakdown = ev.reasons;
+          updatedLeads = updatedLeads.map(l => l.id === dup.matchedLead.id ? merged : l);
+        } else {
+          cand.duplicateCheckResult = "UNIQUE (Verified New)";
+          cand.sourceReferences = [{
+            sourceId: cand.sourceId,
+            sourceName: cand.sourceName,
+            sourceUrl: cand.sourceUrl || "",
+            discoveredAt: cand.discoveredAt,
+            enquiryText: cand.originalEnquiry || ""
+          }];
+          updatedLeads = [cand, ...updatedLeads];
+          addedCount++;
+        }
       }
-      const dup = eng.findDuplicateLead(cand, updatedLeads);
-      if (dup.isDuplicate && dup.matchedLead) {
-        duplicatesMergedCount++;
-        const merged = eng.mergeDuplicateLead(dup.matchedLead, cand, dup);
-        const ev = eng.computeEvidenceScore(merged);
-        merged.intentScore = ev.score;
-        merged.scoreBreakdown = ev.reasons;
-        updatedLeads = updatedLeads.map(l => l.id === dup.matchedLead.id ? merged : l);
+
+      if (isCancelled()) return;
+
+      // Stage 5: Persist to Supabase (8s timeout + 1 retry) — ONLY set 100% AFTER save completes!
+      setAgentStep(5);
+      setAgentProgress(92);
+      setAgentStatusText("Step 5/5: Saving deduplicated leads & campaigns to Supabase...");
+
+      const lastRunSummary = {
+        ranAt: nowIso,
+        queryLocation: agentAddress,
+        addedCount,
+        duplicatesMergedCount,
+        filteredOutCount,
+        sourceWarnings,
+        authorizedSourcesChecked: ["Direct Website Enquiries & Guest Boarding"],
+        unavailableSources: eng.PLATFORM_CATALOG.filter(p => !p.canCollectLeads).map(p => ({ name: p.name, status: p.authStatus, requirement: p.requirement }))
+      };
+
+      const updatedConfig = {
+        address: agentAddress,
+        audience: agentAudience,
+        budget: targetBudgetVal,
+        sharing: agentSharing,
+        maxRent: maxRentVal,
+        status: "READY",
+        lastRunAt: nowIso,
+        lastRunSummary
+      };
+
+      await withTimeoutRetry(
+        "Database Save",
+        () => saveData({
+          sources: leadData.sources,
+          ownerPermissions: leadData.ownerPermissions,
+          leads: updatedLeads,
+          agentConfig: updatedConfig,
+          campaigns: generatedCampaigns
+        }),
+        8000,
+        1
+      );
+
+      if (isCancelled()) return;
+
+      setAgentProgress(100);
+      setAgentStatusText("Completed! " + addedCount + " new enquiry(s) added, " + duplicatesMergedCount + " duplicate(s) skipped/merged.");
+      await new Promise(r => setTimeout(r, 250));
+      if (isCancelled()) return;
+
+      if (addedCount > 0) {
+        z.success("Discovery complete: " + addedCount + " genuine new enquiry(s) added, " + duplicatesMergedCount + " duplicate(s) skipped/merged.");
       } else {
-        cand.duplicateCheckResult = "UNIQUE (Verified New)";
-        cand.sourceReferences = [{
-          sourceId: cand.sourceId,
-          sourceName: cand.sourceName,
-          sourceUrl: cand.sourceUrl || "",
-          discoveredAt: cand.discoveredAt,
-          enquiryText: cand.originalEnquiry || ""
-        }];
-        updatedLeads = [cand, ...updatedLeads];
-        addedCount++;
+        z.success("Discovery complete: 0 new uncollected enquiries (" + duplicatesMergedCount + " already collected & deduplicated).");
+      }
+      if (sourceWarnings.length > 0) {
+        z.info("Note: " + sourceWarnings.join("; "));
+      }
+      setActiveSubTab("pipeline");
+    } catch (err) {
+      if (err?.message !== "CANCELLED") {
+        console.error("AI Lead Finder error:", err);
+        setAgentError(err?.message || "Lead discovery encountered an error.");
+        z.error("Lead discovery stopped: " + (err?.message || "Please retry."));
+      }
+    } finally {
+      if (agentRunIdRef.current === myRunId) {
+        setIsAgentRunning(!1);
       }
     }
-
-    const lastRunSummary = {
-      ranAt: nowIso,
-      queryLocation: agentAddress,
-      addedCount,
-      duplicatesMergedCount,
-      filteredOutCount,
-      authorizedSourcesChecked: ["Direct Website Enquiries & Guest Boarding"],
-      unavailableSources: eng.PLATFORM_CATALOG.filter(p => !p.canCollectLeads).map(p => ({ name: p.name, status: p.authStatus, requirement: p.requirement }))
-    };
-
-    const updatedConfig = {
-      address: agentAddress,
-      audience: agentAudience,
-      budget: targetBudgetVal,
-      sharing: agentSharing,
-      maxRent: maxRentVal,
-      status: "READY",
-      lastRunAt: nowIso,
-      lastRunSummary
-    };
-
-    const updatedAgentData = {
-      leads: updatedLeads,
-      agentConfig: updatedConfig,
-      campaigns: generatedCampaigns
-    };
-
-    await saveData({
-      sources: leadData.sources,
-      ownerPermissions: leadData.ownerPermissions,
-      ...updatedAgentData
-    });
-
-    setIsAgentRunning(!1);
-    if (addedCount > 0) {
-      z.success("Discovery complete: " + addedCount + " genuine new enquiry(s) added, " + duplicatesMergedCount + " duplicate(s) skipped/merged. External portals require Partner API authorization.");
-    } else {
-      z.success("Discovery complete: 0 new uncollected enquiries (" + duplicatesMergedCount + " already collected & deduplicated). No fictional leads generated.");
-    }
-    setActiveSubTab("pipeline");
   };
 
   // Printable Smart QR Flyer Window
@@ -6955,9 +7031,20 @@ function SuperAdminLeadGenConsole() {
                 })
               ]
             }),
-            a.jsx("p", {
-              className: "text-[11px] text-slate-400 font-medium italic",
-              children: "Syncing directly to Supabase notices table 'saas-lead-generation-data'..."
+            a.jsxs("div", {
+              className: "flex items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800",
+              children: [
+                a.jsx("p", {
+                  className: "text-[11px] text-slate-400 font-medium italic text-left",
+                  children: "Authorized sources run with automatic timeouts & duplicate protection."
+                }),
+                a.jsx("button", {
+                  type: "button",
+                  onClick: stopAiLeadFinderAgent,
+                  className: "px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-[11px] font-black cursor-pointer shrink-0",
+                  children: "✕ Stop Search"
+                })
+              ]
             })
           ]
         })
